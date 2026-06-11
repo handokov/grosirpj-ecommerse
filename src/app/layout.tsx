@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "GrosirPJ" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo-sm.png",
   },
   openGraph: {
     title: "GrosirPJ - Pusat Grosir Baju Anak & Remaja Terpercaya",

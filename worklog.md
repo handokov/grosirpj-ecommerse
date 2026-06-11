@@ -335,3 +335,36 @@ Stage Summary:
 - All gradients now use emerald variants (e.g., from-emerald-800 via-emerald-900 to-emerald-800)
 - Gold accents on stars, badges, buttons, highlights
 - Zero runtime errors, zero lint errors, full browser verification passed
+
+---
+Task ID: 11
+Agent: Main Agent
+Task: Replace logo, update motto, fix category grid centering, add WhatsApp chat button
+
+Work Log:
+- Optimized uploaded logo from 9.7MB (6250x6250) to 64KB (512x512) using sharp
+- Created /public/logo.png (512x512) and /public/logo-sm.png (64x64 for favicon)
+- Replaced Heart icon logo with actual uploaded logo image in Header, Footer, Mobile Menu
+- Updated motto from "Fashion Anak & Remaja" to "Harga OK Kualitas OK" everywhere:
+  - Header logo subtitle
+  - Mobile menu subtitle
+  - Footer brand subtitle
+  - Hero badge text: "Harga OK • Kualitas OK"
+  - Hero heading: "Harga OK Kualitas OK!"
+  - Footer copyright: "GrosirPJ — Harga OK Kualitas OK"
+- Fixed CategoryGrid: changed from lg:grid-cols-6 to sm:grid-cols-3 with max-w-3xl mx-auto for centering
+- Created WhatsAppButton component with:
+  - Hidden phone number (6281281756262 in code only, not displayed)
+  - Green WhatsApp color (#25D366) floating button
+  - Tooltip "Ada yang bisa dibantu?" on hover (desktop)
+  - Opens wa.me link with pre-filled message
+- Updated favicon reference from /logo.svg to /logo-sm.png
+- Removed unused Heart import from Header and Footer
+- Lint passes clean, browser verification passed on both desktop and mobile
+
+Stage Summary:
+- Logo replaced with user's uploaded GrosirPJ logo
+- Moto "Harga OK Kualitas OK" applied everywhere
+- Category grid centered and responsive (2 cols mobile, 3 cols tablet/desktop)
+- WhatsApp floating chat button added (number hidden from display)
+- All changes verified via browser on desktop (1920) and mobile (375) viewports

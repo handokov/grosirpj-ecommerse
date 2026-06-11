@@ -14,7 +14,6 @@ import {
   Package,
   Phone,
   MapPin,
-  Heart,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
@@ -123,15 +122,17 @@ export default function Header() {
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Logo */}
             <button onClick={goHome} className="flex items-center gap-2 shrink-0 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-xl flex items-center justify-center group-hover:from-emerald-800 group-hover:to-emerald-950 transition-all shadow-md">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="GrosirPJ Logo"
+                className="h-10 w-10 rounded-xl object-contain group-hover:scale-105 transition-transform"
+              />
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-800 to-emerald-900 bg-clip-text text-transparent leading-tight">
                   GrosirPJ
                 </h1>
                 <p className="text-[10px] text-muted-foreground leading-tight">
-                  Fashion Anak & Remaja
+                  Harga OK Kualitas OK
                 </p>
               </div>
             </button>
@@ -284,10 +285,10 @@ function MobileMenu({
     <div className="flex flex-col h-full">
       <div className="p-4 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white">
         <div className="flex items-center gap-2">
-          <Heart className="h-8 w-8" />
+          <img src="/logo.png" alt="GrosirPJ Logo" className="h-10 w-10 rounded-lg object-contain" />
           <div>
             <h2 className="text-lg font-bold">GrosirPJ</h2>
-            <p className="text-xs text-emerald-200">Fashion Anak & Remaja</p>
+            <p className="text-xs text-emerald-200">Harga OK Kualitas OK</p>
           </div>
         </div>
       </div>

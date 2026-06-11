@@ -34,12 +34,12 @@ export default function HeroSection() {
           <div className="text-white">
             <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 text-sm">
               <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-              <span>Grosir Baju Anak #1 di Indonesia</span>
+              <span>Harga OK • Kualitas OK</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
               Grosir Baju Anak
               <span className="text-amber-400"> & Remaja</span>
-              <br />Harga Termurah!
+              <br />Harga OK Kualitas OK!
             </h1>
             <p className="text-emerald-100 text-lg mb-8 max-w-lg">
               Pusat grosir fashion anak dan remaja terlengkap. Dari bayi lucu hingga remaja stylish. Kualitas terbaik, harga grosir termurah, pengiriman ke seluruh Indonesia.

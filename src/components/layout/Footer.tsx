@@ -1,6 +1,6 @@
 'use client';
 
-import { Heart, Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
 export default function Footer() {
@@ -13,12 +13,10 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-xl flex items-center justify-center">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
+              <img src="/logo.png" alt="GrosirPJ Logo" className="h-10 w-10 rounded-xl object-contain" />
               <div>
                 <h3 className="text-lg font-bold text-white">GrosirPJ</h3>
-                <p className="text-xs text-gray-400">Fashion Anak & Remaja</p>
+                <p className="text-xs text-gray-400">Harga OK Kualitas OK</p>
               </div>
             </div>
             <p className="text-sm text-gray-400 mb-4">
@@ -84,7 +82,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} GrosirPJ. Semua hak dilindungi.</p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
-            <span>Pusat Grosir Baju Anak & Remaja</span>
+            <span>GrosirPJ — Harga OK Kualitas OK</span>
             <span>|</span>
             <span>Dibuat dengan ❤️ di Indonesia</span>
           </div>

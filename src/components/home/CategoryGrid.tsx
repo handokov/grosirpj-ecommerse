@@ -35,7 +35,7 @@ export default function CategoryGrid() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
           {categories.map((cat) => {
             const IconComp = iconMap[cat.icon || ''];
             return (

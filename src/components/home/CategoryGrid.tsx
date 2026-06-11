@@ -35,30 +35,30 @@ export default function CategoryGrid() {
           </p>
         </div>
 
-        {/* Centered flex-wrap grid with auto-adjustment */}
-        <div className="flex flex-wrap justify-center gap-4 md:gap-5">
+        {/* 3 columns: 3 on top, 3 on bottom */}
+        <div className="grid grid-cols-3 gap-4 md:gap-5 max-w-3xl mx-auto">
           {categories.map((cat) => {
             const IconComp = iconMap[cat.icon || ''];
             return (
               <Card
                 key={cat.id}
-                className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden w-[calc(50%-8px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(16.666%-5px)]"
+                className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
                 onClick={() => viewCategory(cat.id)}
               >
                 <CardContent className="p-0">
-                  <div className="relative h-36 sm:h-44 overflow-hidden">
+                  <div className="relative h-32 sm:h-44 overflow-hidden">
                     <ProductImage
                       src={cat.image || ''}
                       alt={cat.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                    <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-white">
                       <div className="flex items-center gap-1.5">
-                        {IconComp && <IconComp className="h-4 w-4 text-amber-400" />}
-                        <h3 className="font-semibold text-xs sm:text-sm">{cat.name}</h3>
+                        {IconComp && <IconComp className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />}
+                        <h3 className="font-semibold text-[10px] sm:text-sm">{cat.name}</h3>
                       </div>
-                      <p className="text-[10px] text-gray-300 mt-0.5">
+                      <p className="text-[9px] sm:text-[10px] text-gray-300 mt-0.5">
                         {cat.productCount ?? 0} produk
                       </p>
                     </div>

@@ -165,8 +165,8 @@ export default function ProductDetail() {
             <div className="grid grid-cols-3 gap-3 mt-6">
               <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
                 <Truck className="h-5 w-5 text-emerald-800 mb-1" />
-                <span className="text-xs font-medium">Gratis Ongkir</span>
-                <span className="text-[10px] text-muted-foreground">Min. 3 Juta</span>
+                <span className="text-xs font-medium">COD Jakarta</span>
+                <span className="text-[10px] text-muted-foreground">Bayar di Tempat</span>
               </div>
               <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
                 <Shield className="h-5 w-5 text-emerald-800 mb-1" />

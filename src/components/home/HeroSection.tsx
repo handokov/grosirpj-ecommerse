@@ -184,8 +184,8 @@ export default function HeroSection() {
                   <Truck className="h-5 w-5 text-emerald-800" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-900">Gratis Ongkir</p>
-                  <p className="text-[10px] text-gray-500">Min. 3 Juta</p>
+                  <p className="text-xs font-semibold text-gray-900">COD Jakarta</p>
+                  <p className="text-[10px] text-gray-500">Bayar di Tempat</p>
                 </div>
               </div>
               <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function HeroSection() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: Truck, title: 'Gratis Ongkir', desc: 'Pesanan 3 Juta+' },
+              { icon: Truck, title: 'COD Jakarta', desc: 'Bayar di Tempat' },
               { icon: Shield, title: 'Garansi Produk', desc: '100% Original' },
               { icon: Headphones, title: 'CS 24/7', desc: 'Siap Membantu' },
               { icon: Heart, title: 'Harga Terbaik', desc: 'Grosir Termurah' },

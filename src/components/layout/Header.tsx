@@ -101,7 +101,7 @@ export default function Header() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span>🎁 Gratis Ongkir Pesanan 3 Juta+</span>
+            <span>🚚 COD Jakarta Area</span>
             <span>|</span>
             <span>👗 Grosir Baju Anak & Remaja Terpercaya</span>
           </div>

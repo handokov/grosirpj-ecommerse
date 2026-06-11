@@ -25,7 +25,7 @@ export default function CTASection() {
               <Button className="bg-amber-500 hover:bg-amber-500 text-gray-900 font-semibold h-12 px-8 rounded-xl text-base" onClick={() => viewCategory(null)}>
                 Mulai Belanja <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
-              <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 h-12 px-8 rounded-xl text-base">
+              <Button className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold h-12 px-8 rounded-xl text-base">
                 <Phone className="h-5 w-5 mr-2" /> Hubungi Kami
               </Button>
             </div>

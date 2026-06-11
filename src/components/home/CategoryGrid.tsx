@@ -35,13 +35,14 @@ export default function CategoryGrid() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        {/* Centered flex-wrap grid with auto-adjustment */}
+        <div className="flex flex-wrap justify-center gap-4 md:gap-5">
           {categories.map((cat) => {
             const IconComp = iconMap[cat.icon || ''];
             return (
               <Card
                 key={cat.id}
-                className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden w-[calc(50%-8px)] sm:w-[calc(33.333%-14px)] lg:w-[calc(16.666%-5px)]"
                 onClick={() => viewCategory(cat.id)}
               >
                 <CardContent className="p-0">

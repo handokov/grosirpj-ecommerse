@@ -18,12 +18,13 @@ export interface Product {
   featured: boolean;
   tags?: string;
   weight?: string;
-  dimensions?: string;
+  sizes?: string;
 }
 
 export interface CartItemType {
   product: Product;
   quantity: number;
+  size?: string;
 }
 
 export interface Category {
@@ -39,86 +40,85 @@ export interface Category {
 type ViewMode = 'home' | 'catalog' | 'product';
 
 interface StoreState {
-  // Navigation
   currentView: ViewMode;
   selectedCategoryId: string | null;
   selectedProduct: Product | null;
   searchQuery: string;
-
-  // Cart
   cartItems: CartItemType[];
   isCartOpen: boolean;
-
-  // UI
   isMobileMenuOpen: boolean;
 
-  // Actions
   setCurrentView: (view: ViewMode) => void;
   setSelectedCategoryId: (id: string | null) => void;
   setSelectedProduct: (product: Product | null) => void;
   setSearchQuery: (query: string) => void;
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateCartQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: Product, quantity?: number, size?: string) => void;
+  removeFromCart: (productId: string, size?: string) => void;
+  updateCartQuantity: (productId: string, quantity: number, size?: string) => void;
   clearCart: () => void;
   setIsCartOpen: (open: boolean) => void;
   setIsMobileMenuOpen: (open: boolean) => void;
   getCartTotal: () => number;
   getCartItemCount: () => number;
   viewProduct: (product: Product) => void;
-  viewCategory: (categoryId: string) => void;
+  viewCategory: (categoryId: string | null) => void;
   goHome: () => void;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
-  // Navigation
   currentView: 'home',
   selectedCategoryId: null,
   selectedProduct: null,
   searchQuery: '',
-
-  // Cart
   cartItems: [],
   isCartOpen: false,
-
-  // UI
   isMobileMenuOpen: false,
 
-  // Actions
   setCurrentView: (view) => set({ currentView: view }),
   setSelectedCategoryId: (id) => set({ selectedCategoryId: id }),
   setSelectedProduct: (product) => set({ selectedProduct: product }),
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  addToCart: (product, quantity = 1) => {
+  addToCart: (product, quantity = 1, size) => {
     const { cartItems } = get();
-    const existingItem = cartItems.find((item) => item.product.id === product.id);
+    const key = `${product.id}-${size || 'no-size'}`;
+    const existingItem = cartItems.find(
+      (item) => `${item.product.id}-${item.size || 'no-size'}` === key
+    );
 
     if (existingItem) {
       set({
         cartItems: cartItems.map((item) =>
-          item.product.id === product.id
+          `${item.product.id}-${item.size || 'no-size'}` === key
             ? { ...item, quantity: item.quantity + quantity }
             : item
         ),
       });
     } else {
-      set({ cartItems: [...cartItems, { product, quantity }] });
+      set({ cartItems: [...cartItems, { product, quantity, size }] });
     }
   },
 
-  removeFromCart: (productId) => {
-    set({ cartItems: get().cartItems.filter((item) => item.product.id !== productId) });
+  removeFromCart: (productId, size) => {
+    const key = `${productId}-${size || 'no-size'}`;
+    set({
+      cartItems: get().cartItems.filter(
+        (item) => `${item.product.id}-${item.size || 'no-size'}` !== key
+      ),
+    });
   },
 
-  updateCartQuantity: (productId, quantity) => {
+  updateCartQuantity: (productId, quantity, size) => {
     if (quantity <= 0) {
-      get().removeFromCart(productId);
+      get().removeFromCart(productId, size);
       return;
     }
+    const key = `${productId}-${size || 'no-size'}`;
     set({
       cartItems: get().cartItems.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
+        `${item.product.id}-${item.size || 'no-size'}` === key
+          ? { ...item, quantity }
+          : item
       ),
     });
   },

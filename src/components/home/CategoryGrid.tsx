@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { useStore, type Category } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  Smartphone, Shirt, ShoppingBag, UtensilsCrossed, Heart, Home, Dumbbell, Pencil,
+  Baby, Smile, GraduationCap, Sparkles, Crown, Footprints,
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Smartphone, Shirt, ShoppingBag, UtensilsCrossed, Heart, Home, Dumbbell, Pencil,
+  Baby, Smile, GraduationCap, Sparkles, Crown, Footprints,
 };
 
 export default function CategoryGrid() {
@@ -27,15 +27,15 @@ export default function CategoryGrid() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Kategori Produk
+            Belanja Berdasarkan Usia
           </h2>
           <p className="text-muted-foreground">
-            Temukan kebutuhan grosir Anda berdasarkan kategori
+            Temukan fashion yang tepat untuk setiap tahap usia si kecil
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {categories.map((cat, idx) => {
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {categories.map((cat) => {
             const IconComp = iconMap[cat.icon || ''];
             return (
               <Card
@@ -44,7 +44,7 @@ export default function CategoryGrid() {
                 onClick={() => viewCategory(cat.id)}
               >
                 <CardContent className="p-0">
-                  <div className="relative h-32 sm:h-40 overflow-hidden">
+                  <div className="relative h-36 sm:h-44 overflow-hidden">
                     <img
                       src={cat.image || ''}
                       alt={cat.name}
@@ -52,11 +52,11 @@ export default function CategoryGrid() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         {IconComp && <IconComp className="h-4 w-4 text-yellow-300" />}
-                        <h3 className="font-semibold text-sm">{cat.name}</h3>
+                        <h3 className="font-semibold text-xs sm:text-sm">{cat.name}</h3>
                       </div>
-                      <p className="text-xs text-gray-300 mt-0.5">
+                      <p className="text-[10px] text-gray-300 mt-0.5">
                         {cat.productCount ?? 0} produk
                       </p>
                     </div>

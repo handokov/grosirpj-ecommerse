@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { useStore, type Product } from '@/store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import {
   Package,
   Phone,
   MapPin,
-  ChevronDown,
+  Heart,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 
@@ -28,7 +27,6 @@ export default function Header() {
     setIsMobileMenuOpen,
     setSearchQuery,
     setCurrentView,
-    setSelectedCategoryId,
     searchQuery,
     viewCategory,
     goHome,
@@ -44,9 +42,7 @@ export default function Header() {
   const cartItemCount = getCartItemCount();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -67,7 +63,6 @@ export default function Header() {
         setShowSuggestions(false);
       }
     }, 300);
-
     return () => clearTimeout(timeout);
   }, [localSearch]);
 
@@ -99,7 +94,7 @@ export default function Header() {
   return (
     <>
       {/* Top bar */}
-      <div className="bg-emerald-700 text-white text-xs py-1.5 hidden md:block">
+      <div className="bg-pink-600 text-white text-xs py-1.5 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
@@ -110,9 +105,9 @@ export default function Header() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span>Gratis Ongkir Pesanan 5 Juta+</span>
+            <span>🎁 Gratis Ongkir Pesanan 3 Juta+</span>
             <span>|</span>
-            <span>Grosir Terpercaya Sejak 2015</span>
+            <span>👗 Grosir Baju Anak & Remaja Terpercaya</span>
           </div>
         </div>
       </div>
@@ -120,67 +115,51 @@ export default function Header() {
       {/* Main header */}
       <header
         className={`sticky top-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-white/95 backdrop-blur-md shadow-lg'
-            : 'bg-white shadow-sm'
+          isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white shadow-sm'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Logo */}
-            <button
-              onClick={goHome}
-              className="flex items-center gap-2 shrink-0 group"
-            >
-              <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
-                <Package className="h-6 w-6 text-white" />
+            <button onClick={goHome} className="flex items-center gap-2 shrink-0 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:from-pink-600 group-hover:to-purple-700 transition-all shadow-md">
+                <Heart className="h-6 w-6 text-white" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-emerald-700 leading-tight">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent leading-tight">
                   GrosirPJ
                 </h1>
                 <p className="text-[10px] text-muted-foreground leading-tight">
-                  Pusat Grosir Terpercaya
+                  Fashion Anak & Remaja
                 </p>
               </div>
             </button>
 
-            {/* Search bar */}
+            {/* Search */}
             <div ref={searchRef} className="flex-1 max-w-2xl relative">
               <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Cari produk grosir..."
+                  placeholder="Cari baju anak, dress remaja, kaos anak..."
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
-                  className="pl-10 pr-4 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500/20 rounded-full"
+                  className="pl-10 pr-4 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-pink-400 focus:ring-pink-400/20 rounded-full"
                 />
               </form>
-
-              {/* Search suggestions dropdown */}
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute top-full mt-1 w-full bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
                   {suggestions.map((s) => (
                     <button
                       key={s.id}
                       onClick={() => handleSuggestionClick(s)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pink-50 transition-colors text-left"
                     >
-                      <img
-                        src={s.images}
-                        alt={s.name}
-                        className="w-10 h-10 rounded-lg object-cover"
-                      />
+                      <img src={s.images} alt={s.name} className="w-10 h-10 rounded-lg object-cover" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{s.name}</p>
-                        <p className="text-xs text-emerald-600 font-semibold">
-                          {formatRupiah(s.wholesalePrice)}
-                        </p>
+                        <p className="text-xs text-pink-600 font-semibold">{formatRupiah(s.wholesalePrice)}</p>
                       </div>
-                      <Badge variant="secondary" className="text-xs shrink-0">
-                        {s.category}
-                      </Badge>
                     </button>
                   ))}
                 </div>
@@ -189,17 +168,16 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
-              {/* Cart button */}
               <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="relative h-10 w-10 rounded-full border-gray-200 hover:bg-emerald-50 hover:border-emerald-300"
+                    className="relative h-10 w-10 rounded-full border-gray-200 hover:bg-pink-50 hover:border-pink-300"
                   >
                     <ShoppingCart className="h-5 w-5" />
                     {cartItemCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
                         {cartItemCount > 99 ? '99+' : cartItemCount}
                       </span>
                     )}
@@ -211,14 +189,9 @@ export default function Header() {
                 </SheetContent>
               </Sheet>
 
-              {/* Mobile menu */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden h-10 w-10 rounded-full"
-                  >
+                  <Button variant="ghost" size="icon" className="md:hidden h-10 w-10 rounded-full">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
@@ -240,13 +213,13 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Category navigation - desktop */}
+        {/* Category nav desktop */}
         <div className="hidden md:block border-t bg-gray-50/50">
           <div className="max-w-7xl mx-auto px-4">
             <nav className="flex items-center gap-1 h-10 overflow-x-auto">
               <button
                 onClick={goHome}
-                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap"
+                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-pink-600 hover:bg-pink-50 rounded-lg transition-colors whitespace-nowrap"
               >
                 Semua Kategori
               </button>
@@ -260,9 +233,7 @@ export default function Header() {
 }
 
 function CategoryNavItems() {
-  const [categories, setCategories] = useState<
-    (import('@/store/useStore').Category & { productCount?: number })[]
-  >([]);
+  const [categories, setCategories] = useState<import('@/store/useStore').Category[]>([]);
   const viewCategory = useStore((s) => s.viewCategory);
   const selectedCategoryId = useStore((s) => s.selectedCategoryId);
 
@@ -281,8 +252,8 @@ function CategoryNavItems() {
           onClick={() => viewCategory(cat.id)}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
             selectedCategoryId === cat.id
-              ? 'text-emerald-700 bg-emerald-100'
-              : 'text-gray-600 hover:text-emerald-700 hover:bg-emerald-50'
+              ? 'text-pink-700 bg-pink-100'
+              : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50'
           }`}
         >
           {cat.name}
@@ -299,9 +270,7 @@ function MobileMenu({
   onCategoryClick: (id: string) => void;
   onHomeClick: () => void;
 }) {
-  const [categories, setCategories] = useState<
-    (import('@/store/useStore').Category & { productCount?: number })[]
-  >([]);
+  const [categories, setCategories] = useState<(import('@/store/useStore').Category & { productCount?: number })[]>([]);
 
   useEffect(() => {
     fetch('/api/categories')
@@ -312,37 +281,33 @@ function MobileMenu({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 bg-emerald-700 text-white">
+      <div className="p-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white">
         <div className="flex items-center gap-2">
-          <Package className="h-8 w-8" />
+          <Heart className="h-8 w-8" />
           <div>
             <h2 className="text-lg font-bold">GrosirPJ</h2>
-            <p className="text-xs text-emerald-200">Pusat Grosir Terpercaya</p>
+            <p className="text-xs text-pink-200">Fashion Anak & Remaja</p>
           </div>
         </div>
       </div>
       <nav className="flex-1 p-2">
         <button
           onClick={onHomeClick}
-          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg hover:bg-emerald-50 text-gray-700 font-medium"
+          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg hover:bg-pink-50 text-gray-700 font-medium"
         >
           Beranda
         </button>
         <div className="my-2 border-t" />
-        <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase">
-          Kategori
-        </p>
+        <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase">Kategori</p>
         {categories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => onCategoryClick(cat.id)}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-left rounded-lg hover:bg-emerald-50 text-gray-700 text-sm"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-left rounded-lg hover:bg-pink-50 text-gray-700 text-sm"
           >
             {cat.name}
             {cat.productCount !== undefined && (
-              <Badge variant="secondary" className="text-xs">
-                {cat.productCount}
-              </Badge>
+              <Badge variant="secondary" className="text-xs">{cat.productCount}</Badge>
             )}
           </button>
         ))}
@@ -363,77 +328,33 @@ function CartDrawer() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-emerald-50">
+      <div className="p-4 border-b bg-pink-50">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-emerald-800">
-            Keranjang Belanja
-          </h2>
-          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
-            {cartItems.length} item
-          </Badge>
+          <h2 className="text-lg font-bold text-pink-800">Keranjang Belanja</h2>
+          <Badge variant="secondary" className="bg-pink-100 text-pink-700">{cartItems.length} item</Badge>
         </div>
       </div>
-
       {cartItems.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
           <ShoppingCart className="h-16 w-16 text-gray-300 mb-4" />
-          <h3 className="font-semibold text-gray-600 mb-1">
-            Keranjang Kosong
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Mulai belanja untuk menambahkan produk
-          </p>
+          <h3 className="font-semibold text-gray-600 mb-1">Keranjang Kosong</h3>
+          <p className="text-sm text-muted-foreground">Mulai belanja fashion anak & remaja</p>
         </div>
       ) : (
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {cartItems.map((item) => (
-              <div
-                key={item.product.id}
-                className="flex gap-3 p-3 bg-gray-50 rounded-xl"
-              >
-                <img
-                  src={item.product.images}
-                  alt={item.product.name}
-                  className="w-16 h-16 rounded-lg object-cover"
-                />
+            {cartItems.map((item, idx) => (
+              <div key={`${item.product.id}-${item.size}-${idx}`} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
+                <img src={item.product.images} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {item.product.name}
-                  </p>
-                  <p className="text-sm text-emerald-600 font-semibold">
-                    {formatRupiah(item.product.wholesalePrice)}
-                  </p>
+                  <p className="text-sm font-medium truncate">{item.product.name}</p>
+                  {item.size && <p className="text-xs text-muted-foreground">Ukuran: {item.size}</p>}
+                  <p className="text-sm text-pink-600 font-semibold">{formatRupiah(item.product.wholesalePrice)}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() =>
-                        updateCartQuantity(item.product.id, item.quantity - 1)
-                      }
-                    >
-                      -
-                    </Button>
-                    <span className="text-sm font-medium w-8 text-center">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() =>
-                        updateCartQuantity(item.product.id, item.quantity + 1)
-                      }
-                    >
-                      +
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => removeFromCart(item.product.id)}
-                    >
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.size)}>-</Button>
+                    <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.size)}>+</Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeFromCart(item.product.id, item.size)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -441,20 +362,15 @@ function CartDrawer() {
               </div>
             ))}
           </div>
-
           <div className="border-t p-4 bg-gray-50">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-lg font-bold text-emerald-700">
-                {formatRupiah(total)}
-              </span>
+              <span className="text-lg font-bold text-pink-700">{formatRupiah(total)}</span>
             </div>
-            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11 rounded-xl font-semibold">
+            <Button className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white h-11 rounded-xl font-semibold">
               Checkout
             </Button>
-            <p className="text-xs text-center text-muted-foreground mt-2">
-              Min. order sesuai ketentuan produk
-            </p>
+            <p className="text-xs text-center text-muted-foreground mt-2">Min. order sesuai ketentuan produk</p>
           </div>
         </>
       )}

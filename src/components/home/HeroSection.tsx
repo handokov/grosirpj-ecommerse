@@ -79,16 +79,12 @@ export default function HeroSection() {
             <p className="text-emerald-100 text-lg mb-2 max-w-lg font-medium">
               Dengan berbagai pilihan produk
             </p>
-            <div className="flex flex-wrap gap-3 mb-8">
-              <span className="inline-flex items-center bg-amber-400/20 text-amber-300 font-bold px-4 py-1.5 rounded-lg text-sm border border-amber-400/30">
-                LOKAL
-              </span>
-              <span className="inline-flex items-center bg-amber-400/20 text-amber-300 font-bold px-4 py-1.5 rounded-lg text-sm border border-amber-400/30">
-                IMPORT
-              </span>
-              <span className="inline-flex items-center bg-amber-400/20 text-amber-300 font-bold px-4 py-1.5 rounded-lg text-sm border border-amber-400/30">
-                BRANDED
-              </span>
+            <div className="flex flex-wrap items-center gap-3 mb-8">
+              <span className="text-white font-bold text-lg tracking-wide">LOKAL</span>
+              <span className="text-white/40">•</span>
+              <span className="text-white font-bold text-lg tracking-wide">IMPORT</span>
+              <span className="text-white/40">•</span>
+              <span className="text-white font-bold text-lg tracking-wide">BRANDED</span>
             </div>
 
             <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">

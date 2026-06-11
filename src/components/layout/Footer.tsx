@@ -13,7 +13,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-xl flex items-center justify-center">
                 <Heart className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -25,9 +25,9 @@ export default function Footer() {
               Pusat grosir baju anak dan remaja terpercaya di Indonesia. Fashion bayi, balita, anak-anak, dan remaja dengan harga grosir termurah. Melayani sejak 2015.
             </p>
             <div className="flex gap-3">
-              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors"><Facebook className="h-4 w-4" /></a>
-              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors"><Instagram className="h-4 w-4" /></a>
-              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors"><Youtube className="h-4 w-4" /></a>
+              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Facebook className="h-4 w-4" /></a>
+              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Instagram className="h-4 w-4" /></a>
+              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Youtube className="h-4 w-4" /></a>
             </div>
           </div>
 
@@ -37,7 +37,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {['Bayi (0-2 Tahun)', 'Balita (2-5 Tahun)', 'Anak-Anak (5-12 Tahun)', 'Remaja (12-17 Tahun)', 'Aksesoris Anak', 'Sepatu Anak & Remaja'].map((cat) => (
                 <li key={cat}>
-                  <button onClick={goHome} className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{cat}</button>
+                  <button onClick={goHome} className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">{cat}</button>
                 </li>
               ))}
             </ul>
@@ -49,7 +49,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {['Tentang Kami', 'Cara Pemesanan', 'Ukuran Baju Anak', 'Kebijakan Pengembalian', 'Syarat & Ketentuan', 'FAQ'].map((item) => (
                 <li key={item}>
-                  <button className="text-sm text-gray-400 hover:text-pink-400 transition-colors">{item}</button>
+                  <button className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">{item}</button>
                 </li>
               ))}
             </ul>
@@ -60,19 +60,19 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">Hubungi Kami</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-0.5 text-pink-400 shrink-0" />
+                <MapPin className="h-4 w-4 mt-0.5 text-emerald-600 shrink-0" />
                 <span className="text-sm text-gray-400">Jl. Raya Grosir No. 123, Tanah Abang, Jakarta Pusat 10230</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-pink-400 shrink-0" />
+                <Phone className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span className="text-sm text-gray-400">+62 812-3456-7890</span>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-pink-400 shrink-0" />
+                <Mail className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span className="text-sm text-gray-400">info@grosirpj.com</span>
               </li>
               <li className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-pink-400 shrink-0" />
+                <Clock className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span className="text-sm text-gray-400">Senin - Sabtu: 08:00 - 17:00 WIB</span>
               </li>
             </ul>

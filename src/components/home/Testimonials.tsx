@@ -39,12 +39,12 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="py-12 md:py-16 bg-pink-50">
+    <section className="py-12 md:py-16 bg-emerald-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-            <span className="text-sm font-semibold text-pink-600 uppercase">Testimoni</span>
+            <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+            <span className="text-sm font-semibold text-emerald-900 uppercase">Testimoni</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Dipercaya Ribuan Reseller</h2>
           <p className="text-muted-foreground">Apa kata mereka tentang GrosirPJ</p>
@@ -53,15 +53,15 @@ export default function Testimonials() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {testimonials.map((t) => (
             <div key={t.name} className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg transition-shadow">
-              <Quote className="h-6 w-6 text-pink-200 mb-3" />
+              <Quote className="h-6 w-6 text-emerald-200 mb-3" />
               <p className="text-sm text-gray-600 mb-4 line-clamp-4">&ldquo;{t.text}&rdquo;</p>
               <div className="flex items-center gap-1 mb-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`h-3.5 w-3.5 ${i < t.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} />
+                  <Star key={i} className={`h-3.5 w-3.5 ${i < t.rating ? 'text-amber-500 fill-amber-500' : 'text-gray-200'}`} />
                 ))}
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-white flex items-center justify-center text-sm font-bold">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-700 to-emerald-900 text-white flex items-center justify-center text-sm font-bold">
                   {t.avatar}
                 </div>
                 <div>

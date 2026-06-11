@@ -19,7 +19,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-pink-600 via-purple-600 to-fuchsia-500">
+    <section className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-800">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -33,15 +33,15 @@ export default function HeroSection() {
           {/* Left content */}
           <div className="text-white">
             <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 text-sm">
-              <Star className="h-4 w-4 text-yellow-300 fill-yellow-300" />
+              <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
               <span>Grosir Baju Anak #1 di Indonesia</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
               Grosir Baju Anak
-              <span className="text-yellow-300"> & Remaja</span>
+              <span className="text-amber-400"> & Remaja</span>
               <br />Harga Termurah!
             </h1>
-            <p className="text-pink-100 text-lg mb-8 max-w-lg">
+            <p className="text-emerald-100 text-lg mb-8 max-w-lg">
               Pusat grosir fashion anak dan remaja terlengkap. Dari bayi lucu hingga remaja stylish. Kualitas terbaik, harga grosir termurah, pengiriman ke seluruh Indonesia.
             </p>
 
@@ -53,26 +53,26 @@ export default function HeroSection() {
                   placeholder="Cari baju anak, dress bayi, kaos remaja..."
                   value={searchVal}
                   onChange={(e) => setSearchVal(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl text-gray-900 bg-white shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl text-gray-900 bg-white shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm"
                 />
               </div>
-              <Button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 rounded-xl font-semibold shadow-lg h-auto">
+              <Button type="submit" className="bg-amber-500 hover:bg-amber-500 text-gray-900 px-6 rounded-xl font-semibold shadow-lg h-auto">
                 Cari
               </Button>
             </form>
 
             <div className="flex flex-wrap gap-6 mt-8">
               <div>
-                <p className="text-2xl font-bold text-yellow-300">5K+</p>
-                <p className="text-xs text-pink-200">Produk Fashion</p>
+                <p className="text-2xl font-bold text-amber-400">5K+</p>
+                <p className="text-xs text-emerald-200">Produk Fashion</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-yellow-300">30K+</p>
-                <p className="text-xs text-pink-200">Reseller Aktif</p>
+                <p className="text-2xl font-bold text-amber-400">30K+</p>
+                <p className="text-xs text-emerald-200">Reseller Aktif</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-yellow-300">99%</p>
-                <p className="text-xs text-pink-200">Puas & Repeat Order</p>
+                <p className="text-2xl font-bold text-amber-400">99%</p>
+                <p className="text-xs text-emerald-200">Puas & Repeat Order</p>
               </div>
             </div>
           </div>
@@ -86,8 +86,8 @@ export default function HeroSection() {
                 className="w-full rounded-2xl shadow-2xl"
               />
               <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2">
-                <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                  <Truck className="h-5 w-5 text-pink-600" />
+                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <Truck className="h-5 w-5 text-emerald-800" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-900">Gratis Ongkir</p>
@@ -95,8 +95,8 @@ export default function HeroSection() {
                 </div>
               </div>
               <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-xl p-3 flex items-center gap-2">
-                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-yellow-600" />
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-900">Garansi 100%</p>
@@ -119,10 +119,10 @@ export default function HeroSection() {
               { icon: Heart, title: 'Harga Terbaik', desc: 'Grosir Termurah' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-3 text-white">
-                <item.icon className="h-6 w-6 text-yellow-300 shrink-0" />
+                <item.icon className="h-6 w-6 text-amber-400 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="text-xs text-pink-200">{item.desc}</p>
+                  <p className="text-xs text-emerald-200">{item.desc}</p>
                 </div>
               </div>
             ))}

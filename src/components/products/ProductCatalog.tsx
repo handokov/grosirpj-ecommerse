@@ -71,7 +71,7 @@ export default function ProductCatalog() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input type="text" placeholder="Cari baju anak, dress remaja..." value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} className="pl-10 rounded-xl" />
             </div>
-            <Button type="submit" variant="default" className="rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">Cari</Button>
+            <Button type="submit" variant="default" className="rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950">Cari</Button>
           </form>
           <div className="flex gap-2">
             <Button variant="outline" className="sm:hidden rounded-xl" onClick={() => setShowFilters(!showFilters)}>
@@ -88,8 +88,8 @@ export default function ProductCatalog() {
               </SelectContent>
             </Select>
             <div className="hidden sm:flex border rounded-xl overflow-hidden">
-              <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className={`rounded-none ${viewMode === 'grid' ? 'bg-pink-600 hover:bg-pink-700' : ''}`} onClick={() => setViewMode('grid')}><Grid3X3 className="h-4 w-4" /></Button>
-              <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" className={`rounded-none ${viewMode === 'list' ? 'bg-pink-600 hover:bg-pink-700' : ''}`} onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
+              <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className={`rounded-none ${viewMode === 'grid' ? 'bg-emerald-800 hover:bg-emerald-900' : ''}`} onClick={() => setViewMode('grid')}><Grid3X3 className="h-4 w-4" /></Button>
+              <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" className={`rounded-none ${viewMode === 'list' ? 'bg-emerald-800 hover:bg-emerald-900' : ''}`} onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
             </div>
           </div>
         </div>
@@ -97,9 +97,9 @@ export default function ProductCatalog() {
         {/* Category filters */}
         <div className={`${showFilters ? 'block' : 'hidden'} sm:block mb-6`}>
           <div className="flex flex-wrap gap-2">
-            <Button variant={filterCategory === 'all' ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === 'all' ? 'bg-gradient-to-r from-pink-500 to-purple-600' : ''}`} onClick={() => { setFilterCategory('all'); setPage(1); }}>Semua</Button>
+            <Button variant={filterCategory === 'all' ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === 'all' ? 'bg-gradient-to-r from-emerald-700 to-emerald-900' : ''}`} onClick={() => { setFilterCategory('all'); setPage(1); }}>Semua</Button>
             {categories.map((cat) => (
-              <Button key={cat.id} variant={filterCategory === cat.id ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === cat.id ? 'bg-gradient-to-r from-pink-500 to-purple-600' : ''}`} onClick={() => { setFilterCategory(cat.id); setPage(1); }}>{cat.name}</Button>
+              <Button key={cat.id} variant={filterCategory === cat.id ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === cat.id ? 'bg-gradient-to-r from-emerald-700 to-emerald-900' : ''}`} onClick={() => { setFilterCategory(cat.id); setPage(1); }}>{cat.name}</Button>
             ))}
             {filterCategory !== 'all' && (
               <Button variant="ghost" size="sm" className="rounded-full text-red-500 hover:text-red-600" onClick={() => { setFilterCategory('all'); setPage(1); }}><X className="h-3 w-3 mr-1" /> Reset</Button>
@@ -132,19 +132,19 @@ export default function ProductCatalog() {
                       <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                       {discount > 0 && <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{discount}%</Badge>}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                        <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-pink-600 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); addToCart(product, product.minOrder); }}><ShoppingCart className="h-4 w-4" /></Button>
-                        <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-pink-600 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); viewProduct(product); }}><Eye className="h-4 w-4" /></Button>
+                        <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); addToCart(product, product.minOrder); }}><ShoppingCart className="h-4 w-4" /></Button>
+                        <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); viewProduct(product); }}><Eye className="h-4 w-4" /></Button>
                       </div>
                     </div>
                     <div className="p-3">
                       <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
                       <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2">{product.name}</h3>
                       <div className="flex items-baseline gap-2 mb-2">
-                        <span className="text-sm font-bold text-pink-700">{formatRupiah(product.wholesalePrice)}</span>
+                        <span className="text-sm font-bold text-emerald-900">{formatRupiah(product.wholesalePrice)}</span>
                         {discount > 0 && <span className="text-xs text-muted-foreground line-through">{formatRupiah(product.price)}</span>}
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-0.5"><Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />{product.rating}</span>
+                        <span className="flex items-center gap-0.5"><Star className="h-3 w-3 text-amber-500 fill-amber-500" />{product.rating}</span>
                         <span>Min. {product.minOrder} pcs</span>
                         <span>{product.sold > 999 ? `${(product.sold / 1000).toFixed(1)}rb` : product.sold} terjual</span>
                       </div>

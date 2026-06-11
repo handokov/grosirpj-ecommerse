@@ -46,10 +46,10 @@ export default function ProductDetail() {
       <div className="max-w-7xl mx-auto px-4">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <button onClick={goHome} className="hover:text-pink-600 transition-colors">Beranda</button>
+          <button onClick={goHome} className="hover:text-emerald-800 transition-colors">Beranda</button>
           <span>/</span>
           {product.categoryName && (
-            <><button className="hover:text-pink-600 transition-colors" onClick={() => viewCategory(product.categoryId)}>{product.categoryName}</button><span>/</span></>
+            <><button className="hover:text-emerald-800 transition-colors" onClick={() => viewCategory(product.categoryId)}>{product.categoryName}</button><span>/</span></>
           )}
           <span className="text-gray-900 font-medium truncate">{product.name}</span>
         </div>
@@ -71,7 +71,7 @@ export default function ProductDetail() {
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} />
+                  <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? 'text-amber-500 fill-amber-500' : 'text-gray-200'}`} />
                 ))}
                 <span className="text-sm font-medium ml-1">{product.rating}</span>
               </div>
@@ -82,15 +82,15 @@ export default function ProductDetail() {
             </div>
 
             {/* Price */}
-            <div className="bg-pink-50 rounded-xl p-4 mb-6">
+            <div className="bg-emerald-50 rounded-xl p-4 mb-6">
               <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-3xl font-bold text-pink-700">{formatRupiah(product.wholesalePrice)}</span>
+                <span className="text-3xl font-bold text-emerald-900">{formatRupiah(product.wholesalePrice)}</span>
                 {discount > 0 && <Badge className="bg-red-500 text-white">HEMAT {discount}%</Badge>}
               </div>
               {discount > 0 && (
                 <p className="text-sm text-muted-foreground">Harga eceran: <span className="line-through">{formatRupiah(product.price)}</span></p>
               )}
-              <p className="text-sm text-pink-600 font-medium mt-1">Harga grosir • Min. order {product.minOrder} pcs</p>
+              <p className="text-sm text-emerald-800 font-medium mt-1">Harga grosir • Min. order {product.minOrder} pcs</p>
             </div>
 
             {/* Description */}
@@ -109,7 +109,7 @@ export default function ProductDetail() {
                       key={size.trim()}
                       variant={selectedSize === size.trim() ? 'default' : 'outline'}
                       size="sm"
-                      className={`rounded-lg ${selectedSize === size.trim() ? 'bg-pink-600 hover:bg-pink-700' : 'hover:border-pink-300 hover:text-pink-700'}`}
+                      className={`rounded-lg ${selectedSize === size.trim() ? 'bg-emerald-800 hover:bg-emerald-900' : 'hover:border-emerald-300 hover:text-emerald-900'}`}
                       onClick={() => setSelectedSize(size.trim())}
                     >
                       {size.trim()}
@@ -131,7 +131,7 @@ export default function ProductDetail() {
               <div className="flex items-center gap-2 text-sm">
                 <Package className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Stok:</span>
-                <span className="font-medium text-pink-600">{product.stock} pcs</span>
+                <span className="font-medium text-emerald-800">{product.stock} pcs</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -154,27 +154,27 @@ export default function ProductDetail() {
                 <span className="w-14 text-center font-semibold">{quantity}</span>
                 <Button variant="ghost" size="icon" className="rounded-none h-11 w-11" onClick={() => setQuantity(Math.min(product.stock, quantity + 1))} disabled={quantity >= product.stock}><Plus className="h-4 w-4" /></Button>
               </div>
-              <span className="text-sm text-muted-foreground">Subtotal: <span className="font-bold text-pink-700">{formatRupiah(product.wholesalePrice * quantity)}</span></span>
+              <span className="text-sm text-muted-foreground">Subtotal: <span className="font-bold text-emerald-900">{formatRupiah(product.wholesalePrice * quantity)}</span></span>
             </div>
 
-            <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold text-base" onClick={handleAddToCart}>
+            <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white font-semibold text-base" onClick={handleAddToCart}>
               <ShoppingCart className="h-5 w-5 mr-2" /> Tambah ke Keranjang
             </Button>
 
             {/* Guarantees */}
             <div className="grid grid-cols-3 gap-3 mt-6">
               <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                <Truck className="h-5 w-5 text-pink-600 mb-1" />
+                <Truck className="h-5 w-5 text-emerald-800 mb-1" />
                 <span className="text-xs font-medium">Gratis Ongkir</span>
                 <span className="text-[10px] text-muted-foreground">Min. 3 Juta</span>
               </div>
               <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                <Shield className="h-5 w-5 text-pink-600 mb-1" />
+                <Shield className="h-5 w-5 text-emerald-800 mb-1" />
                 <span className="text-xs font-medium">Garansi 100%</span>
                 <span className="text-[10px] text-muted-foreground">Uang Kembali</span>
               </div>
               <div className="flex flex-col items-center text-center p-3 bg-gray-50 rounded-xl">
-                <RotateCcw className="h-5 w-5 text-pink-600 mb-1" />
+                <RotateCcw className="h-5 w-5 text-emerald-800 mb-1" />
                 <span className="text-xs font-medium">Easy Return</span>
                 <span className="text-[10px] text-muted-foreground">7 Hari</span>
               </div>
@@ -198,7 +198,7 @@ export default function ProductDetail() {
                       </div>
                       <div className="p-3">
                         <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2">{rp.name}</h3>
-                        <span className="text-sm font-bold text-pink-700">{formatRupiah(rp.wholesalePrice)}</span>
+                        <span className="text-sm font-bold text-emerald-900">{formatRupiah(rp.wholesalePrice)}</span>
                       </div>
                     </CardContent>
                   </Card>

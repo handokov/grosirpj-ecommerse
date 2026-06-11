@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import { toast } from 'sonner';
+import ProductImage from '@/components/ui/product-image';
 
 export default function ProductDetail() {
   const { selectedProduct, viewProduct, addToCart, viewCategory, goHome } = useStore();
@@ -56,7 +57,7 @@ export default function ProductDetail() {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Product image */}
           <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
-            <img src={product.images} alt={product.name} className="w-full h-full object-cover" />
+            <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover" />
             {discount > 0 && (
               <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1">-{discount}% OFF</Badge>
             )}
@@ -192,7 +193,7 @@ export default function ProductDetail() {
                   <Card key={rp.id} className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => viewProduct(rp)}>
                     <CardContent className="p-0">
                       <div className="relative aspect-square overflow-hidden bg-gray-100">
-                        <img src={rp.images} alt={rp.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        <ProductImage src={rp.images} alt={rp.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                         {rDiscount > 0 && <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{rDiscount}%</Badge>}
                       </div>
                       <div className="p-3">

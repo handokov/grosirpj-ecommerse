@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Baby, Smile, GraduationCap, Sparkles, Crown, Footprints,
 } from 'lucide-react';
+import ProductImage from '@/components/ui/product-image';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Baby, Smile, GraduationCap, Sparkles, Crown, Footprints,
@@ -45,7 +46,7 @@ export default function CategoryGrid() {
               >
                 <CardContent className="p-0">
                   <div className="relative h-36 sm:h-44 overflow-hidden">
-                    <img
+                    <ProductImage
                       src={cat.image || ''}
                       alt={cat.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"

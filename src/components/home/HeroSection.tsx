@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Search, Star, Truck, Shield, Headphones, Heart } from 'lucide-react';
+import ProductImage from '@/components/ui/product-image';
 
 export default function HeroSection() {
   const { setSearchQuery, setCurrentView } = useStore();
@@ -79,7 +80,7 @@ export default function HeroSection() {
           {/* Right image */}
           <div className="hidden md:block">
             <div className="relative">
-              <img
+              <ProductImage
                 src="/images/hero-banner.png"
                 alt="GrosirPJ - Pusat Grosir Baju Anak & Remaja"
                 className="w-full rounded-2xl shadow-2xl"

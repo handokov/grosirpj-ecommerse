@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Star, ShoppingCart, Eye, Search, SlidersHorizontal, Grid3X3, List, X, Package } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
+import ProductImage from '@/components/ui/product-image';
 
 export default function ProductCatalog() {
   const { searchQuery, selectedCategoryId, viewProduct, addToCart } = useStore();
@@ -128,7 +129,7 @@ export default function ProductCatalog() {
                 <Card key={product.id} className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => viewProduct(product)}>
                   <CardContent className="p-0">
                     <div className={`${viewMode === 'grid' ? 'aspect-square' : 'aspect-video'} relative overflow-hidden bg-gray-100`}>
-                      <img src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                       {discount > 0 && <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{discount}%</Badge>}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                         <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-pink-600 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); addToCart(product, product.minOrder); }}><ShoppingCart className="h-4 w-4" /></Button>

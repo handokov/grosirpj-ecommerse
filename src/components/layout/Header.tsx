@@ -17,6 +17,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
+import ProductImage from '@/components/ui/product-image';
 
 export default function Header() {
   const {
@@ -155,7 +156,7 @@ export default function Header() {
                       onClick={() => handleSuggestionClick(s)}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pink-50 transition-colors text-left"
                     >
-                      <img src={s.images} alt={s.name} className="w-10 h-10 rounded-lg object-cover" />
+                      <ProductImage src={s.images} alt={s.name} className="w-10 h-10 rounded-lg object-cover" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{s.name}</p>
                         <p className="text-xs text-pink-600 font-semibold">{formatRupiah(s.wholesalePrice)}</p>
@@ -345,7 +346,7 @@ function CartDrawer() {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {cartItems.map((item, idx) => (
               <div key={`${item.product.id}-${item.size}-${idx}`} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
-                <img src={item.product.images} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover" />
+                <ProductImage src={item.product.images} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.product.name}</p>
                   {item.size && <p className="text-xs text-muted-foreground">Ukuran: {item.size}</p>}

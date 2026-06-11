@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, ShoppingCart, Eye, TrendingUp } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
+import ProductImage from '@/components/ui/product-image';
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -56,7 +57,7 @@ export default function FeaturedProducts() {
                 <Card key={product.id} className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                   <CardContent className="p-0">
                     <div className="relative aspect-square overflow-hidden bg-gray-100">
-                      <img src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                       {discount > 0 && (
                         <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{discount}%</Badge>
                       )}

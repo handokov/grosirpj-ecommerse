@@ -1,0 +1,463 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useStore, type Product } from '@/store/useStore';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
+import {
+  ShoppingCart,
+  Search,
+  Menu,
+  X,
+  Package,
+  Phone,
+  MapPin,
+  ChevronDown,
+} from 'lucide-react';
+import { formatRupiah } from '@/lib/format';
+
+export default function Header() {
+  const {
+    cartItems,
+    isCartOpen,
+    setIsCartOpen,
+    isMobileMenuOpen,
+    setIsMobileMenuOpen,
+    setSearchQuery,
+    setCurrentView,
+    setSelectedCategoryId,
+    searchQuery,
+    viewCategory,
+    goHome,
+    getCartItemCount,
+  } = useStore();
+
+  const [localSearch, setLocalSearch] = useState('');
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const cartItemCount = getCartItemCount();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      if (localSearch.trim().length >= 2) {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(localSearch)}`);
+          const data = await res.json();
+          setSuggestions(data.suggestions);
+          setShowSuggestions(true);
+        } catch {
+          setSuggestions([]);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [localSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (localSearch.trim()) {
+      setSearchQuery(localSearch.trim());
+      setCurrentView('catalog');
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (product: Product) => {
+    useStore.getState().viewProduct(product);
+    setLocalSearch('');
+    setShowSuggestions(false);
+  };
+
+  return (
+    <>
+      {/* Top bar */}
+      <div className="bg-emerald-700 text-white text-xs py-1.5 hidden md:block">
+        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1">
+              <Phone className="h-3 w-3" /> +62 812-3456-7890
+            </span>
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3" /> Jakarta, Indonesia
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span>Gratis Ongkir Pesanan 5 Juta+</span>
+            <span>|</span>
+            <span>Grosir Terpercaya Sejak 2015</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main header */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/95 backdrop-blur-md shadow-lg'
+            : 'bg-white shadow-sm'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16 gap-4">
+            {/* Logo */}
+            <button
+              onClick={goHome}
+              className="flex items-center gap-2 shrink-0 group"
+            >
+              <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
+                <Package className="h-6 w-6 text-white" />
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-bold text-emerald-700 leading-tight">
+                  GrosirPJ
+                </h1>
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  Pusat Grosir Terpercaya
+                </p>
+              </div>
+            </button>
+
+            {/* Search bar */}
+            <div ref={searchRef} className="flex-1 max-w-2xl relative">
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cari produk grosir..."
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  className="pl-10 pr-4 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500/20 rounded-full"
+                />
+              </form>
+
+              {/* Search suggestions dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full mt-1 w-full bg-white rounded-xl shadow-xl border z-50 overflow-hidden">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleSuggestionClick(s)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors text-left"
+                    >
+                      <img
+                        src={s.images}
+                        alt={s.name}
+                        className="w-10 h-10 rounded-lg object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{s.name}</p>
+                        <p className="text-xs text-emerald-600 font-semibold">
+                          {formatRupiah(s.wholesalePrice)}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs shrink-0">
+                        {s.category}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Right actions */}
+            <div className="flex items-center gap-2">
+              {/* Cart button */}
+              <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="relative h-10 w-10 rounded-full border-gray-200 hover:bg-emerald-50 hover:border-emerald-300"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                      </span>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:w-[420px] p-0">
+                  <SheetTitle className="sr-only">Keranjang Belanja</SheetTitle>
+                  <CartDrawer />
+                </SheetContent>
+              </Sheet>
+
+              {/* Mobile menu */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden h-10 w-10 rounded-full"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] p-0">
+                  <SheetTitle className="sr-only">Menu Navigasi</SheetTitle>
+                  <MobileMenu
+                    onCategoryClick={(id) => {
+                      viewCategory(id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    onHomeClick={() => {
+                      goHome();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  />
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+        </div>
+
+        {/* Category navigation - desktop */}
+        <div className="hidden md:block border-t bg-gray-50/50">
+          <div className="max-w-7xl mx-auto px-4">
+            <nav className="flex items-center gap-1 h-10 overflow-x-auto">
+              <button
+                onClick={goHome}
+                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap"
+              >
+                Semua Kategori
+              </button>
+              <CategoryNavItems />
+            </nav>
+          </div>
+        </div>
+      </header>
+    </>
+  );
+}
+
+function CategoryNavItems() {
+  const [categories, setCategories] = useState<
+    (import('@/store/useStore').Category & { productCount?: number })[]
+  >([]);
+  const viewCategory = useStore((s) => s.viewCategory);
+  const selectedCategoryId = useStore((s) => s.selectedCategoryId);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
+  return (
+    <>
+      {categories.map((cat) => (
+        <button
+          key={cat.id}
+          onClick={() => viewCategory(cat.id)}
+          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+            selectedCategoryId === cat.id
+              ? 'text-emerald-700 bg-emerald-100'
+              : 'text-gray-600 hover:text-emerald-700 hover:bg-emerald-50'
+          }`}
+        >
+          {cat.name}
+        </button>
+      ))}
+    </>
+  );
+}
+
+function MobileMenu({
+  onCategoryClick,
+  onHomeClick,
+}: {
+  onCategoryClick: (id: string) => void;
+  onHomeClick: () => void;
+}) {
+  const [categories, setCategories] = useState<
+    (import('@/store/useStore').Category & { productCount?: number })[]
+  >([]);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 bg-emerald-700 text-white">
+        <div className="flex items-center gap-2">
+          <Package className="h-8 w-8" />
+          <div>
+            <h2 className="text-lg font-bold">GrosirPJ</h2>
+            <p className="text-xs text-emerald-200">Pusat Grosir Terpercaya</p>
+          </div>
+        </div>
+      </div>
+      <nav className="flex-1 p-2">
+        <button
+          onClick={onHomeClick}
+          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg hover:bg-emerald-50 text-gray-700 font-medium"
+        >
+          Beranda
+        </button>
+        <div className="my-2 border-t" />
+        <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase">
+          Kategori
+        </p>
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => onCategoryClick(cat.id)}
+            className="w-full flex items-center justify-between px-4 py-2.5 text-left rounded-lg hover:bg-emerald-50 text-gray-700 text-sm"
+          >
+            {cat.name}
+            {cat.productCount !== undefined && (
+              <Badge variant="secondary" className="text-xs">
+                {cat.productCount}
+              </Badge>
+            )}
+          </button>
+        ))}
+      </nav>
+      <div className="p-4 border-t bg-gray-50">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Phone className="h-4 w-4" />
+          <span>+62 812-3456-7890</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartDrawer() {
+  const { cartItems, removeFromCart, updateCartQuantity, getCartTotal } = useStore();
+  const total = getCartTotal();
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b bg-emerald-50">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-emerald-800">
+            Keranjang Belanja
+          </h2>
+          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+            {cartItems.length} item
+          </Badge>
+        </div>
+      </div>
+
+      {cartItems.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <ShoppingCart className="h-16 w-16 text-gray-300 mb-4" />
+          <h3 className="font-semibold text-gray-600 mb-1">
+            Keranjang Kosong
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Mulai belanja untuk menambahkan produk
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {cartItems.map((item) => (
+              <div
+                key={item.product.id}
+                className="flex gap-3 p-3 bg-gray-50 rounded-xl"
+              >
+                <img
+                  src={item.product.images}
+                  alt={item.product.name}
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {item.product.name}
+                  </p>
+                  <p className="text-sm text-emerald-600 font-semibold">
+                    {formatRupiah(item.product.wholesalePrice)}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() =>
+                        updateCartQuantity(item.product.id, item.quantity - 1)
+                      }
+                    >
+                      -
+                    </Button>
+                    <span className="text-sm font-medium w-8 text-center">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() =>
+                        updateCartQuantity(item.product.id, item.quantity + 1)
+                      }
+                    >
+                      +
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => removeFromCart(item.product.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t p-4 bg-gray-50">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-lg font-bold text-emerald-700">
+                {formatRupiah(total)}
+              </span>
+            </div>
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11 rounded-xl font-semibold">
+              Checkout
+            </Button>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              Min. order sesuai ketentuan produk
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

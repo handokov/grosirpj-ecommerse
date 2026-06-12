@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "prisma generate && next build",
+    "build": "DATABASE_URL=${DATABASE_URL:-file:/dev/null} prisma generate && DATABASE_URL=${DATABASE_URL:-file:/dev/null} next build",
     "start": "NODE_ENV=production next start -p 3000",
     "lint": "eslint .",
     "postinstall": "prisma generate",

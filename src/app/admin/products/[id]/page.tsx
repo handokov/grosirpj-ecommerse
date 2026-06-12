@@ -316,7 +316,7 @@ export default function EditProductPage() {
 
   if (loadingProduct) {
     return (
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-5 max-w-4xl">
         <div className="flex items-center gap-4">
           <Skeleton className="h-9 w-9" />
           <div>
@@ -324,7 +324,7 @@ export default function EditProductPage() {
             <Skeleton className="h-4 w-64 mt-1" />
           </div>
         </div>
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <Skeleton className="h-8 w-48 mb-4" />
           <div className="space-y-4">
             <Skeleton className="h-9 w-full" />
@@ -332,7 +332,7 @@ export default function EditProductPage() {
             <Skeleton className="h-24 w-full" />
           </div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <Skeleton className="h-8 w-36 mb-4" />
           <div className="grid grid-cols-2 gap-4">
             <Skeleton className="h-9 w-full" />
@@ -346,33 +346,33 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-5 max-w-4xl">
       {/* Page Header */}
       <div className="flex items-center gap-4">
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className="h-9 w-9"
+          className="border-gray-200 h-8 w-8"
           onClick={() => router.push('/admin/products')}
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Edit Produk</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-lg font-bold text-gray-900">Edit Produk</h1>
+          <p className="text-[11px] text-gray-500 mt-0.5">
             Perbarui informasi produk Anda
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Section 1: Informasi Umum */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100">
               <Package className="h-4 w-4 text-emerald-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Informasi Umum</h2>
+            <h2 className="text-sm font-bold text-gray-900">Informasi Umum</h2>
           </div>
           <Separator className="mb-5" />
           <div className="space-y-4">
@@ -434,12 +434,12 @@ export default function EditProductPage() {
         </Card>
 
         {/* Section 2: Harga & Stok */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <DollarSign className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100">
+              <DollarSign className="h-4 w-4 text-amber-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Harga & Stok</h2>
+            <h2 className="text-sm font-bold text-gray-900">Harga & Stok</h2>
           </div>
           <Separator className="mb-5" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -531,12 +531,12 @@ export default function EditProductPage() {
         </Card>
 
         {/* Section 3: Varian */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <Settings2 className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-100">
+              <Settings2 className="h-4 w-4 text-sky-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Varian</h2>
+            <h2 className="text-sm font-bold text-gray-900">Varian</h2>
           </div>
           <Separator className="mb-5" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -566,12 +566,12 @@ export default function EditProductPage() {
         </Card>
 
         {/* Section 4: Media */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <ImageIcon className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-100">
+              <ImageIcon className="h-4 w-4 text-purple-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Media</h2>
+            <h2 className="text-sm font-bold text-gray-900">Media</h2>
           </div>
           <Separator className="mb-5" />
           <div className="space-y-4">
@@ -678,12 +678,12 @@ export default function EditProductPage() {
         </Card>
 
         {/* Section 5: Lainnya */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <Tag className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100">
+              <Tag className="h-4 w-4 text-rose-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Lainnya</h2>
+            <h2 className="text-sm font-bold text-gray-900">Lainnya</h2>
           </div>
           <Separator className="mb-5" />
           <div className="space-y-4">
@@ -727,13 +727,14 @@ export default function EditProductPage() {
             variant="outline"
             onClick={() => router.push('/admin/products')}
             disabled={submitting}
+            className="text-xs border-gray-200"
           >
             Batal
           </Button>
           <Button
             type="submit"
             disabled={submitting || uploadingImage}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white min-w-[140px]"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs shadow-sm shadow-emerald-200 min-w-[140px]"
           >
             {submitting ? (
               <>

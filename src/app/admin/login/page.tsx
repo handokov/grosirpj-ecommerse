@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Store, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Store, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -45,31 +45,34 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center p-4">
+      <div className="w-full max-w-[420px]">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-700 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 shadow-lg shadow-emerald-200/50 mb-4">
             <Store className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-emerald-800">GrosirPJ</h1>
-          <p className="text-sm text-gray-500 mt-1">Seller Centre</p>
+          <h1 className="text-2xl font-bold text-gray-900">GrosirPJ</h1>
+          <p className="text-sm text-emerald-600 font-semibold mt-0.5">Seller Centre</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Masuk ke Akun</h2>
-          <p className="text-sm text-gray-500 mb-6">Masukkan email dan password Anda</p>
+        <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 border border-gray-100 p-8">
+          <div className="flex items-center gap-2 mb-1">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-base font-bold text-gray-900">Masuk ke Akun</h2>
+          </div>
+          <p className="text-xs text-gray-500 mb-6">Masukkan email dan password Anda</p>
 
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-600">
+            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-600 font-medium">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -77,12 +80,12 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                className="h-11"
+                className="h-11 text-sm bg-gray-50 border-gray-200 focus:bg-white"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-xs font-semibold">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -91,7 +94,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
-                  className="h-11 pr-10"
+                  className="h-11 pr-10 text-sm bg-gray-50 border-gray-200 focus:bg-white"
                 />
                 <button
                   type="button"
@@ -106,7 +109,7 @@ export default function AdminLoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-emerald-700 hover:bg-emerald-800 text-white font-medium"
+              className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-sm shadow-emerald-200"
             >
               {loading ? (
                 <>
@@ -121,7 +124,7 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-[10px] text-gray-400 mt-6">
           © 2025 GrosirPJ Seller Centre. All rights reserved.
         </p>
       </div>

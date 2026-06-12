@@ -28,3 +28,42 @@ Stage Summary:
 - Admin routes: /admin/login, /admin, /admin/products, /admin/categories, /admin/orders, /admin/settings
 - Vercel needs NEXTAUTH_SECRET environment variable added
 - Turso DB needs User, Order, OrderItem tables (run db:push after deploy or manually)
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Redesign Admin Seller Centre with Shopee-style UI
+
+Work Log:
+- Redesigned AdminSidebar with Shopee-style navigation, collapsible menu, better mobile support
+- Redesigned AdminHeader with top accent gradient bar, breadcrumb navigation, notification bell, profile dropdown
+- Redesigned AdminLayout with lighter background (#f5f6fa), 260px sidebar width
+- Redesigned Admin Dashboard with:
+  - Welcome banner with gradient background and quick action buttons
+  - KPI summary cards (Total Produk, Total Pesanan, Pendapatan, Perlu Proses)
+  - Shopee-style order status pipeline (Perlu Proses, Dikonfirmasi, Sedang Dikirim, Selesai, Dibatalkan)
+  - Revenue chart with category distribution sidebar
+  - Top products and low stock panels
+  - Recent orders table
+- Redesigned Products page with:
+  - Tab-based navigation (Semua, Aktif, Featured, Stok Rendah, Habis)
+  - Export/Import buttons
+  - Improved table with compact styling
+- Redesigned Orders page with:
+  - Status tabs with colored dots
+  - Compact order cards with better layout
+  - Export button
+- Redesigned Categories page with compact table and modern dialogs
+- Redesigned Login page with gradient background, shield icon, modern card
+- Redesigned Settings page with gradient feature banner, better info layout
+- Redesigned Add/Edit Product pages with color-coded section icons
+- Redesigned Order Detail page with compact status stepper, better typography
+- All lint checks pass
+- Server tested: login page renders (42KB), homepage renders (95KB), dashboard redirects correctly (307)
+
+Stage Summary:
+- Complete UI overhaul of Admin Seller Centre to match Shopee's design language
+- Key design changes: lighter backgrounds, border-0 cards with shadow-sm, compact typography, color-coded sections, gradient accents
+- All pages use consistent design tokens: emerald-600 primary, rounded-xl corners, text-xs/text-sm base
+- No backend changes needed - all API routes remain the same
+- Dev server verified working with curl (agent-browser unreliable due to sandbox memory)

@@ -17,11 +17,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // All other admin pages get the sidebar layout
   return (
     <SessionProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#f5f6fa]">
         <AdminSidebar />
-        <div className="lg:ml-64">
+        <div className="lg:ml-[260px]">
           <AdminHeader />
-          <main className="p-6">{children}</main>
+          <main className="p-4 lg:p-6">{children}</main>
         </div>
       </div>
     </SessionProvider>

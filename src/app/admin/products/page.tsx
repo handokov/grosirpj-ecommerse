@@ -13,6 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
+  SlidersHorizontal,
+  Download,
+  Upload,
 } from 'lucide-react'
 import { formatRupiah } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -21,6 +24,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -88,6 +92,8 @@ interface ProductsResponse {
   totalPages: number
 }
 
+type ProductTab = 'all' | 'active' | 'featured' | 'lowstock' | 'outofstock'
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -100,6 +106,7 @@ export default function ProductsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [activeTab, setActiveTab] = useState<ProductTab>('all')
 
   const limit = 20
 
@@ -178,52 +185,113 @@ export default function ProductsPage() {
     setPage(1)
   }
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as ProductTab)
+    setPage(1)
+  }
+
   const getFirstImage = (images: string) => {
     if (!images) return ''
     return images.split(',')[0] || ''
   }
 
-  const getStockBadgeVariant = (stock: number) => {
-    if (stock === 0) return 'destructive'
-    if (stock <= 10) return 'secondary'
-    return 'outline'
+  // Filter products based on tab
+  const filteredProducts = products.filter(product => {
+    switch (activeTab) {
+      case 'active':
+        return product.stock > 0
+      case 'featured':
+        return product.featured
+      case 'lowstock':
+        return product.stock > 0 && product.stock <= 20
+      case 'outofstock':
+        return product.stock === 0
+      default:
+        return true
+    }
+  })
+
+  // Tab counts
+  const tabCounts = {
+    all: total,
+    active: products.filter(p => p.stock > 0).length,
+    featured: products.filter(p => p.featured).length,
+    lowstock: products.filter(p => p.stock > 0 && p.stock <= 20).length,
+    outofstock: products.filter(p => p.stock === 0).length,
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Produk Saya</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-gray-900">Produk Saya</h1>
+          <p className="text-xs text-gray-500 mt-0.5">
             Kelola semua produk toko Anda
           </p>
         </div>
-        <Link href="/admin/products/add">
-          <Button className="bg-emerald-700 hover:bg-emerald-800 text-white gap-2">
-            <Plus className="h-4 w-4" />
-            Tambah Produk
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="text-xs gap-1.5 border-gray-200">
+            <Download className="h-3.5 w-3.5" />
+            Export
           </Button>
-        </Link>
+          <Button variant="outline" size="sm" className="text-xs gap-1.5 border-gray-200">
+            <Upload className="h-3.5 w-3.5" />
+            Import
+          </Button>
+          <Link href="/admin/products/add">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs shadow-sm shadow-emerald-200" size="sm">
+              <Plus className="h-3.5 w-3.5" />
+              Tambah Produk
+            </Button>
+          </Link>
+        </div>
       </div>
 
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="h-auto bg-white border border-gray-200 p-0.5 rounded-xl shadow-sm">
+          {[
+            { value: 'all', label: 'Semua' },
+            { value: 'active', label: 'Aktif' },
+            { value: 'featured', label: 'Featured' },
+            { value: 'lowstock', label: 'Stok Rendah' },
+            { value: 'outofstock', label: 'Habis' },
+          ].map(tab => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className={cn(
+                'text-xs px-3 py-2 rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm',
+                'text-gray-600 font-medium'
+              )}
+            >
+              {tab.label}
+              <span className="ml-1.5 text-[10px] opacity-70">
+                {tabCounts[tab.value as ProductTab]}
+              </span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
       {/* Filters */}
-      <Card className="p-4">
+      <Card className="p-3 border-0 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
             <Input
               placeholder="Cari nama produk, slug, atau tag..."
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9"
+              className="pl-9 text-xs h-9 bg-gray-50 border-gray-200"
             />
           </div>
           <Select
             value={categoryId || 'all'}
             onValueChange={handleCategoryChange}
           >
-            <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectTrigger className="w-full sm:w-[180px] h-9 text-xs">
               <SelectValue placeholder="Semua Kategori" />
             </SelectTrigger>
             <SelectContent>
@@ -239,76 +307,57 @@ export default function ProductsPage() {
       </Card>
 
       {/* Data Table */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-0 shadow-sm">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50 hover:bg-gray-50">
-                <TableHead className="w-[70px]">Gambar</TableHead>
-                <TableHead>Nama Produk</TableHead>
-                <TableHead className="hidden md:table-cell">Kategori</TableHead>
-                <TableHead>Harga</TableHead>
-                <TableHead className="hidden sm:table-cell">Harga Grosir</TableHead>
-                <TableHead className="hidden lg:table-cell">Stok</TableHead>
-                <TableHead className="hidden lg:table-cell">Terjual</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+              <TableRow className="bg-gray-50/80 hover:bg-gray-50/80 border-gray-100">
+                <TableHead className="w-[60px] text-[11px] font-semibold text-gray-500 uppercase">Gambar</TableHead>
+                <TableHead className="text-[11px] font-semibold text-gray-500 uppercase">Nama Produk</TableHead>
+                <TableHead className="hidden md:table-cell text-[11px] font-semibold text-gray-500 uppercase">Kategori</TableHead>
+                <TableHead className="text-[11px] font-semibold text-gray-500 uppercase">Harga</TableHead>
+                <TableHead className="hidden sm:table-cell text-[11px] font-semibold text-gray-500 uppercase">Harga Grosir</TableHead>
+                <TableHead className="hidden lg:table-cell text-[11px] font-semibold text-gray-500 uppercase">Stok</TableHead>
+                <TableHead className="hidden lg:table-cell text-[11px] font-semibold text-gray-500 uppercase">Terjual</TableHead>
+                <TableHead className="text-[11px] font-semibold text-gray-500 uppercase">Status</TableHead>
+                <TableHead className="text-right text-[11px] font-semibold text-gray-500 uppercase">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                // Loading skeletons
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell>
-                      <Skeleton className="h-12 w-12 rounded-md" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-[200px]" />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Skeleton className="h-4 w-[100px]" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-[100px]" />
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Skeleton className="h-4 w-[100px]" />
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <Skeleton className="h-4 w-[50px]" />
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <Skeleton className="h-4 w-[50px]" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-5 w-[60px]" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-8 w-8 rounded-md" />
-                    </TableCell>
+                    <TableCell><Skeleton className="h-12 w-12 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-[60px] rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
                   </TableRow>
                 ))
-              ) : products.length === 0 ? (
-                // Empty state
+              ) : filteredProducts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="h-64 text-center">
                     <div className="flex flex-col items-center justify-center gap-3 text-gray-400">
                       <PackageOpen className="h-16 w-16" />
                       <div>
-                        <p className="text-lg font-medium text-gray-600">
+                        <p className="text-sm font-semibold text-gray-600">
                           Belum ada produk
                         </p>
-                        <p className="text-sm mt-1">
+                        <p className="text-xs mt-1">
                           Mulai tambahkan produk pertama Anda
                         </p>
                       </div>
                       <Link href="/admin/products/add">
                         <Button
                           variant="outline"
-                          className="mt-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                          size="sm"
+                          className="mt-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 text-xs"
                         >
-                          <Plus className="h-4 w-4 mr-2" />
+                          <Plus className="h-3.5 w-3.5 mr-1.5" />
                           Tambah Produk
                         </Button>
                       </Link>
@@ -316,12 +365,12 @@ export default function ProductsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                products.map((product) => {
+                filteredProducts.map((product) => {
                   const firstImage = getFirstImage(product.images)
                   return (
-                    <TableRow key={product.id} className="group">
+                    <TableRow key={product.id} className="group hover:bg-gray-50/50 border-gray-50">
                       <TableCell>
-                        <div className="h-12 w-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                        <div className="h-12 w-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
                           {firstImage ? (
                             <img
                               src={firstImage}
@@ -330,61 +379,71 @@ export default function ProductsPage() {
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center text-gray-300">
-                              <PackageOpen className="h-6 w-6" />
+                              <PackageOpen className="h-5 w-5" />
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="max-w-[250px]">
-                          <p className="font-medium text-sm text-gray-900 truncate">
+                          <p className="text-xs font-semibold text-gray-900 truncate">
                             {product.name}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
+                          <p className="text-[10px] text-gray-400 mt-0.5">
                             Min. {product.minOrder} pcs
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <Badge variant="outline" className="text-xs font-normal">
+                        <Badge variant="outline" className="text-[10px] font-normal border-gray-200">
                           {product.category?.name || '-'}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <p className="text-sm font-semibold text-emerald-900">
+                        <p className="text-xs font-bold text-gray-900">
                           {formatRupiah(product.price)}
                         </p>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <p className="text-sm text-emerald-700">
+                        <p className="text-xs text-emerald-700 font-semibold">
                           {formatRupiah(product.wholesalePrice)}
                         </p>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        <Badge variant={getStockBadgeVariant(product.stock)} className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-[10px] font-bold',
+                            product.stock === 0
+                              ? 'bg-red-50 text-red-700 border-red-200'
+                              : product.stock <= 10
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          )}
+                        >
                           {product.stock}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-xs text-gray-600 font-medium">
                           {product.sold}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           {product.featured && (
-                            <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-xs gap-1">
-                              <Star className="h-3 w-3 fill-current" />
+                            <Badge className="bg-amber-500 hover:bg-amber-500 text-white text-[10px] gap-0.5 px-1.5">
+                              <Star className="h-2.5 w-2.5 fill-current" />
                               Featured
                             </Badge>
                           )}
                           {product.stock === 0 && (
-                            <Badge variant="destructive" className="text-xs">
+                            <Badge variant="destructive" className="text-[10px] px-1.5">
                               Habis
                             </Badge>
                           )}
                           {!product.featured && product.stock > 0 && (
-                            <Badge variant="outline" className="text-xs text-emerald-700 border-emerald-200">
+                            <Badge variant="outline" className="text-[10px] text-emerald-700 border-emerald-200 bg-emerald-50 px-1.5">
                               Aktif
                             </Badge>
                           )}
@@ -401,21 +460,21 @@ export default function ProductsPage() {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem asChild>
                               <Link
                                 href={`/admin/products/${product.id}`}
-                                className="cursor-pointer gap-2"
+                                className="cursor-pointer gap-2 text-xs"
                               >
-                                <Edit className="h-4 w-4" />
+                                <Edit className="h-3.5 w-3.5" />
                                 Edit
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="cursor-pointer gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                              className="cursor-pointer gap-2 text-xs text-red-600 focus:text-red-600 focus:bg-red-50"
                               onClick={() => openDeleteDialog(product)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                               Hapus
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -430,9 +489,9 @@ export default function ProductsPage() {
         </div>
 
         {/* Pagination */}
-        {!loading && products.length > 0 && (
-          <div className="flex items-center justify-between border-t px-4 py-3">
-            <p className="text-sm text-gray-500">
+        {!loading && filteredProducts.length > 0 && (
+          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
+            <p className="text-[11px] text-gray-500">
               Menampilkan {((page - 1) * limit) + 1}–{Math.min(page * limit, total)} dari{' '}
               {total} produk
             </p>
@@ -440,15 +499,14 @@ export default function ProductsPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-7 w-7 text-xs border-gray-200"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((p) => {
-                  // Show first, last, current, and adjacent pages
                   if (totalPages <= 7) return true
                   if (p === 1 || p === totalPages) return true
                   if (Math.abs(p - page) <= 1) return true
@@ -460,14 +518,14 @@ export default function ProductsPage() {
                   return (
                     <span key={p} className="flex items-center gap-1">
                       {showEllipsis && (
-                        <span className="px-1 text-gray-400 text-sm">...</span>
+                        <span className="px-1 text-gray-400 text-[10px]">...</span>
                       )}
                       <Button
                         variant={p === page ? 'default' : 'outline'}
                         size="icon"
                         className={cn(
-                          'h-8 w-8 text-sm',
-                          p === page && 'bg-emerald-700 hover:bg-emerald-800 text-white'
+                          'h-7 w-7 text-[11px]',
+                          p === page && 'bg-emerald-600 hover:bg-emerald-700 text-white border-0'
                         )}
                         onClick={() => setPage(p)}
                       >
@@ -479,11 +537,11 @@ export default function ProductsPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-7 w-7 text-xs border-gray-200"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -492,10 +550,10 @@ export default function ProductsPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Hapus Produk</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base">Hapus Produk</DialogTitle>
+            <DialogDescription className="text-sm">
               Apakah Anda yakin ingin menghapus produk{' '}
               <span className="font-semibold text-gray-900">
                 &quot;{deletingProduct?.name}&quot;
@@ -509,6 +567,7 @@ export default function ProductsPage() {
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={deleting}
+              className="text-xs"
             >
               Batal
             </Button>
@@ -516,16 +575,16 @@ export default function ProductsPage() {
               variant="destructive"
               onClick={handleDelete}
               disabled={deleting}
-              className="gap-2"
+              className="gap-1.5 text-xs"
             >
               {deleting ? (
                 <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Menghapus...
                 </>
               ) : (
                 <>
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                   Hapus
                 </>
               )}

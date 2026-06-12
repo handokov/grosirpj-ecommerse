@@ -249,20 +249,20 @@ export default function AddProductPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-5 max-w-4xl">
       {/* Page Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className="h-9 w-9"
+          className="h-8 w-8 border-gray-200"
           onClick={() => router.push('/admin/products')}
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tambah Produk Baru</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-lg font-bold text-gray-900">Tambah Produk Baru</h1>
+          <p className="text-[11px] text-gray-500 mt-0.5">
             Isi informasi produk dengan lengkap
           </p>
         </div>
@@ -270,12 +270,12 @@ export default function AddProductPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Section 1: Informasi Umum */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100">
               <Package className="h-4 w-4 text-emerald-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Informasi Umum</h2>
+            <h2 className="text-sm font-bold text-gray-900">Informasi Umum</h2>
           </div>
           <Separator className="mb-5" />
           <div className="space-y-4">
@@ -334,12 +334,12 @@ export default function AddProductPage() {
         </Card>
 
         {/* Section 2: Harga & Stok */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <DollarSign className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100">
+              <DollarSign className="h-4 w-4 text-amber-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Harga & Stok</h2>
+            <h2 className="text-sm font-bold text-gray-900">Harga & Stok</h2>
           </div>
           <Separator className="mb-5" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -431,12 +431,12 @@ export default function AddProductPage() {
         </Card>
 
         {/* Section 3: Varian */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <Settings2 className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-100">
+              <Settings2 className="h-4 w-4 text-sky-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Varian</h2>
+            <h2 className="text-sm font-bold text-gray-900">Varian</h2>
           </div>
           <Separator className="mb-5" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -466,12 +466,12 @@ export default function AddProductPage() {
         </Card>
 
         {/* Section 4: Media */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <ImageIcon className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-100">
+              <ImageIcon className="h-4 w-4 text-purple-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Media</h2>
+            <h2 className="text-sm font-bold text-gray-900">Media</h2>
           </div>
           <Separator className="mb-5" />
           <div className="space-y-4">
@@ -578,12 +578,12 @@ export default function AddProductPage() {
         </Card>
 
         {/* Section 5: Lainnya */}
-        <Card className="p-6">
+        <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-              <Tag className="h-4 w-4 text-emerald-700" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100">
+              <Tag className="h-4 w-4 text-rose-700" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Lainnya</h2>
+            <h2 className="text-sm font-bold text-gray-900">Lainnya</h2>
           </div>
           <Separator className="mb-5" />
           <div className="space-y-4">
@@ -627,13 +627,14 @@ export default function AddProductPage() {
             variant="outline"
             onClick={() => router.push('/admin/products')}
             disabled={submitting}
+            className="text-xs border-gray-200"
           >
             Batal
           </Button>
           <Button
             type="submit"
             disabled={submitting || uploadingImage}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white min-w-[140px]"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[140px] text-xs shadow-sm shadow-emerald-200"
           >
             {submitting ? (
               <>

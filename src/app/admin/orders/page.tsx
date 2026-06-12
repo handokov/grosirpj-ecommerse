@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   Search,
@@ -13,7 +13,8 @@ import {
   RefreshCw,
   Phone,
   MapPin,
-  Mail,
+  Download,
+  Filter,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -81,37 +82,43 @@ interface Order {
 
 const STATUS_CONFIG: Record<
   OrderStatus,
-  { label: string; color: string; bg: string }
+  { label: string; color: string; bg: string; dotColor: string }
 > = {
   pending: {
     label: 'Pending',
-    color: 'text-yellow-700',
-    bg: 'bg-yellow-50 border-yellow-200',
+    color: 'text-amber-700',
+    bg: 'bg-amber-50 border-amber-200',
+    dotColor: 'bg-amber-400',
   },
   confirmed: {
     label: 'Dikonfirmasi',
-    color: 'text-blue-700',
-    bg: 'bg-blue-50 border-blue-200',
+    color: 'text-sky-700',
+    bg: 'bg-sky-50 border-sky-200',
+    dotColor: 'bg-sky-400',
   },
   processing: {
     label: 'Diproses',
     color: 'text-purple-700',
     bg: 'bg-purple-50 border-purple-200',
+    dotColor: 'bg-purple-400',
   },
   shipped: {
     label: 'Dikirim',
     color: 'text-orange-700',
     bg: 'bg-orange-50 border-orange-200',
+    dotColor: 'bg-orange-400',
   },
   completed: {
     label: 'Selesai',
     color: 'text-emerald-700',
     bg: 'bg-emerald-50 border-emerald-200',
+    dotColor: 'bg-emerald-400',
   },
   cancelled: {
     label: 'Dibatalkan',
     color: 'text-red-700',
     bg: 'bg-red-50 border-red-200',
+    dotColor: 'bg-red-400',
   },
 }
 
@@ -173,9 +180,10 @@ function formatDate(dateStr: string): string {
 
 export default function OrdersPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState(searchParams.get('status') || '')
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [page, setPage] = useState(1)
@@ -213,6 +221,14 @@ export default function OrdersPage() {
   useEffect(() => {
     fetchOrders()
   }, [fetchOrders])
+
+  // Sync status from URL params on mount
+  useEffect(() => {
+    const statusParam = searchParams.get('status')
+    if (statusParam) {
+      setStatus(statusParam)
+    }
+  }, [searchParams])
 
   const handleSearch = () => {
     setSearch(searchInput)
@@ -260,57 +276,75 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Pesanan</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Kelola pesanan masuk toko Anda
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Pesanan</h1>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Kelola pesanan masuk toko Anda
+          </p>
+        </div>
+        <Button variant="outline" size="sm" className="text-xs gap-1.5 border-gray-200 w-fit">
+          <Download className="h-3.5 w-3.5" />
+          Export Pesanan
+        </Button>
       </div>
 
       {/* Status Tabs */}
       <Tabs value={status} onValueChange={handleStatusTabChange}>
-        <TabsList className="h-auto flex-wrap bg-gray-100 p-1">
-          {STATUS_TABS.map(tab => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className={cn(
-                'text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm',
-                'px-3 py-1.5'
-              )}
-            >
-              {tab.label}
-            </TabsTrigger>
-          ))}
+        <TabsList className="h-auto bg-white border border-gray-200 p-0.5 rounded-xl shadow-sm flex-wrap">
+          {STATUS_TABS.map(tab => {
+            const statusConf = STATUS_CONFIG[tab.value as OrderStatus]
+            return (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className={cn(
+                  'text-xs px-3 py-2 rounded-lg font-medium',
+                  tab.value
+                    ? 'data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900'
+                    : 'data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm',
+                  'text-gray-600'
+                )}
+              >
+                {statusConf && (
+                  <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', statusConf.dotColor)} />
+                )}
+                {tab.label}
+              </TabsTrigger>
+            )
+          })}
         </TabsList>
       </Tabs>
 
       {/* Search */}
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Cari nomor pesanan atau nama..."
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            className="pl-9"
-          />
+      <Card className="p-3 border-0 shadow-sm">
+        <div className="flex gap-2">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Input
+              placeholder="Cari nomor pesanan atau nama..."
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              className="pl-9 text-xs h-9 bg-gray-50 border-gray-200"
+            />
+          </div>
+          <Button
+            onClick={handleSearch}
+            variant="outline"
+            size="sm"
+            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-xs h-9"
+          >
+            <Search className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Cari</span>
+          </Button>
         </div>
-        <Button
-          onClick={handleSearch}
-          variant="outline"
-          className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-        >
-          <Search className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Cari</span>
-        </Button>
-      </div>
+      </Card>
 
       {/* Orders Count */}
-      <p className="text-sm text-gray-500">
+      <p className="text-[11px] text-gray-500 font-medium">
         {loading ? 'Memuat...' : `${total} pesanan ditemukan`}
       </p>
 
@@ -318,7 +352,7 @@ export default function OrdersPage() {
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="border-0 shadow-sm">
               <CardContent className="p-4">
                 <div className="space-y-3">
                   <Skeleton className="h-5 w-40" />
@@ -331,11 +365,11 @@ export default function OrdersPage() {
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardContent className="py-16">
             <div className="flex flex-col items-center justify-center text-gray-400">
               <ShoppingCart className="w-12 h-12 mb-3" />
-              <p className="text-sm">
+              <p className="text-xs font-medium">
                 {search || status
                   ? 'Pesanan tidak ditemukan'
                   : 'Belum ada pesanan'}
@@ -344,107 +378,106 @@ export default function OrdersPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {orders.map(order => {
             const statusConfig = STATUS_CONFIG[order.status]
             const paymentConfig = PAYMENT_CONFIG[order.paymentStatus]
             return (
               <Card
                 key={order.id}
-                className="overflow-hidden hover:shadow-md transition-shadow"
+                className="border-0 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
                 <CardContent className="p-0">
                   {/* Order Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 bg-gray-50 border-b">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 bg-gray-50/80 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-gray-900 text-sm">
+                      <span className="text-xs font-bold text-gray-900">
                         {order.orderNumber}
                       </span>
-                      <span className="text-xs text-gray-400">•</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-[10px] text-gray-400">•</span>
+                      <span className="text-[10px] text-gray-500">
                         {formatDate(order.createdAt)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className={cn('text-xs', statusConfig.color, statusConfig.bg)}
+                        className={cn('text-[10px] font-semibold gap-1', statusConfig.color, statusConfig.bg)}
                       >
+                        <span className={cn('w-1.5 h-1.5 rounded-full', statusConfig.dotColor)} />
                         {statusConfig.label}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className={cn('text-xs', paymentConfig.color, paymentConfig.bg)}
+                        className={cn('text-[10px] font-semibold', paymentConfig.color, paymentConfig.bg)}
                       >
                         {paymentConfig.label}
                       </Badge>
                     </div>
                   </div>
 
-                  {/* Customer Info */}
-                  <div className="p-4 border-b">
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1.5 text-gray-700">
-                        <span className="font-medium">{order.customerName}</span>
-                      </div>
+                  {/* Customer + Items row */}
+                  <div className="px-4 py-3">
+                    <div className="flex items-center gap-3 text-xs mb-3">
+                      <span className="font-semibold text-gray-900">{order.customerName}</span>
                       {order.customerPhone && (
                         <div className="flex items-center gap-1 text-gray-500">
-                          <Phone className="w-3.5 h-3.5" />
-                          <span className="text-xs">{order.customerPhone}</span>
+                          <Phone className="w-3 h-3" />
+                          <span className="text-[10px]">{order.customerPhone}</span>
                         </div>
                       )}
                       {order.customerAddr && (
                         <div className="hidden md:flex items-center gap-1 text-gray-500">
-                          <MapPin className="w-3.5 h-3.5" />
-                          <span className="text-xs truncate max-w-[200px]">
+                          <MapPin className="w-3 h-3" />
+                          <span className="text-[10px] truncate max-w-[200px]">
                             {order.customerAddr}
                           </span>
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Items */}
-                  <div className="p-4 space-y-3 border-b">
-                    {order.items.map(item => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex-shrink-0 overflow-hidden">
-                          {item.product.images ? (
-                            <img
-                              src={getFirstImage(item.product.images)}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                              <ShoppingCart className="w-5 h-5" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {item.product.name}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            {item.size && <span>Ukuran: {item.size}</span>}
-                            <span>{item.quantity}x {formatRupiah(item.price)}</span>
+                    {/* Items */}
+                    <div className="space-y-2">
+                      {order.items.map(item => (
+                        <div key={item.id} className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-lg bg-gray-100 border border-gray-100 flex-shrink-0 overflow-hidden">
+                            {item.product.images ? (
+                              <img
+                                src={getFirstImage(item.product.images)}
+                                alt={item.product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <ShoppingCart className="w-4 h-4" />
+                              </div>
+                            )}
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-gray-900 truncate">
+                              {item.product.name}
+                            </p>
+                            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                              {item.size && <span>Ukuran: {item.size}</span>}
+                              <span>{item.quantity}x {formatRupiah(item.price)}</span>
+                            </div>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-700">
+                            {formatRupiah(item.price * item.quantity)}
+                          </p>
                         </div>
-                        <p className="text-sm font-medium text-gray-700">
-                          {formatRupiah(item.price * item.quantity)}
-                        </p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
                   {/* Footer */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4">
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500">Total</span>
-                      <span className="text-lg font-bold text-emerald-800">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50/30">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] text-gray-500 font-medium">Total Pesanan</span>
+                      <span className="text-base font-bold text-emerald-800">
                         {formatRupiah(order.totalAmount)}
                       </span>
-                      <span className="text-xs text-gray-400 hidden sm:inline">
+                      <span className="text-[10px] text-gray-400 hidden sm:inline">
                         via {PAYMENT_METHOD_LABELS[order.paymentMethod] || order.paymentMethod}
                       </span>
                     </div>
@@ -453,18 +486,18 @@ export default function OrdersPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => openStatusDialog(order)}
-                        className="text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                        className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 text-[11px] h-8"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                        <RefreshCw className="w-3 h-3 mr-1" />
                         Update Status
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => router.push(`/admin/orders/${order.id}`)}
-                        className="text-gray-600 border-gray-200 hover:bg-gray-50"
+                        className="text-gray-600 border-gray-200 hover:bg-gray-50 text-[11px] h-8"
                       >
-                        <Eye className="w-3.5 h-3.5 mr-1.5" />
+                        <Eye className="w-3 h-3 mr-1" />
                         Detail
                       </Button>
                     </div>
@@ -484,11 +517,11 @@ export default function OrdersPage() {
             size="sm"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="border-gray-200"
+            className="border-gray-200 text-xs h-8"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </Button>
-          <span className="text-sm text-gray-600">
+          <span className="text-xs text-gray-600 font-medium">
             Halaman {page} dari {totalPages}
           </span>
           <Button
@@ -496,9 +529,9 @@ export default function OrdersPage() {
             size="sm"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="border-gray-200"
+            className="border-gray-200 text-xs h-8"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </Button>
         </div>
       )}
@@ -507,33 +540,28 @@ export default function OrdersPage() {
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Update Status Pesanan</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base">Update Status Pesanan</DialogTitle>
+            <DialogDescription className="text-sm">
               Pesanan {selectedOrder?.orderNumber}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-xs font-semibold text-gray-700">
                 Status Baru
               </label>
               <Select value={newStatus} onValueChange={setNewStatus}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                     <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 text-xs">
                         <span
                           className={cn(
                             'w-2 h-2 rounded-full',
-                            key === 'pending' && 'bg-yellow-500',
-                            key === 'confirmed' && 'bg-blue-500',
-                            key === 'processing' && 'bg-purple-500',
-                            key === 'shipped' && 'bg-orange-500',
-                            key === 'completed' && 'bg-emerald-500',
-                            key === 'cancelled' && 'bg-red-500'
+                            config.dotColor
                           )}
                         />
                         {config.label}
@@ -549,15 +577,16 @@ export default function OrdersPage() {
               variant="outline"
               onClick={() => setStatusDialogOpen(false)}
               disabled={updating}
+              className="text-xs"
             >
               Batal
             </Button>
             <Button
               onClick={handleUpdateStatus}
               disabled={updating}
-              className="bg-emerald-700 hover:bg-emerald-800 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
             >
-              {updating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {updating && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
               Update Status
             </Button>
           </DialogFooter>

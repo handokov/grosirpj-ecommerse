@@ -19,8 +19,6 @@ import {
   PackageCheck,
   ChevronRight,
   BarChart3,
-  ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react'
 import {
   Card,
@@ -41,10 +39,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { formatRupiah } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import dynamic from 'next/dynamic'
+
+const RevenueChart = dynamic(() => import('@/components/admin/RevenueChart'), {
+  ssr: false,
+  loading: () => <div className="lg:col-span-2 border-0 shadow-sm bg-white rounded-xl h-[380px] flex items-center justify-center"><p className="text-gray-400 text-sm">Memuat chart...</p></div>,
+})
 
 // Types
 interface DashboardData {
@@ -93,17 +95,7 @@ interface DashboardData {
   }[]
 }
 
-// Chart config
-const chartConfig: ChartConfig = {
-  revenue: {
-    label: 'Pendapatan',
-    color: '#10b981',
-  },
-  orders: {
-    label: 'Pesanan',
-    color: '#059669',
-  },
-}
+
 
 // Helper to parse product images
 function parseProductImage(imagesStr: string): string {
@@ -158,13 +150,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-// Custom tooltip formatter for the chart
-function chartTooltipFormatter(value: number, name: string) {
-  if (name === 'revenue') {
-    return [formatRupiah(value), 'Pendapatan']
-  }
-  return [value.toLocaleString('id-ID'), 'Pesanan']
-}
+
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -401,81 +387,7 @@ export default function AdminDashboardPage() {
       {/* Revenue Chart + Quick Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Chart */}
-        <Card className="lg:col-span-2 border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-bold">Pendapatan Bulanan</CardTitle>
-                  <CardDescription className="text-[11px]">6 bulan terakhir</CardDescription>
-                </div>
-              </div>
-              <Badge variant="secondary" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
-                <ArrowUpRight className="w-3 h-3 mr-0.5" />
-                Live
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {loading ? (
-              <Skeleton className="h-[280px] w-full rounded-xl" />
-            ) : error ? (
-              <div className="flex items-center justify-center h-[280px] text-gray-400">
-                <p>Gagal memuat data chart</p>
-              </div>
-            ) : (
-              <ChartContainer config={chartConfig} className="h-[280px] w-full">
-                <AreaChart
-                  data={data?.monthlyData || []}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    fontSize={11}
-                    tick={{ fill: '#9ca3af' }}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    fontSize={11}
-                    tick={{ fill: '#9ca3af' }}
-                    tickFormatter={(value: number) => {
-                      if (value >= 1000000) return `${(value / 1000000).toFixed(0)}jt`
-                      if (value >= 1000) return `${(value / 1000).toFixed(0)}rb`
-                      return value.toString()
-                    }}
-                  />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent formatter={chartTooltipFormatter} />
-                    }
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#10b981"
-                    strokeWidth={2.5}
-                    fill="url(#fillRevenue)"
-                  />
-                </AreaChart>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
+        <RevenueChart data={data?.monthlyData} loading={loading} error={error} />
 
         {/* Quick Stats / Category Distribution */}
         <Card className="border-0 shadow-sm">

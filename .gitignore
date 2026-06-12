@@ -57,4 +57,4 @@ public/workbox-*.js.map
 public/swe-worker-*.js
 
 # Skills directory
-/skills/
+/skills/upload/

@@ -1,12 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Phone, ArrowRight } from 'lucide-react';
-import { useStore } from '@/store/useStore';
 
 export default function CTASection() {
-  const viewCategory = useStore((s) => s.viewCategory);
-
   return (
     <section className="py-12 md:py-16">
       <div className="max-w-7xl mx-auto px-4">
@@ -22,9 +20,11 @@ export default function CTASection() {
               Bergabung dengan 30.000+ reseller yang sudah sukses jualan baju anak dan remaja bersama GrosirPJ. Daftar sekarang dan dapatkan diskon 15% untuk pesanan pertama!
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="bg-amber-500 hover:bg-amber-500 text-gray-900 font-semibold h-12 px-8 rounded-xl text-base" onClick={() => viewCategory(null)}>
-                Mulai Belanja <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
+              <Link href="/cari">
+                <Button className="bg-amber-500 hover:bg-amber-500 text-gray-900 font-semibold h-12 px-8 rounded-xl text-base">
+                  Mulai Belanja <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+              </Link>
               <Button className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold h-12 px-8 rounded-xl text-base">
                 <Phone className="h-5 w-5 mr-2" /> Hubungi Kami
               </Button>

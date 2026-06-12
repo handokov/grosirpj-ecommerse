@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
+    const categorySlug = searchParams.get('categorySlug');
     const featured = searchParams.get('featured');
     const search = searchParams.get('q');
     const sort = searchParams.get('sort') || 'popular';
@@ -17,6 +18,8 @@ export async function GET(request: Request) {
 
     if (category) {
       where.categoryId = category;
+    } else if (categorySlug) {
+      where.category = { slug: categorySlug };
     }
 
     if (featured === 'true') {
@@ -78,6 +81,7 @@ export async function GET(request: Request) {
       products: products.map((p) => ({
         ...p,
         categoryName: p.category.name,
+        categorySlug: p.category.slug,
       })),
       total,
       page,

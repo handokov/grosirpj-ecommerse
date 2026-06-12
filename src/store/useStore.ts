@@ -12,6 +12,7 @@ export interface Product {
   images: string;
   categoryId: string;
   categoryName?: string;
+  categorySlug?: string;
   rating: number;
   reviewCount: number;
   sold: number;
@@ -37,20 +38,12 @@ export interface Category {
   order: number;
 }
 
-type ViewMode = 'home' | 'catalog' | 'product';
-
 interface StoreState {
-  currentView: ViewMode;
-  selectedCategoryId: string | null;
-  selectedProduct: Product | null;
   searchQuery: string;
   cartItems: CartItemType[];
   isCartOpen: boolean;
   isMobileMenuOpen: boolean;
 
-  setCurrentView: (view: ViewMode) => void;
-  setSelectedCategoryId: (id: string | null) => void;
-  setSelectedProduct: (product: Product | null) => void;
   setSearchQuery: (query: string) => void;
   addToCart: (product: Product, quantity?: number, size?: string) => void;
   removeFromCart: (productId: string, size?: string) => void;
@@ -60,23 +53,14 @@ interface StoreState {
   setIsMobileMenuOpen: (open: boolean) => void;
   getCartTotal: () => number;
   getCartItemCount: () => number;
-  viewProduct: (product: Product) => void;
-  viewCategory: (categoryId: string | null) => void;
-  goHome: () => void;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
-  currentView: 'home',
-  selectedCategoryId: null,
-  selectedProduct: null,
   searchQuery: '',
   cartItems: [],
   isCartOpen: false,
   isMobileMenuOpen: false,
 
-  setCurrentView: (view) => set({ currentView: view }),
-  setSelectedCategoryId: (id) => set({ selectedCategoryId: id }),
-  setSelectedProduct: (product) => set({ selectedProduct: product }),
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   addToCart: (product, quantity = 1, size) => {
@@ -136,20 +120,5 @@ export const useStore = create<StoreState>((set, get) => ({
 
   getCartItemCount: () => {
     return get().cartItems.reduce((count, item) => count + item.quantity, 0);
-  },
-
-  viewProduct: (product) => {
-    set({ selectedProduct: product, currentView: 'product' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  },
-
-  viewCategory: (categoryId) => {
-    set({ selectedCategoryId: categoryId, currentView: 'catalog', searchQuery: '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  },
-
-  goHome: () => {
-    set({ currentView: 'home', selectedCategoryId: null, selectedProduct: null, searchQuery: '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 }));

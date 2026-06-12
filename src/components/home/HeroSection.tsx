@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Search, Truck, Shield, Headphones, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 
 const SLIDER_IMAGES = [
   { src: '/images/products/dress-bayi.png', alt: 'Dress Bayi Lucu' },
@@ -19,7 +20,7 @@ const SLIDER_IMAGES = [
 ];
 
 export default function HeroSection() {
-  const { setSearchQuery, setCurrentView } = useStore();
+  const router = useRouter();
   const [searchVal, setSearchVal] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -40,8 +41,7 @@ export default function HeroSection() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchVal.trim()) {
-      setSearchQuery(searchVal.trim());
-      setCurrentView('catalog');
+      router.push(`/cari?q=${encodeURIComponent(searchVal.trim())}`);
     }
   };
 

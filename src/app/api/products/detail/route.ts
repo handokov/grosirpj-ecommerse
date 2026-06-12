@@ -5,13 +5,14 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const slug = searchParams.get('slug');
 
-    if (!id) {
-      return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
+    if (!id && !slug) {
+      return NextResponse.json({ error: 'Product ID or slug required' }, { status: 400 });
     }
 
     const product = await db.product.findUnique({
-      where: { id },
+      where: id ? { id } : { slug: slug! },
       include: {
         category: true,
       },
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
       take: 4,
       orderBy: { sold: 'desc' },
       include: {
-        category: { select: { name: true } },
+        category: { select: { name: true, slug: true } },
       },
     });
 
@@ -37,10 +38,12 @@ export async function GET(request: Request) {
       product: {
         ...product,
         categoryName: product.category.name,
+        categorySlug: product.category.slug,
       },
       related: related.map((p) => ({
         ...p,
         categoryName: p.category.name,
+        categorySlug: p.category.slug,
       })),
     });
   } catch (error) {

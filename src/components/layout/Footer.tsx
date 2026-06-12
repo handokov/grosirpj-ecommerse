@@ -1,11 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { Mail, MapPin, Clock, Facebook, Instagram, Youtube } from 'lucide-react';
-import { useStore } from '@/store/useStore';
 
 export default function Footer() {
-  const goHome = useStore((s) => s.goHome);
-
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -33,9 +31,16 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Kategori</h4>
             <ul className="space-y-2">
-              {['Bayi (0-2 Tahun)', 'Balita (2-5 Tahun)', 'Anak-Anak (5-12 Tahun)', 'Remaja (12-17 Tahun)', 'Aksesoris Anak', 'Sepatu Anak & Remaja'].map((cat) => (
-                <li key={cat}>
-                  <button onClick={goHome} className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">{cat}</button>
+              {[
+                { name: 'Bayi (0-2 Tahun)', slug: 'bayi-0-2-tahun' },
+                { name: 'Balita (2-5 Tahun)', slug: 'balita-2-5-tahun' },
+                { name: 'Anak-Anak (5-12 Tahun)', slug: 'anak-anak-5-12-tahun' },
+                { name: 'Remaja (12-17 Tahun)', slug: 'remaja-12-17-tahun' },
+                { name: 'Aksesoris Anak', slug: 'aksesoris-anak' },
+                { name: 'Sepatu Anak & Remaja', slug: 'sepatu-anak-remaja' },
+              ].map((cat) => (
+                <li key={cat.slug}>
+                  <Link href={`/${cat.slug}`} className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">{cat.name}</Link>
                 </li>
               ))}
             </ul>

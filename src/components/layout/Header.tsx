@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { useStore, type Product } from '@/store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -24,11 +26,6 @@ export default function Header() {
     setIsCartOpen,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
-    setSearchQuery,
-    setCurrentView,
-    searchQuery,
-    viewCategory,
-    goHome,
     getCartItemCount,
   } = useStore();
 
@@ -37,6 +34,8 @@ export default function Header() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const cartItemCount = getCartItemCount();
 
@@ -78,14 +77,14 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (localSearch.trim()) {
-      setSearchQuery(localSearch.trim());
-      setCurrentView('catalog');
+      router.push(`/cari?q=${encodeURIComponent(localSearch.trim())}`);
       setShowSuggestions(false);
     }
   };
 
   const handleSuggestionClick = (product: Product) => {
-    useStore.getState().viewProduct(product);
+    const url = `/${product.categorySlug}/${product.slug}`;
+    router.push(url);
     setLocalSearch('');
     setShowSuggestions(false);
   };
@@ -117,7 +116,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Logo */}
-            <button onClick={goHome} className="flex items-center gap-2.5 shrink-0 group">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
               <img
                 src="/logo.png"
                 alt="GrosirPJ Logo"
@@ -131,7 +130,7 @@ export default function Header() {
                   Harga OK Kualitas OK
                 </p>
               </div>
-            </button>
+            </Link>
 
             {/* Search */}
             <div ref={searchRef} className="flex-1 max-w-2xl relative">
@@ -195,16 +194,7 @@ export default function Header() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px] p-0">
                   <SheetTitle className="sr-only">Menu Navigasi</SheetTitle>
-                  <MobileMenu
-                    onCategoryClick={(id) => {
-                      viewCategory(id);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    onHomeClick={() => {
-                      goHome();
-                      setIsMobileMenuOpen(false);
-                    }}
-                  />
+                  <MobileMenu onClose={() => setIsMobileMenuOpen(false)} />
                 </SheetContent>
               </Sheet>
             </div>
@@ -215,13 +205,17 @@ export default function Header() {
         <div className="hidden md:block border-t bg-gray-50/50">
           <div className="max-w-7xl mx-auto px-4">
             <nav className="flex items-center gap-1 h-10 overflow-x-auto">
-              <button
-                onClick={goHome}
-                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap"
+              <Link
+                href="/cari"
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                  pathname === '/cari'
+                    ? 'text-emerald-900 bg-emerald-100'
+                    : 'text-gray-600 hover:text-emerald-800 hover:bg-emerald-50'
+                }`}
               >
                 Semua Kategori
-              </button>
-              <CategoryNavItems />
+              </Link>
+              <CategoryNavItems currentPath={pathname} />
             </nav>
           </div>
         </div>
@@ -230,10 +224,8 @@ export default function Header() {
   );
 }
 
-function CategoryNavItems() {
+function CategoryNavItems({ currentPath }: { currentPath: string }) {
   const [categories, setCategories] = useState<import('@/store/useStore').Category[]>([]);
-  const viewCategory = useStore((s) => s.viewCategory);
-  const selectedCategoryId = useStore((s) => s.selectedCategoryId);
 
   useEffect(() => {
     fetch('/api/categories')
@@ -245,29 +237,23 @@ function CategoryNavItems() {
   return (
     <>
       {categories.map((cat) => (
-        <button
+        <Link
           key={cat.id}
-          onClick={() => viewCategory(cat.id)}
+          href={`/${cat.slug}`}
           className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-            selectedCategoryId === cat.id
+            currentPath === `/${cat.slug}` || currentPath.startsWith(`/${cat.slug}/`)
               ? 'text-emerald-900 bg-emerald-100'
               : 'text-gray-600 hover:text-emerald-800 hover:bg-emerald-50'
           }`}
         >
           {cat.name}
-        </button>
+        </Link>
       ))}
     </>
   );
 }
 
-function MobileMenu({
-  onCategoryClick,
-  onHomeClick,
-}: {
-  onCategoryClick: (id: string) => void;
-  onHomeClick: () => void;
-}) {
+function MobileMenu({ onClose }: { onClose: () => void }) {
   const [categories, setCategories] = useState<(import('@/store/useStore').Category & { productCount?: number })[]>([]);
 
   useEffect(() => {
@@ -289,25 +275,27 @@ function MobileMenu({
         </div>
       </div>
       <nav className="flex-1 p-2">
-        <button
-          onClick={onHomeClick}
-          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg hover:bg-emerald-50 text-gray-700 font-medium"
+        <Link
+          href="/"
+          onClick={onClose}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-emerald-50 text-gray-700 font-medium"
         >
           Beranda
-        </button>
+        </Link>
         <div className="my-2 border-t" />
         <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase">Kategori</p>
         {categories.map((cat) => (
-          <button
+          <Link
             key={cat.id}
-            onClick={() => onCategoryClick(cat.id)}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-left rounded-lg hover:bg-emerald-50 text-gray-700 text-sm"
+            href={`/${cat.slug}`}
+            onClick={onClose}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-emerald-50 text-gray-700 text-sm"
           >
             {cat.name}
             {cat.productCount !== undefined && (
               <Badge variant="secondary" className="text-xs">{cat.productCount}</Badge>
             )}
-          </button>
+          </Link>
         ))}
       </nav>
       <div className="p-4 border-t bg-gray-50">

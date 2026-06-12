@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useStore, type Category } from '@/store/useStore';
+import Link from 'next/link';
+import { type Category } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Baby, Smile, GraduationCap, Sparkles, Crown, Footprints,
@@ -14,7 +15,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export default function CategoryGrid() {
   const [categories, setCategories] = useState<(Category & { productCount?: number })[]>([]);
-  const viewCategory = useStore((s) => s.viewCategory);
 
   useEffect(() => {
     fetch('/api/categories')
@@ -40,31 +40,29 @@ export default function CategoryGrid() {
           {categories.map((cat) => {
             const IconComp = iconMap[cat.icon || ''];
             return (
-              <Card
-                key={cat.id}
-                className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
-                onClick={() => viewCategory(cat.id)}
-              >
-                <CardContent className="p-0">
-                  <div className="relative h-32 sm:h-44 overflow-hidden">
-                    <ProductImage
-                      src={cat.image || ''}
-                      alt={cat.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-white">
-                      <div className="flex items-center gap-1.5">
-                        {IconComp && <IconComp className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />}
-                        <h3 className="font-semibold text-[10px] sm:text-sm">{cat.name}</h3>
+              <Link key={cat.id} href={`/${cat.slug}`}>
+                <Card className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="relative h-32 sm:h-44 overflow-hidden">
+                      <ProductImage
+                        src={cat.image || ''}
+                        alt={cat.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-white">
+                        <div className="flex items-center gap-1.5">
+                          {IconComp && <IconComp className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400" />}
+                          <h3 className="font-semibold text-[10px] sm:text-sm">{cat.name}</h3>
+                        </div>
+                        <p className="text-[9px] sm:text-[10px] text-gray-300 mt-0.5">
+                          {cat.productCount ?? 0} produk
+                        </p>
                       </div>
-                      <p className="text-[9px] sm:text-[10px] text-gray-300 mt-0.5">
-                        {cat.productCount ?? 0} produk
-                      </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>

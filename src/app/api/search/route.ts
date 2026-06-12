@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         wholesalePrice: true,
         images: true,
         category: {
-          select: { name: true },
+          select: { name: true, slug: true },
         },
       },
       take: 8,
@@ -36,9 +36,10 @@ export async function GET(request: Request) {
         id: p.id,
         name: p.name,
         slug: p.slug,
-        price: p.wholesalePrice,
-        image: p.images,
-        category: p.category.name,
+        wholesalePrice: p.wholesalePrice,
+        images: p.images,
+        categoryName: p.category.name,
+        categorySlug: p.category.slug,
       })),
     });
   } catch (error) {

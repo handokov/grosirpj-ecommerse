@@ -1,13 +1,11 @@
 'use client';
 
-import { useStore } from '@/store/useStore';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Zap, Percent, Gift, Clock, Baby, Sparkles } from 'lucide-react';
+import { ArrowRight, Zap, Percent, Gift, Clock } from 'lucide-react';
 
 export default function PromoSection() {
-  const { viewCategory } = useStore();
-
   return (
     <section className="py-12 md:py-16">
       <div className="max-w-7xl mx-auto px-4">
@@ -32,9 +30,11 @@ export default function PromoSection() {
                 <Clock className="h-4 w-4 text-amber-400" />
                 <span className="text-sm text-amber-400 font-medium">Berakhir dalam 3 hari</span>
               </div>
-              <Button className="bg-white text-emerald-800 hover:bg-amber-500 hover:text-gray-900 font-semibold rounded-xl" onClick={() => viewCategory(null)}>
-                Belanja Sekarang <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
+              <Link href="/cari">
+                <Button className="bg-white text-emerald-800 hover:bg-amber-500 hover:text-gray-900 font-semibold rounded-xl">
+                  Belanja Sekarang <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -49,9 +49,11 @@ export default function PromoSection() {
                 <Clock className="h-4 w-4 text-amber-400" />
                 <span className="text-sm text-amber-400 font-medium">Promo sepanjang bulan</span>
               </div>
-              <Button className="bg-white text-emerald-900 hover:bg-amber-500 hover:text-gray-900 font-semibold rounded-xl" onClick={() => viewCategory(null)}>
-                Belanja Sekarang <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
+              <Link href="/cari">
+                <Button className="bg-white text-emerald-900 hover:bg-amber-500 hover:text-gray-900 font-semibold rounded-xl">
+                  Belanja Sekarang <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useStore, type Product } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,7 @@ import ProductImage from '@/components/ui/product-image';
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { viewProduct, addToCart, viewCategory } = useStore();
+  const addToCart = useStore((s) => s.addToCart);
 
   useEffect(() => {
     fetch('/api/products?featured=true&limit=8')
@@ -32,9 +33,11 @@ export default function FeaturedProducts() {
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Pilihan Terlaris</h2>
           </div>
-          <Button variant="outline" className="hidden sm:flex border-emerald-200 text-emerald-900 hover:bg-emerald-50" onClick={() => viewCategory(null)}>
-            Lihat Semua
-          </Button>
+          <Link href="/cari" className="hidden sm:block">
+            <Button variant="outline" className="border-emerald-200 text-emerald-900 hover:bg-emerald-50">
+              Lihat Semua
+            </Button>
+          </Link>
         </div>
 
         {loading ? (
@@ -53,6 +56,7 @@ export default function FeaturedProducts() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {products.map((product) => {
               const discount = calculateDiscount(product.price, product.wholesalePrice);
+              const productUrl = `/${product.categorySlug}/${product.slug}`;
               return (
                 <Card key={product.id} className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                   <CardContent className="p-0">
@@ -70,16 +74,20 @@ export default function FeaturedProducts() {
                         <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); addToCart(product, product.minOrder); }}>
                           <ShoppingCart className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); viewProduct(product); }}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <Link href={productUrl}>
+                          <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                     <div className="p-3">
                       <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
-                      <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2 cursor-pointer hover:text-emerald-900 transition-colors" onClick={() => viewProduct(product)}>
-                        {product.name}
-                      </h3>
+                      <Link href={productUrl}>
+                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2 cursor-pointer hover:text-emerald-900 transition-colors">
+                          {product.name}
+                        </h3>
+                      </Link>
                       <div className="flex items-baseline gap-2 mb-2">
                         <span className="text-sm font-bold text-emerald-900">{formatRupiah(product.wholesalePrice)}</span>
                         {discount > 0 && <span className="text-xs text-muted-foreground line-through">{formatRupiah(product.price)}</span>}
@@ -98,9 +106,11 @@ export default function FeaturedProducts() {
         )}
 
         <div className="text-center mt-6 sm:hidden">
-          <Button variant="outline" className="border-emerald-200 text-emerald-900 hover:bg-emerald-50" onClick={() => viewCategory(null)}>
-            Lihat Semua Produk
-          </Button>
+          <Link href="/cari">
+            <Button variant="outline" className="border-emerald-200 text-emerald-900 hover:bg-emerald-50">
+              Lihat Semua Produk
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import SiteLayout from "@/components/layout/SiteLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -123,7 +124,7 @@ export default function RootLayout({
               url: "https://grosirpj.com",
               potentialAction: {
                 "@type": "SearchAction",
-                target: "https://grosirpj.com/?q={search_term_string}",
+                target: "https://grosirpj.com/cari?q={search_term_string}",
                 "query-input": "required name=search_term_string",
               },
             }),
@@ -133,7 +134,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <SiteLayout>{children}</SiteLayout>
         <Toaster position="top-right" richColors />
       </body>
     </html>

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
-  Star, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Package, BarChart3, Weight, Ruler,
+  Star, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Package, BarChart3, Weight, Ruler, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import { toast } from 'sonner';
@@ -55,7 +55,7 @@ export default function ProductDetailClient({ product, related }: Props) {
           {/* Product images */}
           <div>
             {/* Main image */}
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 group">
               {allImages.length > 0 ? (
                 <Image
                   src={getOptimizedImageUrl(allImages[selectedImageIndex] || allImages[0], { width: 800, quality: 'auto' })}
@@ -69,7 +69,34 @@ export default function ProductDetailClient({ product, related }: Props) {
                 <ProductImage src="" alt={product.name} className="w-full h-full object-cover" priority={true} />
               )}
               {discount > 0 && (
-                <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1">-{discount}% OFF</Badge>
+                <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 z-10">-{discount}% OFF</Badge>
+              )}
+              {/* Navigation arrows */}
+              {hasMultipleImages && (
+                <>
+                  {/* Left arrow */}
+                  <button
+                    onClick={() => setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all opacity-0 group-hover:opacity-100 z-10"
+                    aria-label="Gambar sebelumnya"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  {/* Right arrow */}
+                  <button
+                    onClick={() => setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all opacity-0 group-hover:opacity-100 z-10"
+                    aria-label="Gambar selanjutnya"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+              {/* Image counter */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  {selectedImageIndex + 1} / {allImages.length}
+                </div>
               )}
             </div>
 

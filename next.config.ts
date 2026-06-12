@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     ".space-z.ai",
     "21.0.16.16",
+    "preview-chat-115ba976-1f49-404a-a69d-0734743bb5f8.space-z.ai",
   ],
 
   // Ensure these packages are NOT bundled by Next.js - they need to run as-is in Node.js

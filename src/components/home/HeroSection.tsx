@@ -9,14 +9,14 @@ import { useState, useEffect, useCallback } from 'react';
 const SLIDER_IMAGES = [
   { src: '/images/products/dress-bayi.png', alt: 'Dress Bayi Lucu' },
   { src: '/images/products/set-bayi-laki.png', alt: 'Set Bayi Laki-Laki' },
+  { src: '/images/products/romper-bayi.png', alt: 'Romper Bayi Imut' },
   { src: '/images/products/dress-balita.png', alt: 'Dress Balita Cantik' },
+  { src: '/images/products/set-balita.png', alt: 'Set Balita Casual' },
   { src: '/images/products/kaos-anak.png', alt: 'Kaos Anak Trendy' },
   { src: '/images/products/dress-anak.png', alt: 'Dress Anak Elegant' },
   { src: '/images/products/jaket-anak.png', alt: 'Jaket Anak Stylish' },
-  { src: '/images/products/hoodie-remaja.png', alt: 'Hoodie Anak Cool' },
-  { src: '/images/products/dress-remaja.png', alt: 'Dress Anak Modis' },
   { src: '/images/products/gamis-anak.png', alt: 'Gamis Anak Syar\'i' },
-  { src: '/images/products/kemeja-remaja.png', alt: 'Kemeja Anak Formal' },
+  { src: '/images/products/kemeja-anak.png', alt: 'Kemeja Anak Formal' },
 ];
 
 export default function HeroSection() {

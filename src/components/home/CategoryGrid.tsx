@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { type Category } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  Baby, Smile, GraduationCap, Sparkles, Crown, Footprints,
+  Baby, Smile, GraduationCap, Crown, Footprints,
 } from 'lucide-react';
 import ProductImage from '@/components/ui/product-image';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Baby, Smile, GraduationCap, Sparkles, Crown, Footprints,
+  Baby, Smile, GraduationCap, Crown, Footprints,
 };
 
 export default function CategoryGrid() {

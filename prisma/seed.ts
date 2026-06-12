@@ -1,89 +1,72 @@
 import { db } from '@/lib/db';
 
 async function main() {
-  // Seed categories
+  // Clean up old data first
+  await db.cartItem.deleteMany();
+  await db.product.deleteMany();
+  await db.category.deleteMany();
+
+  // Seed categories (5 categories - Remaja removed)
   const categories = await Promise.all([
-    db.category.upsert({
-      where: { slug: 'bayi-0-2-tahun' },
-      update: {},
-      create: {
-        name: 'Bayi (0-2 Tahun)',
-        slug: 'bayi-0-2-tahun',
+    db.category.create({
+      data: {
+        name: 'Bayi (0-12 Bulan)',
+        slug: 'bayi-0-12-bulan',
         description: 'Baju bayi, romper, set bayi lucu dan nyaman untuk si kecil',
         icon: 'Baby',
         image: '/images/categories/bayi.png',
         order: 1,
       },
     }),
-    db.category.upsert({
-      where: { slug: 'balita-2-5-tahun' },
-      update: {},
-      create: {
-        name: 'Balita (2-5 Tahun)',
-        slug: 'balita-2-5-tahun',
+    db.category.create({
+      data: {
+        name: 'Balita (1-5 Tahun)',
+        slug: 'balita-1-5-tahun',
         description: 'Pakaian balita lucu dan nyaman untuk aktif bermain',
         icon: 'Smile',
         image: '/images/categories/balita.png',
         order: 2,
       },
     }),
-    db.category.upsert({
-      where: { slug: 'anak-anak-5-12-tahun' },
-      update: {},
-      create: {
-        name: 'Anak-Anak (5-12 Tahun)',
-        slug: 'anak-anak-5-12-tahun',
+    db.category.create({
+      data: {
+        name: 'Anak-anak (6-12 Tahun)',
+        slug: 'anak-anak-6-12-tahun',
         description: 'Baju anak untuk sekolah dan santai, model trendi dan nyaman',
         icon: 'GraduationCap',
         image: '/images/categories/anak-anak.png',
         order: 3,
       },
     }),
-    db.category.upsert({
-      where: { slug: 'remaja-12-17-tahun' },
-      update: {},
-      create: {
-        name: 'Remaja (12-17 Tahun)',
-        slug: 'remaja-12-17-tahun',
-        description: 'Fashion remaja trendi dan stylish, dari kasual hingga formal',
-        icon: 'Sparkles',
-        image: '/images/categories/remaja.png',
+    db.category.create({
+      data: {
+        name: 'Aksesoris Baby Kids',
+        slug: 'aksesoris-baby-kids',
+        description: 'Topi, tas, ikat rambut, dan aksesoris lucu untuk bayi dan anak',
+        icon: 'Crown',
+        image: '/images/categories/aksesoris.png',
         order: 4,
       },
     }),
-    db.category.upsert({
-      where: { slug: 'aksesoris-anak' },
-      update: {},
-      create: {
-        name: 'Aksesoris Anak',
-        slug: 'aksesoris-anak',
-        description: 'Topi, tas, ikat rambut, dan aksesoris lucu untuk anak',
-        icon: 'Crown',
-        image: '/images/categories/aksesoris.png',
-        order: 5,
-      },
-    }),
-    db.category.upsert({
-      where: { slug: 'sepatu-anak' },
-      update: {},
-      create: {
-        name: 'Sepatu Anak & Remaja',
-        slug: 'sepatu-anak',
-        description: 'Sepatu sekolah, santai, dan olahraga untuk anak dan remaja',
+    db.category.create({
+      data: {
+        name: 'Sepatu',
+        slug: 'sepatu',
+        description: 'Sepatu sekolah, santai, dan olahraga untuk bayi dan anak',
         icon: 'Footprints',
         image: '/images/categories/sepatu.png',
-        order: 6,
+        order: 5,
       },
     }),
   ]);
 
   // Seed products
   const products = [
-    // === BAYI (0-2 Tahun) ===
+    // === BAYI (0-12 Bulan) ===
     {
       name: 'Romper Bayi Set 3in1 Karakter Lucu',
       slug: 'romper-bayi-set-3in1-karakter-lucu',
-      description: 'Set romper bayi 3in1 dengan motif karakter hewan lucu. Bahan katun stretch yang lembut dan aman untuk kulit bayi. Mudah dipakai dan dilepas dengan kancing press. Tersedia ukuran 0-6 bulan, 6-12 bulan, 12-18 bulan. Cocok untuk hadiah bayi baru lahir.',
+      description: 'Set romper bayi 3in1 dengan motif karakter hewan lucu. Bahan katun stretch yang lembut dan aman untuk kulit bayi. Mudah dipakai dan dilepas dengan kancing press. Tersedia ukuran 0-6 bulan, 6-12 bulan. Cocok untuk hadiah bayi baru lahir.',
       price: 125000,
       wholesalePrice: 75000,
       minOrder: 12,
@@ -96,7 +79,7 @@ async function main() {
       featured: true,
       tags: 'romper,bayi,set,lucu,katun',
       weight: '150g',
-      sizes: '0-6B,6-12B,12-18B,18-24B',
+      sizes: '0-6B,6-12B',
     },
     {
       name: 'Set Baju Bayi Laki-Laki Casual',
@@ -114,7 +97,7 @@ async function main() {
       featured: true,
       tags: 'set,bayi,laki-laki,casual,katun',
       weight: '120g',
-      sizes: '0-6B,6-12B,12-18B,18-24B',
+      sizes: '0-6B,6-12B',
     },
     {
       name: 'Dress Bayi Perempuan Floral',
@@ -132,10 +115,28 @@ async function main() {
       featured: true,
       tags: 'dress,bayi,perempuan,floral,pesta',
       weight: '130g',
-      sizes: '0-6B,6-12B,12-18B,18-24B',
+      sizes: '0-6B,6-12B',
+    },
+    {
+      name: 'Jumpsuit Bayi Unisex Cotton',
+      slug: 'jumpsuit-bayi-unisex-cotton',
+      description: 'Jumpsuit bayi unisex bahan katun premium yang lembut dan menyerap keringat. Desain simpel dan nyaman untuk harian. Kancing press di bagian bawah untuk mudah ganti popok.',
+      price: 85000,
+      wholesalePrice: 50000,
+      minOrder: 12,
+      stock: 450,
+      images: '/images/products/jaket-anak.png',
+      categoryId: categories[0].id,
+      rating: 4.7,
+      reviewCount: 198,
+      sold: 2800,
+      featured: false,
+      tags: 'jumpsuit,bayi,unisex,cotton,harian',
+      weight: '130g',
+      sizes: '0-6B,6-12B',
     },
 
-    // === BALITA (2-5 Tahun) ===
+    // === BALITA (1-5 Tahun) ===
     {
       name: 'Set Baju Balita Laki-Laki Kartun',
       slug: 'set-baju-balita-laki-laki-kartun',
@@ -152,7 +153,7 @@ async function main() {
       featured: true,
       tags: 'set,balita,laki-laki,kartun,katun',
       weight: '150g',
-      sizes: '2T,3T,4T,5T',
+      sizes: '1T,2T,3T,4T,5T',
     },
     {
       name: 'Dress Balita Perempuan Princess Tutu',
@@ -170,7 +171,7 @@ async function main() {
       featured: true,
       tags: 'dress,balita,princess,tutu,pesta',
       weight: '200g',
-      sizes: '2T,3T,4T,5T',
+      sizes: '1T,2T,3T,4T,5T',
     },
     {
       name: 'Set Baju Balita Unisex Casual',
@@ -188,14 +189,32 @@ async function main() {
       featured: false,
       tags: 'set,balita,unisex,casual,cotton',
       weight: '140g',
-      sizes: '2T,3T,4T,5T',
+      sizes: '1T,2T,3T,4T,5T',
+    },
+    {
+      name: 'Kaos Balita Print Kartun Lucu',
+      slug: 'kaos-balita-print-kartun-lucu',
+      description: 'Kaos balita dengan print kartun lucu dan warna ceria. Bahan cotton combed 24s yang lembut dan adem. Sablon rubber yang aman dan tidak luntur. Tersedia 15+ motif pilihan.',
+      price: 65000,
+      wholesalePrice: 38000,
+      minOrder: 24,
+      stock: 600,
+      images: '/images/products/kaos-anak.png',
+      categoryId: categories[1].id,
+      rating: 4.5,
+      reviewCount: 312,
+      sold: 5600,
+      featured: false,
+      tags: 'kaos,balita,kartun,cotton,lucu',
+      weight: '110g',
+      sizes: '1T,2T,3T,4T,5T',
     },
 
-    // === ANAK-ANAK (5-12 Tahun) ===
+    // === ANAK-ANAK (6-12 Tahun) ===
     {
       name: 'Kemeja Anak Laki-Laki Sekolah',
       slug: 'kemeja-anak-laki-laki-sekolah',
-      description: 'Kemeja anak laki-laki untuk seragam sekolah dan acara formal. Bahan cotton prima yang rapi dan nyaman dipakai seharian. Warna putih bersih tidak mudah kuning. Tersedia ukuran 5-12 tahun.',
+      description: 'Kemeja anak laki-laki untuk seragam sekolah dan acara formal. Bahan cotton prima yang rapi dan nyaman dipakai seharian. Warna putih bersih tidak mudah kuning. Tersedia ukuran 6-12 tahun.',
       price: 85000,
       wholesalePrice: 50000,
       minOrder: 24,
@@ -208,7 +227,7 @@ async function main() {
       featured: true,
       tags: 'kemeja,anak,sekolah,formal,cotton',
       weight: '150g',
-      sizes: '5,6,7,8,9,10,11,12',
+      sizes: '6,7,8,9,10,11,12',
     },
     {
       name: 'Dress Anak Perempuan Casual Cantik',
@@ -226,7 +245,7 @@ async function main() {
       featured: true,
       tags: 'dress,anak,perempuan,casual,katun',
       weight: '180g',
-      sizes: '5,6,7,8,9,10,11,12',
+      sizes: '6,7,8,9,10,11,12',
     },
     {
       name: 'Kaos Anak Unisex Print Kartun',
@@ -244,7 +263,7 @@ async function main() {
       featured: false,
       tags: 'kaos,anak,kartun,unisex,cotton',
       weight: '130g',
-      sizes: '5,6,7,8,9,10,11,12',
+      sizes: '6,7,8,9,10,11,12',
     },
     {
       name: 'Celana Anak Jeans & Chino Mix',
@@ -262,7 +281,7 @@ async function main() {
       featured: false,
       tags: 'celana,anak,jeans,chino,denim',
       weight: '220g',
-      sizes: '5,6,7,8,9,10,11,12',
+      sizes: '6,7,8,9,10,11,12',
     },
     {
       name: 'Jaket Anak Hoodie & Bomber',
@@ -280,7 +299,7 @@ async function main() {
       featured: true,
       tags: 'jaket,anak,hoodie,bomber,fleece',
       weight: '300g',
-      sizes: '5,6,7,8,9,10,11,12',
+      sizes: '6,7,8,9,10,11,12',
     },
     {
       name: 'Gamis Anak Perempuan Syari',
@@ -298,138 +317,10 @@ async function main() {
       featured: true,
       tags: 'gamis,anak,syari,muslimah,ceruti',
       weight: '250g',
-      sizes: '5,6,7,8,9,10,11,12',
+      sizes: '6,7,8,9,10,11,12',
     },
 
-    // === REMAJA (12-17 Tahun) ===
-    {
-      name: 'Kaos Remaja Oversize Streetwear',
-      slug: 'kaos-remaja-oversize-streetwear',
-      description: 'Kaos remaja model oversize gaya streetwear yang lagi trending. Bahan cotton combed 24s yang tebal dan jatuh. Sablon DTF berkualitas tinggi yang tidak luntur. Tersedia 30+ desain kekinian.',
-      price: 85000,
-      wholesalePrice: 48000,
-      minOrder: 24,
-      stock: 700,
-      images: '/images/products/kaos-remaja.png',
-      categoryId: categories[3].id,
-      rating: 4.7,
-      reviewCount: 567,
-      sold: 9800,
-      featured: true,
-      tags: 'kaos,remaja,oversize,streetwear,cotton',
-      weight: '200g',
-      sizes: 'S,M,L,XL,XXL',
-    },
-    {
-      name: 'Hoodie Remaja Trendy Premium',
-      slug: 'hoodie-remaja-trendy-premium',
-      description: 'Hoodie remaja premium bahan fleece yang tebal dan hangat. Model kangguru pocket dengan tali hood adjustable. Bordir dan sablon berkualitas. Warna-warna aesthetic yang kekinian.',
-      price: 165000,
-      wholesalePrice: 105000,
-      minOrder: 12,
-      stock: 350,
-      images: '/images/products/hoodie-remaja.png',
-      categoryId: categories[3].id,
-      rating: 4.8,
-      reviewCount: 423,
-      sold: 5600,
-      featured: true,
-      tags: 'hoodie,remaja,trendy,fleece,premium',
-      weight: '400g',
-      sizes: 'S,M,L,XL,XXL',
-    },
-    {
-      name: 'Dress Remaja Casual Modern',
-      slug: 'dress-remaja-casual-modern',
-      description: 'Dress remaja model casual modern yang chic dan stylish. Bahan katun rayon dan viskose yang jatuh dan sejuk. Motif bunga dan solid color tersedia. Cocok untuk hangout dan acara casual.',
-      price: 145000,
-      wholesalePrice: 88000,
-      minOrder: 12,
-      stock: 300,
-      images: '/images/products/dress-remaja.png',
-      categoryId: categories[3].id,
-      rating: 4.7,
-      reviewCount: 312,
-      sold: 3800,
-      featured: false,
-      tags: 'dress,remaja,casual,modern,katun',
-      weight: '200g',
-      sizes: 'S,M,L,XL',
-    },
-    {
-      name: 'Kemeja Remaja Laki-Laki Stylish',
-      slug: 'kemeja-remaja-laki-laki-stylish',
-      description: 'Kemeja remaja laki-laki model casual dan semi-formal. Bahan cotton dan linen premium yang adem. Motif kotak-kotak dan solid tersedia. Cocok untuk ke kampus, hangout, dan acara.',
-      price: 135000,
-      wholesalePrice: 82000,
-      minOrder: 12,
-      stock: 350,
-      images: '/images/products/kemeja-remaja.png',
-      categoryId: categories[3].id,
-      rating: 4.6,
-      reviewCount: 267,
-      sold: 3200,
-      featured: false,
-      tags: 'kemeja,remaja,laki-laki,stylish,cotton',
-      weight: '180g',
-      sizes: 'S,M,L,XL,XXL',
-    },
-    {
-      name: 'Celana Remaja Cargo & Jeans',
-      slug: 'celana-remaja-cargo-jeans',
-      description: 'Celana cargo dan jeans remaja model baggy dan wide leg yang trending. Bahan denim dan cotton twill berkualitas. Saku cargo fungsional dan stylish. Wash effect yang kekinian.',
-      price: 155000,
-      wholesalePrice: 95000,
-      minOrder: 12,
-      stock: 400,
-      images: '/images/products/celana-remaja.png',
-      categoryId: categories[3].id,
-      rating: 4.7,
-      reviewCount: 345,
-      sold: 4500,
-      featured: true,
-      tags: 'celana,remaja,cargo,jeans,baggy',
-      weight: '350g',
-      sizes: 'S,M,L,XL,XXL',
-    },
-    {
-      name: 'Jaket Remaja Bomber & Denim',
-      slug: 'jaket-remaja-bomber-denim',
-      description: 'Jaket remaja koleksi bomber dan denim yang keren. Bahan parasut waterproof dan denim premium. Variasi bordir dan patch yang unik. Warna-warna bold dan aesthetic.',
-      price: 195000,
-      wholesalePrice: 128000,
-      minOrder: 10,
-      stock: 250,
-      images: '/images/products/jaket-remaja.png',
-      categoryId: categories[3].id,
-      rating: 4.8,
-      reviewCount: 234,
-      sold: 2900,
-      featured: true,
-      tags: 'jaket,remaja,bomber,denim,stylish',
-      weight: '450g',
-      sizes: 'S,M,L,XL,XXL',
-    },
-    {
-      name: 'Gamis Remaja Muslimah Modern',
-      slug: 'gamis-remaja-muslimah-modern',
-      description: 'Gamis remaja model modern dan syari yang elegan. Bahan ceruti, kaos, dan wolfis premium. Aksen payet dan bordir yang cantik. Dilengkapi inner dan jilbit segi empat matching.',
-      price: 185000,
-      wholesalePrice: 118000,
-      minOrder: 10,
-      stock: 280,
-      images: '/images/products/gamis-remaja.png',
-      categoryId: categories[3].id,
-      rating: 4.9,
-      reviewCount: 456,
-      sold: 5800,
-      featured: true,
-      tags: 'gamis,remaja,muslimah,modern,syari',
-      weight: '300g',
-      sizes: 'S,M,L,XL,XXL',
-    },
-
-    // === AKSESORIS ANAK ===
+    // === AKSESORIS BABY KIDS ===
     {
       name: 'Topi Anak Bucket Hat & Cap Set',
       slug: 'topi-anak-bucket-hat-cap-set',
@@ -439,7 +330,7 @@ async function main() {
       minOrder: 24,
       stock: 600,
       images: '/images/products/topi-anak.png',
-      categoryId: categories[4].id,
+      categoryId: categories[3].id,
       rating: 4.5,
       reviewCount: 234,
       sold: 4500,
@@ -457,7 +348,7 @@ async function main() {
       minOrder: 12,
       stock: 400,
       images: '/images/products/tas-anak.png',
-      categoryId: categories[4].id,
+      categoryId: categories[3].id,
       rating: 4.7,
       reviewCount: 389,
       sold: 5200,
@@ -466,8 +357,26 @@ async function main() {
       weight: '400g',
       sizes: 'S,M,L',
     },
+    {
+      name: 'Ikat Rambut & Aksesoris Bayi Set',
+      slug: 'ikat-rambut-aksesoris-bayi-set',
+      description: 'Set ikat rambut dan aksesoris bayi lucu. Bahan kain dan plastik aman untuk bayi dan anak. Motif bunga, kupu-kupu, dan karakter kartun. Cocok untuk hadiah dan日常使用.',
+      price: 35000,
+      wholesalePrice: 18000,
+      minOrder: 50,
+      stock: 1000,
+      images: '/images/products/set-balita.png',
+      categoryId: categories[3].id,
+      rating: 4.6,
+      reviewCount: 567,
+      sold: 8900,
+      featured: false,
+      tags: 'ikat rambut,aksesoris,bayi,lucu,set',
+      weight: '50g',
+      sizes: 'All Size',
+    },
 
-    // === SEPATU ANAK ===
+    // === SEPATU ===
     {
       name: 'Sepatu Anak Sneakers Casual',
       slug: 'sepatu-anak-sneakers-casual',
@@ -477,7 +386,7 @@ async function main() {
       minOrder: 12,
       stock: 350,
       images: '/images/products/sepatu-anak.png',
-      categoryId: categories[5].id,
+      categoryId: categories[4].id,
       rating: 4.7,
       reviewCount: 345,
       sold: 4100,
@@ -495,7 +404,7 @@ async function main() {
       minOrder: 24,
       stock: 700,
       images: '/images/products/sandal-anak.png',
-      categoryId: categories[5].id,
+      categoryId: categories[4].id,
       rating: 4.5,
       reviewCount: 267,
       sold: 5800,
@@ -505,30 +414,28 @@ async function main() {
       sizes: '25,26,27,28,29,30,31,32,33,34,35',
     },
     {
-      name: 'Sepatu Remaja Sneakers Trendy',
-      slug: 'sepatu-remaja-sneakers-trendy',
-      description: 'Sepatu remaja model sneakers trendy gaya streetwear. Bahan mesh premium dan sol cushion yang nyaman untuk seharian. Desain kekinian yang cocok untuk ootd. Tersedia warna-warna aesthetic.',
-      price: 225000,
-      wholesalePrice: 148000,
-      minOrder: 10,
-      stock: 250,
-      images: '/images/products/sepatu-remaja.png',
-      categoryId: categories[5].id,
+      name: 'Sepatu Bayi Pre-Walker Anti Slip',
+      slug: 'sepatu-bayi-pre-walker-anti-slip',
+      description: 'Sepatu bayi pre-walker dengan sol anti-slip yang aman untuk bayi belajar berjalan. Bahan katun lembut dan breathable. Elastis di pergelangan kaki agar mudah dipasang. Warna-warna lucu dan ceria.',
+      price: 75000,
+      wholesalePrice: 42000,
+      minOrder: 24,
+      stock: 500,
+      images: '/images/products/romper-bayi.png',
+      categoryId: categories[4].id,
       rating: 4.8,
-      reviewCount: 312,
-      sold: 3600,
+      reviewCount: 456,
+      sold: 7200,
       featured: true,
-      tags: 'sepatu,remaja,sneakers,trendy,streetwear',
-      weight: '350g',
-      sizes: '36,37,38,39,40,41,42',
+      tags: 'sepatu,bayi,pre-walker,anti-slip,katun',
+      weight: '80g',
+      sizes: '0-6B,6-12B,12-18B,18-24B',
     },
   ];
 
   for (const product of products) {
-    await db.product.upsert({
-      where: { slug: product.slug },
-      update: {},
-      create: product,
+    await db.product.create({
+      data: product,
     });
   }
 

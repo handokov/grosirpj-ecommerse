@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import SiteLayout from "@/components/layout/SiteLayout";
+import PWARegistrar from "@/components/pwa/PWARegistrar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +41,11 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "GrosirPJ" }],
   icons: {
-    icon: "/logo-sm.png",
+    icon: [
+      { url: "/logo-sm.png", sizes: "32x32" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/icons/apple-touch-icon-180x180.png",
   },
   openGraph: {
     title: "GrosirPJ - Pusat Grosir Baju Anak & Baby Kids Terpercaya",
@@ -71,6 +76,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://grosirpj.com",
   },
+  manifest: "/manifest.json",
+  applicationName: "GrosirPJ",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "GrosirPJ",
+  },
 };
 
 export default function RootLayout({
@@ -81,6 +93,9 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#065f46" />
+        <link rel="manifest" href="/manifest.json" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -134,6 +149,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         <SiteLayout>{children}</SiteLayout>
+        <PWARegistrar />
         <Toaster position="top-right" richColors />
       </body>
     </html>

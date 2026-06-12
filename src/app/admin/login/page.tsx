@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Store, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/admin'
@@ -129,5 +129,20 @@ export default function AdminLoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center">
+        <div className="flex items-center gap-2 text-gray-400">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Memuat...</span>
+        </div>
+      </div>
+    }>
+      <AdminLoginForm />
+    </Suspense>
   )
 }

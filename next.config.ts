@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     "@libsql/client",
     "@prisma/adapter-libsql",
+    "cloudinary",
+    "bcryptjs",
   ],
 
   // Cloudinary image domains

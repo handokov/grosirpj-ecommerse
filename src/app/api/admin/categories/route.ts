@@ -14,7 +14,7 @@ export async function GET() {
     return NextResponse.json({ categories })
   } catch (error) {
     console.error('Categories API error:', error)
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 })
+    return NextResponse.json({ categories: [] })
   }
 }
 

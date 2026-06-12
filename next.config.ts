@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
 
+  // Ensure these packages are NOT bundled by Next.js - they need to run as-is in Node.js
+  serverExternalPackages: [
+    "@libsql/client",
+    "@prisma/adapter-libsql",
+  ],
+
   // Cloudinary image domains
   images: {
     remotePatterns: [

@@ -368,3 +368,25 @@ Stage Summary:
 - Category grid centered and responsive (2 cols mobile, 3 cols tablet/desktop)
 - WhatsApp floating chat button added (number hidden from display)
 - All changes verified via browser on desktop (1920) and mobile (375) viewports
+---
+Task ID: 1
+Agent: main
+Task: Fix blank/white page on Vercel deployment
+
+Work Log:
+- Diagnosed the issue: Vercel deployment showed "Application error: a client-side exception has occurred"
+- Root cause analysis: @libsql/client and @prisma/adapter-libsql packages could be bundled into client-side JavaScript
+- Installed server-only package and added it to db.ts
+- Changed db.ts to use require() for dynamic imports instead of static imports
+- Added global error boundary (error.tsx) for better error handling
+- Fixed service worker to be non-blocking with Promise.allSettled for precache
+- Added force-dynamic to all pages that query the database
+- Changed API routes and server components to use dynamic imports for db
+- Added better error handling in API routes with detailed error messages
+- Made PWARegistrar more resilient to SW registration failures
+- Pushed fix to GitHub (commit a3ba033)
+
+Stage Summary:
+- All local tests pass (lint, dev server, browser verification)
+- Fix pushed to GitHub, waiting for Vercel to rebuild
+- Key changes: server-only guard, dynamic imports, error boundary, improved SW

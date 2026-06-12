@@ -1,7 +1,10 @@
-import { db } from '@/lib/db';
+import { PrismaClient } from '@prisma/client';
+const db = new PrismaClient();
 
 async function main() {
   // Clean up old data first
+  await db.orderItem.deleteMany();
+  await db.order.deleteMany();
   await db.cartItem.deleteMany();
   await db.product.deleteMany();
   await db.category.deleteMany();

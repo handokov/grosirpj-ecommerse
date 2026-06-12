@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import SiteLayout from "@/components/layout/SiteLayout";
+import StorefrontWrapperClient from "@/components/layout/StorefrontWrapperClient";
 import PWARegistrar from "@/components/pwa/PWARegistrar";
 
 const geistSans = Geist({
@@ -154,7 +154,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <SiteLayout>{children}</SiteLayout>
+        <StorefrontWrapperClient>{children}</StorefrontWrapperClient>
         <PWARegistrar />
         <Toaster position="top-right" richColors />
       </body>

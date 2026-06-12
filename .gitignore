@@ -58,3 +58,10 @@ public/swe-worker-*.js
 
 # Skills directory
 /skills/upload/
+node_modules/
+.next/
+db/*.db
+prisma/*.db
+prisma/prisma/
+tool-results/
+agent-ctx/

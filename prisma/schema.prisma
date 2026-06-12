@@ -40,6 +40,7 @@ model Product {
   weight      String?
   sizes       String?
   cartItems   CartItem[]
+  orderItems  OrderItem[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -53,4 +54,45 @@ model CartItem {
   sessionId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          String   @default("admin") // admin, staff
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  customerAddr  String?
+  status        String      @default("pending") // pending, confirmed, processing, shipped, completed, cancelled
+  paymentMethod String      @default("whatsapp") // whatsapp, transfer, cod
+  paymentStatus String      @default("unpaid") // unpaid, paid, refunded
+  totalAmount   Float
+  note          String?
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  size      String?
+  price     Float    // price at time of order
+  createdAt DateTime @default(now())
 }

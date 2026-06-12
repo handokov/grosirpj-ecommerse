@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
@@ -178,7 +178,7 @@ function formatDate(dateStr: string): string {
   })
 }
 
-export default function OrdersPage() {
+function OrdersContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
@@ -593,5 +593,18 @@ export default function OrdersPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+        <span className="ml-2 text-sm text-gray-500">Memuat pesanan...</span>
+      </div>
+    }>
+      <OrdersContent />
+    </Suspense>
   )
 }

@@ -96,6 +96,11 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#065f46" />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192x192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="GrosirPJ" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

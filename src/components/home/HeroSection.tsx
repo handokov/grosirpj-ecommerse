@@ -105,7 +105,7 @@ export default function HeroSection() {
 
             <div className="flex flex-wrap gap-6 mt-8">
               <div>
-                <p className="text-2xl font-bold text-amber-400">5K+</p>
+                <p className="text-2xl font-bold text-amber-400">100K</p>
                 <p className="text-xs text-emerald-200">Produk Fashion</p>
               </div>
               <div>

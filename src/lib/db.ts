@@ -12,24 +12,34 @@ const globalForPrisma = globalThis as unknown as {
  *
  * IMPORTANT: The adapter export name is case-sensitive!
  * @prisma/adapter-libsql v7 exports `PrismaLibSql` (lowercase 'ql'), NOT `PrismaLibSQL`.
- * It's a Factory class with a .connect() method that returns the actual adapter.
- * PrismaClient v6 calls adapter.connect() internally when provided.
  */
 function createPrismaClient(): PrismaClient {
   const tursoUrl = process.env.TURSO_DATABASE_URL
   const tursoToken = process.env.TURSO_AUTH_TOKEN
 
   if (tursoUrl && tursoToken) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaLibSql } = require('@prisma/adapter-libsql')
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const libsqlModule = require('@prisma/adapter-libsql')
 
-    // PrismaLibSql is a Factory — PrismaClient calls .connect() internally
-    const adapter = new PrismaLibSql({
-      url: tursoUrl,
-      authToken: tursoToken,
-    })
+      // Try both export names for compatibility (v7 uses PrismaLibSql)
+      const PrismaLibSql = libsqlModule.PrismaLibSql || libsqlModule.PrismaLibSQL
 
-    return new PrismaClient({ adapter })
+      if (!PrismaLibSql) {
+        console.error('[db] ERROR: PrismaLibSql not found in @prisma/adapter-libsql. Available exports:', Object.keys(libsqlModule))
+        // Fall through to local SQLite
+      } else {
+        const adapter = new PrismaLibSql({
+          url: tursoUrl,
+          authToken: tursoToken,
+        })
+
+        return new PrismaClient({ adapter })
+      }
+    } catch (err) {
+      console.error('[db] ERROR: Failed to create Turso adapter:', err)
+      // Fall through to local SQLite
+    }
   }
 
   // Local SQLite for development

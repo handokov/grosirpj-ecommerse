@@ -10,10 +10,10 @@ const globalForPrisma = globalThis as unknown as {
  * - If TURSO_DATABASE_URL + TURSO_AUTH_TOKEN are set → use Turso (production)
  * - Otherwise → use local SQLite (development)
  *
- * IMPORTANT: In Prisma v6, PrismaLibSQL is a FACTORY that accepts a config
- * object { url, authToken }, NOT a pre-existing libsql client instance.
- * Passing a client object causes URL_INVALID errors because the factory
- * tries to parse it as a config.
+ * IMPORTANT: The adapter export name is case-sensitive!
+ * @prisma/adapter-libsql v7 exports `PrismaLibSql` (lowercase 'ql'), NOT `PrismaLibSQL`.
+ * It's a Factory class with a .connect() method that returns the actual adapter.
+ * PrismaClient v6 calls adapter.connect() internally when provided.
  */
 function createPrismaClient(): PrismaClient {
   const tursoUrl = process.env.TURSO_DATABASE_URL
@@ -21,10 +21,10 @@ function createPrismaClient(): PrismaClient {
 
   if (tursoUrl && tursoToken) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaLibSQL } = require('@prisma/adapter-libsql')
+    const { PrismaLibSql } = require('@prisma/adapter-libsql')
 
-    // Prisma v6: Pass config object directly — the factory creates the client internally
-    const adapter = new PrismaLibSQL({
+    // PrismaLibSql is a Factory — PrismaClient calls .connect() internally
+    const adapter = new PrismaLibSql({
       url: tursoUrl,
       authToken: tursoToken,
     })

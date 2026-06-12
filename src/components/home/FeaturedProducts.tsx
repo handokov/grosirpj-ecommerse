@@ -2,19 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useStore, type Product } from '@/store/useStore';
+import { type Product } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, ShoppingCart, Eye, TrendingUp } from 'lucide-react';
+import { Star, TrendingUp } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const addToCart = useStore((s) => s.addToCart);
-
   useEffect(() => {
     fetch('/api/products?featured=true&limit=8')
       .then((r) => r.json())
@@ -58,36 +56,25 @@ export default function FeaturedProducts() {
               const discount = calculateDiscount(product.price, product.wholesalePrice);
               const productUrl = `/${product.categorySlug}/${product.slug}`;
               return (
-                <Card key={product.id} className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                  <CardContent className="p-0">
-                    <div className="relative aspect-square overflow-hidden bg-gray-100">
-                      <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                      {discount > 0 && (
-                        <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{discount}%</Badge>
-                      )}
-                      {product.featured && (
-                        <Badge className="absolute top-2 right-2 bg-amber-500 text-gray-900 text-xs px-2">
-                          <Star className="h-3 w-3 fill-current mr-0.5" />TOP
-                        </Badge>
-                      )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                        <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg" onClick={(e) => { e.stopPropagation(); addToCart(product, product.minOrder); }}>
-                          <ShoppingCart className="h-4 w-4" />
-                        </Button>
-                        <Link href={productUrl}>
-                          <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                <Link key={product.id} href={productUrl}>
+                  <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer h-full">
+                    <CardContent className="p-0">
+                      <div className="relative aspect-square overflow-hidden bg-gray-100">
+                        <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        {discount > 0 && (
+                          <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{discount}%</Badge>
+                        )}
+                        {product.featured && (
+                          <Badge className="absolute top-2 right-2 bg-amber-500 text-gray-900 text-xs px-2">
+                            <Star className="h-3 w-3 fill-current mr-0.5" />TOP
+                          </Badge>
+                        )}
                       </div>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
-                      <Link href={productUrl}>
-                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2 cursor-pointer hover:text-emerald-900 transition-colors">
+                      <div className="p-3">
+                        <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
+                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2 group-hover:text-emerald-900 transition-colors">
                           {product.name}
                         </h3>
-                      </Link>
                       <div className="flex items-baseline gap-2 mb-2">
                         <span className="text-sm font-bold text-emerald-900">{formatRupiah(product.wholesalePrice)}</span>
                         {discount > 0 && <span className="text-xs text-muted-foreground line-through">{formatRupiah(product.price)}</span>}
@@ -100,6 +87,7 @@ export default function FeaturedProducts() {
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               );
             })}
           </div>

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import { useStore, type Product, type Category } from '@/store/useStore';
+import { type Product, type Category } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Star, ShoppingCart, Eye, Search, SlidersHorizontal, Grid3X3, List, X, Package } from 'lucide-react';
+import { Star, Search, Grid3X3, List, Package } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
 
@@ -22,7 +22,6 @@ interface Props {
 }
 
 export default function CategoryPageClient({ category, initialProducts, initialTotal, searchQuery: initialSearchQuery }: Props) {
-  const { addToCart } = useStore();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [loading, setLoading] = useState(false);
   const [sort, setSort] = useState('popular');
@@ -121,14 +120,10 @@ export default function CategoryPageClient({ category, initialProducts, initialT
                       <div className={`${viewMode === 'grid' ? 'aspect-square' : 'aspect-video'} relative overflow-hidden bg-gray-100`}>
                         <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                         {discount > 0 && <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{discount}%</Badge>}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                          <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg" onClick={(e) => { e.preventDefault(); addToCart(product, product.minOrder); }}><ShoppingCart className="h-4 w-4" /></Button>
-                          <Button size="icon" className="h-10 w-10 rounded-full bg-white text-gray-900 hover:bg-emerald-800 hover:text-white shadow-lg"><Eye className="h-4 w-4" /></Button>
-                        </div>
                       </div>
                       <div className="p-3">
                         <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
-                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2">{product.name}</h3>
+                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2 group-hover:text-emerald-900 transition-colors">{product.name}</h3>
                         <div className="flex items-baseline gap-2 mb-2">
                           <span className="text-sm font-bold text-emerald-900">{formatRupiah(product.wholesalePrice)}</span>
                           {discount > 0 && <span className="text-xs text-muted-foreground line-through">{formatRupiah(product.price)}</span>}

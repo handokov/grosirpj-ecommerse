@@ -390,3 +390,26 @@ Stage Summary:
 - All local tests pass (lint, dev server, browser verification)
 - Fix pushed to GitHub, waiting for Vercel to rebuild
 - Key changes: server-only guard, dynamic imports, error boundary, improved SW
+
+---
+Task ID: 12
+Agent: Main Agent
+Task: Fix Vercel blank page - ROOT CAUSE: PrismaLibSQL v6 API change
+
+Work Log:
+- Analyzed screenshot: "Application error: a client-side exception has occurred" on grosirpj-ecommerce.vercel.app
+- Tested Turso direct connection - SUCCESS (5 categories found)
+- Tested Prisma+Turso adapter with existing code - FAILED with "URL_INVALID: The URL 'undefined' is not in a valid format"
+- ROOT CAUSE DISCOVERED: In Prisma v6, `PrismaLibSQL` is a FACTORY class that takes a config object {url, authToken}, NOT a pre-existing libsql client instance. The old code was passing `createClient()` result as the argument, which the factory treated as a config object, finding `url=undefined`.
+- Fixed db.ts: Changed from `new PrismaLibSQL(createClient({...}))` to `new PrismaLibSQL({ url, authToken })` - the factory creates the client internally
+- Verified fix: Prisma+Turso connection now works WITHOUT needing DATABASE_URL env var on Vercel
+- Fixed sonner.tsx: Removed `useTheme()` from next-themes (no ThemeProvider was configured, could cause runtime crash)
+- Fixed package.json: Added DATABASE_URL fallback `file:/dev/null` for Vercel builds where DATABASE_URL isn't set
+- Build succeeds locally, API routes return data correctly
+- Browser verification: Homepage renders perfectly with all sections
+
+Stage Summary:
+- ROOT CAUSE: PrismaLibSQL v6 adapter API change - must pass config object, not client instance
+- Fix pushed to GitHub (commit 9b9f376), Vercel should auto-deploy
+- Vercel needs only: TURSO_DATABASE_URL + TURSO_AUTH_TOKEN (no DATABASE_URL required at runtime)
+- DATABASE_URL fallback in build script prevents build-time failures

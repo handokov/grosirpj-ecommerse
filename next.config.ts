@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   // Allow cross-origin requests from preview panel
   allowedDevOrigins: [
     ".space-z.ai",
+    "21.0.16.16",
   ],
 
   // Ensure these packages are NOT bundled by Next.js - they need to run as-is in Node.js

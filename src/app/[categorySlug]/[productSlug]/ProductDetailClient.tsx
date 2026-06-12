@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useStore, type Product } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import { toast } from 'sonner';
-import ProductImage from '@/components/ui/product-image';
+import ProductImage, { getAllImageUrls, getOptimizedImageUrl } from '@/components/ui/product-image';
 
 interface Props {
   product: Product;
@@ -23,9 +24,12 @@ export default function ProductDetailClient({ product, related }: Props) {
   const { addToCart } = useStore();
   const [quantity, setQuantity] = useState(product.minOrder);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const discount = calculateDiscount(product.price, product.wholesalePrice);
   const sizeList = product.sizes ? product.sizes.split(',') : [];
+  const allImages = getAllImageUrls(product.images);
+  const hasMultipleImages = allImages.length > 1;
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedSize || undefined);
@@ -48,11 +52,50 @@ export default function ProductDetailClient({ product, related }: Props) {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* Product image */}
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
-            <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover" priority={true} />
-            {discount > 0 && (
-              <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1">-{discount}% OFF</Badge>
+          {/* Product images */}
+          <div>
+            {/* Main image */}
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3">
+              {allImages.length > 0 ? (
+                <Image
+                  src={getOptimizedImageUrl(allImages[selectedImageIndex] || allImages[0], { width: 800, quality: 'auto' })}
+                  alt={`${product.name} - ${selectedImageIndex + 1}`}
+                  fill
+                  className="object-cover"
+                  priority={true}
+                  unoptimized={allImages[selectedImageIndex]?.startsWith('http')}
+                />
+              ) : (
+                <ProductImage src="" alt={product.name} className="w-full h-full object-cover" priority={true} />
+              )}
+              {discount > 0 && (
+                <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1">-{discount}% OFF</Badge>
+              )}
+            </div>
+
+            {/* Thumbnail gallery */}
+            {hasMultipleImages && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                      idx === selectedImageIndex
+                        ? 'border-emerald-600 shadow-md'
+                        : 'border-gray-200 hover:border-emerald-300'
+                    }`}
+                  >
+                    <Image
+                      src={getOptimizedImageUrl(img, { width: 100, quality: 'auto' })}
+                      alt={`${product.name} thumb ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      unoptimized={img.startsWith('http')}
+                    />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 

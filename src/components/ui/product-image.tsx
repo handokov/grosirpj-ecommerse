@@ -41,7 +41,23 @@ function ImagePlaceholder({ className = '' }: { className?: string }) {
 }
 
 /**
+ * Extract the first image URL from a comma-separated string of image URLs.
+ * Database stores images as "url1,url2,url3" — we only use the first one.
+ */
+function getFirstImageUrl(src: string): string {
+  if (!src) return '';
+  const trimmed = src.trim();
+  // If it contains commas, split and take the first URL
+  if (trimmed.includes(',')) {
+    const parts = trimmed.split(',').map(s => s.trim()).filter(Boolean);
+    return parts[0] || '';
+  }
+  return trimmed;
+}
+
+/**
  * Optimized product image using Next.js Image component.
+ * - Handles comma-separated image URLs (takes the first one)
  * - Cloudinary URLs get transformation parameters for auto WebP/AVIF
  * - Local images served via Next.js Image optimization
  * - Error fallback with placeholder
@@ -61,8 +77,15 @@ export default function ProductImage({
     return <ImagePlaceholder className={className} />;
   }
 
+  // Get the first image from comma-separated URLs
+  const firstImage = getFirstImageUrl(src);
+
+  if (!firstImage) {
+    return <ImagePlaceholder className={className} />;
+  }
+
   // Build optimized URL
-  const imageSrc = getOptimizedImageUrl(src, {
+  const imageSrc = getOptimizedImageUrl(firstImage, {
     width: 600,
     quality: 'auto',
   });
@@ -124,4 +147,13 @@ export function getOptimizedImageUrl(
 
   // Local path - just return as-is, Next.js Image will optimize
   return path;
+}
+
+/**
+ * Get all image URLs from a comma-separated string.
+ * Useful for image galleries.
+ */
+export function getAllImageUrls(src: string): string[] {
+  if (!src) return [];
+  return src.split(',').map(s => s.trim()).filter(Boolean);
 }

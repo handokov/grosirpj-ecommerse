@@ -1,6 +1,9 @@
 import { db } from '@/lib/db';
 import type { MetadataRoute } from 'next';
 
+// Make this route dynamic so it doesn't try to build at deploy time
+export const dynamic = 'force-dynamic';
+
 const BASE_URL = 'https://grosirpj.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

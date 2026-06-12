@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    // Dynamic import to ensure db is only loaded server-side
+    const { db } = await import('@/lib/db');
+
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
 
@@ -45,6 +49,6 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch categories', details: String(error) }, { status: 500 });
   }
 }

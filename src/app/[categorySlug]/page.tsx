@@ -1,7 +1,9 @@
-import { db } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import CategoryPageClient from './CategoryPageClient';
+
+// Force dynamic rendering - don't try to statically generate
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ categorySlug: string }>;
@@ -10,33 +12,41 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categorySlug } = await params;
-  const category = await db.category.findUnique({ where: { slug: categorySlug } });
 
-  if (!category) {
-    return { title: 'Kategori Tidak Ditemukan - GrosirPJ' };
+  try {
+    const { db } = await import('@/lib/db');
+    const category = await db.category.findUnique({ where: { slug: categorySlug } });
+
+    if (!category) {
+      return { title: 'Kategori Tidak Ditemukan - GrosirPJ' };
+    }
+
+    return {
+      title: `${category.name} - GrosirPJ | Grosir Baju Anak & Baby Kids`,
+      description: category.description || `Beli grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah di GrosirPJ. Fashion bayi, balita, dan anak-anak. COD Jakarta & garansi 100%.`,
+      openGraph: {
+        title: `${category.name} - GrosirPJ`,
+        description: category.description || `Grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah. Belanja sekarang!`,
+        url: `https://grosirpj.com/${categorySlug}`,
+        siteName: 'GrosirPJ',
+        type: 'website',
+        locale: 'id_ID',
+        images: category.image ? [{ url: category.image, alt: category.name }] : undefined,
+      },
+      alternates: {
+        canonical: `https://grosirpj.com/${categorySlug}`,
+      },
+    };
+  } catch {
+    return { title: 'GrosirPJ - Grosir Baju Anak & Baby Kids' };
   }
-
-  return {
-    title: `${category.name} - GrosirPJ | Grosir Baju Anak & Baby Kids`,
-    description: category.description || `Beli grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah di GrosirPJ. Fashion bayi, balita, dan anak-anak. COD Jakarta & garansi 100%.`,
-    openGraph: {
-      title: `${category.name} - GrosirPJ`,
-      description: category.description || `Grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah. Belanja sekarang!`,
-      url: `https://grosirpj.com/${categorySlug}`,
-      siteName: 'GrosirPJ',
-      type: 'website',
-      locale: 'id_ID',
-      images: category.image ? [{ url: category.image, alt: category.name }] : undefined,
-    },
-    alternates: {
-      canonical: `https://grosirpj.com/${categorySlug}`,
-    },
-  };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorySlug } = await params;
   const { q } = await searchParams;
+
+  const { db } = await import('@/lib/db');
 
   const category = await db.category.findUnique({
     where: { slug: categorySlug },

@@ -11,7 +11,8 @@ export default function PWARegistrar() {
           console.log('SW registered:', registration.scope);
         })
         .catch((error) => {
-          console.log('SW registration failed:', error);
+          // Don't crash if SW registration fails - just log it
+          console.warn('SW registration failed (non-critical):', error);
         });
     }
   }, []);

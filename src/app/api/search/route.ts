@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    // Dynamic import to ensure db is only loaded server-side
+    const { db } = await import('@/lib/db');
+
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
 
@@ -44,6 +48,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Error searching:', error);
-    return NextResponse.json({ error: 'Search failed' }, { status: 500 });
+    return NextResponse.json({ suggestions: [], error: 'Search failed' }, { status: 500 });
   }
 }

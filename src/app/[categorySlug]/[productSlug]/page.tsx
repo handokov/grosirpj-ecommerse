@@ -1,3 +1,4 @@
+import { db } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import ProductDetailClient from './ProductDetailClient';
@@ -13,7 +14,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { productSlug } = await params;
 
   try {
-    const { db } = await import('@/lib/db');
     const product = await db.product.findUnique({
       where: { slug: productSlug },
       include: { category: true },
@@ -46,8 +46,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { productSlug } = await params;
-  const { db } = await import('@/lib/db');
-
   const product = await db.product.findUnique({
     where: { slug: productSlug },
     include: { category: true },

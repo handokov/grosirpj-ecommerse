@@ -1,3 +1,4 @@
+import { db } from '@/lib/db';
 import type { MetadataRoute } from 'next';
 
 // Make this route dynamic so it doesn't try to build at deploy time
@@ -7,10 +8,6 @@ const BASE_URL = 'https://grosirpj.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
-    // Dynamic import to ensure db is only loaded server-side
-    const { db } = await import('@/lib/db');
-
-    // Fetch all categories and products
     const [categories, products] = await Promise.all([
       db.category.findMany({
         select: { slug: true, updatedAt: true },
@@ -54,7 +51,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    // Return minimal sitemap on error
     return [
       {
         url: BASE_URL,

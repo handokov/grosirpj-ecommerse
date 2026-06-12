@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
 
+  // Allow cross-origin requests from preview panel
+  allowedDevOrigins: [
+    ".space-z.ai",
+  ],
+
   // Ensure these packages are NOT bundled by Next.js - they need to run as-is in Node.js
   serverExternalPackages: [
     "@libsql/client",

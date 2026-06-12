@@ -1,3 +1,4 @@
+import { db } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import CategoryPageClient from './CategoryPageClient';
@@ -14,7 +15,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categorySlug } = await params;
 
   try {
-    const { db } = await import('@/lib/db');
     const category = await db.category.findUnique({ where: { slug: categorySlug } });
 
     if (!category) {
@@ -45,8 +45,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorySlug } = await params;
   const { q } = await searchParams;
-
-  const { db } = await import('@/lib/db');
 
   const category = await db.category.findUnique({
     where: { slug: categorySlug },

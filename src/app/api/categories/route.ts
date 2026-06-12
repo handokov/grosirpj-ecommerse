@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    // Dynamic import to ensure db is only loaded server-side
-    const { db } = await import('@/lib/db');
-
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
 
-    // If slug is provided, return a single category
     if (slug) {
       const category = await db.category.findUnique({
         where: { slug },
@@ -31,7 +28,6 @@ export async function GET(request: Request) {
       });
     }
 
-    // Otherwise, return all categories
     const categories = await db.category.findMany({
       orderBy: { order: 'asc' },
       include: {
@@ -49,6 +45,6 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return NextResponse.json({ error: 'Failed to fetch categories', details: String(error) }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
   }
 }

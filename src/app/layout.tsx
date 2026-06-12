@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://grosirpj.com'),
   title: "GrosirPJ - Pusat Grosir Baju Anak & Baby Kids Terpercaya",
   description:
     "GrosirPJ adalah pusat grosir baju anak dan baby kids terpercaya di Indonesia. Beli grosir fashion bayi, balita, dan anak-anak dengan harga termurah. Kualitas terbaik, pengiriman cepat ke seluruh Indonesia.",

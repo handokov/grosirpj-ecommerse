@@ -40,7 +40,7 @@ export default function CategoryGrid() {
           {categories.map((cat) => {
             const IconComp = iconMap[cat.icon || ''];
             return (
-              <Link key={cat.id} href={`/${cat.slug}`}>
+              <Link key={cat.id} href={`/${cat.slug}`} prefetch={true}>
                 <Card className="group cursor-pointer border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                   <CardContent className="p-0">
                     <div className="relative h-32 sm:h-44 overflow-hidden">

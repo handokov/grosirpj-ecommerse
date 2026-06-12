@@ -46,6 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { productSlug } = await params;
+
   const product = await db.product.findUnique({
     where: { slug: productSlug },
     include: { category: true },
@@ -55,18 +56,20 @@ export default async function ProductPage({ params }: Props) {
     notFound();
   }
 
-  // Fetch related products
-  const related = await db.product.findMany({
-    where: {
-      categoryId: product.categoryId,
-      id: { not: product.id },
-    },
-    take: 4,
-    orderBy: { sold: 'desc' },
-    include: {
-      category: { select: { name: true, slug: true } },
-    },
-  });
+  // Run both queries in parallel to reduce latency
+  const [related] = await Promise.all([
+    db.product.findMany({
+      where: {
+        categoryId: product.categoryId,
+        id: { not: product.id },
+      },
+      take: 4,
+      orderBy: { sold: 'desc' },
+      include: {
+        category: { select: { name: true, slug: true } },
+      },
+    }),
+  ]);
 
   const serializedProduct = {
     ...product,

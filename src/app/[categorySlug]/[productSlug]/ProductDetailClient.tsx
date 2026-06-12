@@ -50,7 +50,7 @@ export default function ProductDetailClient({ product, related }: Props) {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Product image */}
           <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
-            <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover" />
+            <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover" priority={true} />
             {discount > 0 && (
               <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1">-{discount}% OFF</Badge>
             )}

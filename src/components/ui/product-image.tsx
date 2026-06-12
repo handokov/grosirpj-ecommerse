@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface ProductImageProps {
   src: string;
@@ -10,19 +11,22 @@ interface ProductImageProps {
   className?: string;
   loading?: 'lazy' | 'eager';
   sizes?: string;
+  priority?: boolean;
 }
 
 /**
- * Smart image component that works with both local and Cloudinary images.
- * - If src is a full URL (Cloudinary), uses it directly with optimization
- * - If src is a local path, serves from /public
- * - Includes error fallback
+ * Optimized product image using Next.js Image component.
+ * - Cloudinary URLs get transformation parameters for auto WebP/AVIF
+ * - Local images served via Next.js Image optimization
+ * - Error fallback with placeholder
  */
 export default function ProductImage({
   src,
   alt,
   className = '',
   loading = 'lazy',
+  sizes = '(max-width: 768px) 50vw, 25vw',
+  priority = false,
 }: ProductImageProps) {
   const [error, setError] = useState(false);
 
@@ -31,6 +35,9 @@ export default function ProductImage({
     width: 600,
     quality: 'auto',
   });
+
+  // Determine if it's an external URL (Cloudinary) or local path
+  const isExternal = imageSrc.startsWith('http://') || imageSrc.startsWith('https://');
 
   // Fallback placeholder on error
   if (error) {
@@ -59,12 +66,18 @@ export default function ProductImage({
   }
 
   return (
-    <img
+    <Image
       src={imageSrc}
       alt={alt}
+      fill={!className?.includes('h-') && !className?.includes('w-')}
+      width={className?.includes('h-') || className?.includes('w-') ? 600 : undefined}
+      height={className?.includes('h-') || className?.includes('w-') ? 600 : undefined}
       className={className}
-      loading={loading}
+      loading={priority ? 'eager' : loading}
+      sizes={sizes}
+      priority={priority}
       onError={() => setError(true)}
+      unoptimized={isExternal}
     />
   );
 }
@@ -72,7 +85,7 @@ export default function ProductImage({
 /**
  * Get optimized image URL
  * - Cloudinary URLs get transformation parameters
- * - Local paths stay as-is
+ * - Local paths stay as-is (Next.js Image handles optimization)
  */
 export function getOptimizedImageUrl(
   path: string,
@@ -95,31 +108,12 @@ export function getOptimizedImageUrl(
       else transforms.push('f_auto');
       transforms.push('c_limit');
 
-      // Insert transforms into the URL
       const transformStr = transforms.join(',');
       return path.replace('/image/upload/', `/image/upload/${transformStr}/`);
     }
     return path;
   }
 
-  // Local path - check if Cloudinary is configured for production
-  const cloudName = typeof window !== 'undefined' 
-    ? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME 
-    : process.env.CLOUDINARY_CLOUD_NAME;
-
-  if (cloudName) {
-    const publicId = path.replace(/^\/images\//, 'grosirpj/');
-    const transforms: string[] = [];
-    if (options?.width) transforms.push(`w_${options.width}`);
-    if (options?.height) transforms.push(`h_${options.height}`);
-    if (options?.quality) transforms.push(`q_${options.quality}`);
-    transforms.push('f_auto');
-    transforms.push('c_limit');
-
-    const transformStr = transforms.join(',');
-    return `https://res.cloudinary.com/${cloudName}/image/upload/${transformStr}/${publicId}`;
-  }
-
-  // Fallback to local path
+  // Local path - just return as-is, Next.js Image will optimize
   return path;
 }

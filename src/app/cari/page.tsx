@@ -9,10 +9,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const { q } = await searchParams;
   return {
     title: q ? `Hasil pencarian "${q}" - GrosirPJ` : 'Cari Produk - GrosirPJ',
-    description: `Cari produk grosir baju anak dan remaja di GrosirPJ${q ? ` untuk "${q}"` : ''}. Harga grosir termurah, kualitas terbaik.`,
+    description: `Cari produk grosir baju anak dan baby kids di GrosirPJ${q ? ` untuk "${q}"` : ''}. Harga grosir termurah, kualitas terbaik.`,
     openGraph: {
       title: q ? `Hasil pencarian "${q}" - GrosirPJ` : 'Cari Produk - GrosirPJ',
-      description: `Cari produk grosir baju anak dan remaja${q ? ` untuk "${q}"` : ''}.`,
+      description: `Cari produk grosir baju anak dan baby kids${q ? ` untuk "${q}"` : ''}.`,
       url: `https://grosirpj.com/cari${q ? `?q=${encodeURIComponent(q)}` : ''}`,
       siteName: 'GrosirPJ',
       type: 'website',

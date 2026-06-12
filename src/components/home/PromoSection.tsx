@@ -15,7 +15,7 @@ export default function PromoSection() {
             <span className="text-sm font-semibold text-orange-500 uppercase">Promo Spesial</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Penawaran Terbatas</h2>
-          <p className="text-muted-foreground">Jangan lewatkan promo grosir baju anak & remaja terbaik minggu ini</p>
+          <p className="text-muted-foreground">Jangan lewatkan promo grosir baju anak & baby kids terbaik minggu ini</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
@@ -44,7 +44,7 @@ export default function PromoSection() {
             <div className="relative">
               <Badge className="bg-amber-500 text-gray-900 mb-3"><Gift className="h-3 w-3 mr-1" /> GRATIS ONGKIR</Badge>
               <h3 className="text-xl md:text-2xl font-bold mb-2">Free Ongkir Seluruh Indonesia</h3>
-              <p className="text-emerald-100 text-sm mb-4">Gratis ongkos kirim untuk pembelian di atas Rp 3.000.000. Berlaku untuk semua kategori fashion anak & remaja.</p>
+              <p className="text-emerald-100 text-sm mb-4">Gratis ongkos kirim untuk pembelian di atas Rp 3.000.000. Berlaku untuk semua kategori fashion anak & baby kids.</p>
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="h-4 w-4 text-amber-400" />
                 <span className="text-sm text-amber-400 font-medium">Promo sepanjang bulan</span>
@@ -62,7 +62,7 @@ export default function PromoSection() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           {[
             { icon: '🎀', title: 'Reseller Baru', desc: 'Diskon 15% first order' },
-            { icon: '📦', title: 'Paket Lengkap', desc: 'Set baju dari bayi-remaja' },
+            { icon: '📦', title: 'Paket Lengkap', desc: 'Set baju dari bayi-anak' },
             { icon: '🔄', title: 'Repeat Order', desc: 'Cashback 5%' },
             { icon: '💎', title: 'VIP Reseller', desc: 'Extra diskon 10%' },
           ].map((promo) => (

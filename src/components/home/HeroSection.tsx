@@ -13,10 +13,10 @@ const SLIDER_IMAGES = [
   { src: '/images/products/kaos-anak.png', alt: 'Kaos Anak Trendy' },
   { src: '/images/products/dress-anak.png', alt: 'Dress Anak Elegant' },
   { src: '/images/products/jaket-anak.png', alt: 'Jaket Anak Stylish' },
-  { src: '/images/products/hoodie-remaja.png', alt: 'Hoodie Remaja Cool' },
-  { src: '/images/products/dress-remaja.png', alt: 'Dress Remaja Modis' },
+  { src: '/images/products/hoodie-remaja.png', alt: 'Hoodie Anak Cool' },
+  { src: '/images/products/dress-remaja.png', alt: 'Dress Anak Modis' },
   { src: '/images/products/gamis-anak.png', alt: 'Gamis Anak Syar\'i' },
-  { src: '/images/products/kemeja-remaja.png', alt: 'Kemeja Remaja Formal' },
+  { src: '/images/products/kemeja-remaja.png', alt: 'Kemeja Anak Formal' },
 ];
 
 export default function HeroSection() {
@@ -73,7 +73,7 @@ export default function HeroSection() {
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
               Grosir Baju Anak
-              <span className="text-amber-400"> & Remaja</span>
+              <span className="text-amber-400"> & Baby Kids</span>
             </h1>
 
             <p className="text-emerald-100 text-lg mb-2 max-w-lg font-medium">
@@ -92,7 +92,7 @@ export default function HeroSection() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Cari baju anak, dress bayi, kaos remaja..."
+                  placeholder="Cari baju anak, dress bayi, kaos anak..."
                   value={searchVal}
                   onChange={(e) => setSearchVal(e.target.value)}
                   className="w-full pl-11 pr-4 py-3.5 rounded-xl text-gray-900 bg-white shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm"

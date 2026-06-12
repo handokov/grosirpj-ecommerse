@@ -102,7 +102,7 @@ export default function Header() {
           <div className="flex items-center gap-4">
             <span>🚚 COD Jakarta Area</span>
             <span>|</span>
-            <span>👗 Grosir Baju Anak & Remaja Terpercaya</span>
+            <span>👗 Grosir Baju Anak & Baby Kids Terpercaya</span>
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ export default function Header() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Cari baju anak, dress remaja, kaos anak..."
+                  placeholder="Cari baju anak, dress bayi, kaos anak..."
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
                   className="pl-10 pr-4 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-600 focus:ring-emerald-600/20 rounded-full"
@@ -324,7 +324,7 @@ function CartDrawer() {
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
           <ShoppingCart className="h-16 w-16 text-gray-300 mb-4" />
           <h3 className="font-semibold text-gray-600 mb-1">Keranjang Kosong</h3>
-          <p className="text-sm text-muted-foreground">Mulai belanja fashion anak & remaja</p>
+          <p className="text-sm text-muted-foreground">Mulai belanja fashion anak & baby kids</p>
         </div>
       ) : (
         <>

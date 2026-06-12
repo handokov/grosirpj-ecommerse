@@ -18,7 +18,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-sm text-gray-400 mb-4">
-              Pusat grosir baju anak dan remaja terpercaya di Indonesia. Fashion bayi, balita, anak-anak, dan remaja dengan harga grosir termurah. Melayani sejak 2015.
+              Pusat grosir baju anak terpercaya di Indonesia. Fashion bayi, balita, dan anak-anak dengan harga grosir termurah. Melayani sejak 2015.
             </p>
             <div className="flex gap-3">
               <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Facebook className="h-4 w-4" /></a>
@@ -32,12 +32,11 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">Kategori</h4>
             <ul className="space-y-2">
               {[
-                { name: 'Bayi (0-2 Tahun)', slug: 'bayi-0-2-tahun' },
-                { name: 'Balita (2-5 Tahun)', slug: 'balita-2-5-tahun' },
-                { name: 'Anak-Anak (5-12 Tahun)', slug: 'anak-anak-5-12-tahun' },
-                { name: 'Remaja (12-17 Tahun)', slug: 'remaja-12-17-tahun' },
-                { name: 'Aksesoris Anak', slug: 'aksesoris-anak' },
-                { name: 'Sepatu Anak & Remaja', slug: 'sepatu-anak-remaja' },
+                { name: 'Bayi (0-12 Bulan)', slug: 'bayi-0-12-bulan' },
+                { name: 'Balita (1-5 Tahun)', slug: 'balita-1-5-tahun' },
+                { name: 'Anak-Anak (6-12 Tahun)', slug: 'anak-anak-6-12-tahun' },
+                { name: 'Aksesoris Baby Kids', slug: 'aksesoris-baby-kids' },
+                { name: 'Sepatu', slug: 'sepatu' },
               ].map((cat) => (
                 <li key={cat.slug}>
                   <Link href={`/${cat.slug}`} className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">{cat.name}</Link>

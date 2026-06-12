@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${product.name} - GrosirPJ | Grosir Baju Anak & Remaja`,
+    title: `${product.name} - GrosirPJ | Grosir Baju Anak & Baby Kids`,
     description: product.description.slice(0, 160) || `Beli grosir ${product.name} berkualitas dengan harga termurah. Harga grosir mulai ${product.wholesalePrice}. Min. order ${product.minOrder} pcs.`,
     openGraph: {
       title: `${product.name} - GrosirPJ`,

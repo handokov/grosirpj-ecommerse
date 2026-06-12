@@ -15,15 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GrosirPJ - Pusat Grosir Baju Anak & Remaja Terpercaya",
+  title: "GrosirPJ - Pusat Grosir Baju Anak & Baby Kids Terpercaya",
   description:
-    "GrosirPJ adalah pusat grosir baju anak dan remaja terpercaya di Indonesia. Beli grosir fashion bayi, balita, anak-anak, dan remaja dengan harga termurah. Kualitas terbaik, pengiriman cepat ke seluruh Indonesia.",
+    "GrosirPJ adalah pusat grosir baju anak dan baby kids terpercaya di Indonesia. Beli grosir fashion bayi, balita, dan anak-anak dengan harga termurah. Kualitas terbaik, pengiriman cepat ke seluruh Indonesia.",
   keywords: [
     "grosir baju anak",
     "grosir fashion anak",
-    "grosir baju remaja",
     "grosir baju bayi",
     "grosir baju balita",
+    "grosir baju baby kids",
     "baju anak grosir murah",
     "grosir pakaian anak",
     "supplier baju anak",
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
     icon: "/logo-sm.png",
   },
   openGraph: {
-    title: "GrosirPJ - Pusat Grosir Baju Anak & Remaja Terpercaya",
+    title: "GrosirPJ - Pusat Grosir Baju Anak & Baby Kids Terpercaya",
     description:
-      "Beli grosir baju anak dan remaja berkualitas dengan harga termurah. Fashion bayi, balita, anak-anak, remaja. Gratis ongkir & garansi 100%.",
+      "Beli grosir baju anak dan baby kids berkualitas dengan harga termurah. Fashion bayi, balita, anak-anak. COD Jakarta & garansi 100%.",
     url: "https://grosirpj.com",
     siteName: "GrosirPJ",
     type: "website",
@@ -53,9 +53,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GrosirPJ - Grosir Baju Anak & Remaja Terpercaya",
+    title: "GrosirPJ - Grosir Baju Anak & Baby Kids Terpercaya",
     description:
-      "Beli grosir fashion anak dan remaja berkualitas. Harga termurah, gratis ongkir, garansi 100%.",
+      "Beli grosir fashion anak dan baby kids berkualitas. Harga termurah, COD Jakarta, garansi 100%.",
   },
   robots: {
     index: true,
@@ -91,7 +91,7 @@ export default function RootLayout({
               url: "https://grosirpj.com",
               logo: "https://grosirpj.com/logo.svg",
               description:
-                "Pusat grosir baju anak dan remaja terpercaya di Indonesia. Fashion bayi, balita, anak-anak, dan remaja dengan harga grosir termurah.",
+                "Pusat grosir baju anak dan baby kids terpercaya di Indonesia. Fashion bayi, balita, dan anak-anak dengan harga grosir termurah.",
               address: {
                 "@type": "PostalAddress",
                 streetAddress: "Jl. Raya Grosir No. 123, Tanah Abang",
@@ -102,7 +102,6 @@ export default function RootLayout({
               },
               contactPoint: {
                 "@type": "ContactPoint",
-                telephone: "+62-812-3456-7890",
                 contactType: "customer service",
                 availableLanguage: ["Indonesian", "English"],
               },

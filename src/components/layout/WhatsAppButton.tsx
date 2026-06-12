@@ -9,7 +9,7 @@ import { MessageCircle } from 'lucide-react';
  */
 export default function WhatsAppButton() {
   const WA_NUMBER = '6281281756262';
-  const WA_MESSAGE = encodeURIComponent('Halo GrosirPJ! Saya ingin bertanya tentang produk fashion anak & remaja.');
+  const WA_MESSAGE = encodeURIComponent('Halo GrosirPJ! Saya ingin bertanya tentang produk fashion anak & baby kids.');
 
   const handleClick = () => {
     window.open(`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`, '_blank', 'noopener,noreferrer');

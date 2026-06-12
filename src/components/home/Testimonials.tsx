@@ -8,7 +8,7 @@ const testimonials = [
     role: 'Owner Toko Baju Anak',
     location: 'Jakarta',
     rating: 5,
-    text: 'GrosirPJ benar-benar penyelamat bisnis saya! Koleksi baju anaknya lengkap banget dari bayi sampai remaja, harga grosirnya paling murah. Kualitas bajunya juga bagus-bagus, pelanggan saya selalu repeat order!',
+    text: 'GrosirPJ benar-benar penyelamat bisnis saya! Koleksi baju anaknya lengkap banget dari bayi sampai anak-anak, harga grosirnya paling murah. Kualitas bajunya juga bagus-bagus, pelanggan saya selalu repeat order!',
     avatar: 'RW',
   },
   {

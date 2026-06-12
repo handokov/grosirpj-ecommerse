@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${category.name} - GrosirPJ | Grosir Baju Anak & Remaja`,
-    description: category.description || `Beli grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah di GrosirPJ. Fashion bayi, balita, anak-anak, dan remaja. Gratis ongkir & garansi 100%.`,
+    title: `${category.name} - GrosirPJ | Grosir Baju Anak & Baby Kids`,
+    description: category.description || `Beli grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah di GrosirPJ. Fashion bayi, balita, dan anak-anak. COD Jakarta & garansi 100%.`,
     openGraph: {
       title: `${category.name} - GrosirPJ`,
       description: category.description || `Grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah. Belanja sekarang!`,

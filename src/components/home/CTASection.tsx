@@ -17,7 +17,7 @@ export default function CTASection() {
               Siap Jadi Reseller Baju Anak?
             </h2>
             <p className="text-emerald-100 mb-6 text-lg">
-              Bergabung dengan 30.000+ reseller yang sudah sukses jualan baju anak dan remaja bersama GrosirPJ. Daftar sekarang dan dapatkan diskon 15% untuk pesanan pertama!
+              Bergabung dengan 30.000+ reseller yang sudah sukses jualan baju anak dan baby kids bersama GrosirPJ. Daftar sekarang dan dapatkan diskon 15% untuk pesanan pertama!
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/cari">

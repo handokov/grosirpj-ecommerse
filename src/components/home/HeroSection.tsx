@@ -71,20 +71,19 @@ export default function HeroSection() {
               <span className="text-sm font-semibold text-amber-300">Harga OK • Kualitas OK</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
-              Grosir Baju Anak
-              <span className="text-amber-400"> & Baby Kids</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4 text-amber-400">
+              Grosir Baju Baby & Kids
             </h1>
 
             <p className="text-emerald-100 text-lg mb-2 max-w-lg font-medium">
               Dengan berbagai pilihan produk
             </p>
             <div className="flex flex-wrap items-center gap-3 mb-8">
-              <span className="text-white font-bold text-lg tracking-wide">LOKAL</span>
-              <span className="text-white/40">•</span>
-              <span className="text-white font-bold text-lg tracking-wide">IMPORT</span>
-              <span className="text-white/40">•</span>
-              <span className="text-white font-bold text-lg tracking-wide">BRANDED</span>
+              <span className="text-amber-400 font-bold text-lg tracking-wide">LOKAL</span>
+              <span className="text-amber-400/40">•</span>
+              <span className="text-amber-400 font-bold text-lg tracking-wide">IMPORT</span>
+              <span className="text-amber-400/40">•</span>
+              <span className="text-amber-400 font-bold text-lg tracking-wide">BRANDED</span>
             </div>
 
             <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">

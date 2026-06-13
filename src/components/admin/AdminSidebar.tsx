@@ -17,6 +17,7 @@ import {
   BarChart3,
   ImagePlus,
   HelpCircle,
+  ImageIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -53,6 +54,11 @@ const navItems: NavItem[] = [
     label: 'Kategori',
     href: '/admin/categories',
     icon: FolderOpen,
+  },
+  {
+    label: 'Banner',
+    href: '/admin/banners',
+    icon: ImageIcon,
   },
   {
     label: 'Analitik',

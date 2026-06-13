@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { type Product, type Category } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,16 +20,19 @@ interface Props {
   initialQuery: string;
 }
 
-export default function SearchPageClient({ initialQuery }: Props) {
+function SearchPageContent({ initialQuery }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read initial state from URL params
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sort, setSort] = useState('popular');
+  const [sort, setSort] = useState(searchParams.get('sort') || 'popular');
   const [totalProducts, setTotalProducts] = useState(0);
-  const [page, setPage] = useState(1);
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [localSearch, setLocalSearch] = useState(initialQuery);
+  const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
+  const [filterCategory, setFilterCategory] = useState(searchParams.get('cat') || 'all');
+  const [localSearch, setLocalSearch] = useState(searchParams.get('q') || initialQuery);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
@@ -50,11 +54,40 @@ export default function SearchPageClient({ initialQuery }: Props) {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
+  // Update URL when state changes
+  const updateUrl = useCallback((newPage: number, newSort: string, newSearch?: string, newCat?: string) => {
+    const params = new URLSearchParams();
+    if (newSearch) params.set('q', newSearch);
+    if (newPage > 1) params.set('page', newPage.toString());
+    if (newSort && newSort !== 'popular') params.set('sort', newSort);
+    if (newCat && newCat !== 'all') params.set('cat', newCat);
+    const queryString = params.toString();
+    const url = `/cari${queryString ? `?${queryString}` : ''}`;
+    router.replace(url, { scroll: false });
+  }, [router]);
+
+  const handleSortChange = (newSort: string) => {
+    setSort(newSort);
+    setPage(1);
+    updateUrl(1, newSort, localSearch || undefined, filterCategory);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    updateUrl(newPage, sort, localSearch || undefined, filterCategory);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCategoryChange = (newCat: string) => {
+    setFilterCategory(newCat);
+    setPage(1);
+    updateUrl(1, sort, localSearch || undefined, newCat);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (localSearch.trim()) {
-      router.push(`/cari?q=${encodeURIComponent(localSearch.trim())}`);
-    }
+    setPage(1);
+    updateUrl(1, sort, localSearch || undefined, filterCategory);
   };
 
   return (
@@ -84,7 +117,7 @@ export default function SearchPageClient({ initialQuery }: Props) {
             <Button type="submit" variant="default" className="rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950">Cari</Button>
           </form>
           <div className="flex gap-2">
-            <Select value={sort} onValueChange={(v) => { setSort(v); setPage(1); }}>
+            <Select value={sort} onValueChange={handleSortChange}>
               <SelectTrigger className="w-[160px] rounded-xl"><SelectValue placeholder="Urutkan" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="popular">Terpopuler</SelectItem>
@@ -104,9 +137,9 @@ export default function SearchPageClient({ initialQuery }: Props) {
         {/* Category filters */}
         <div className="mb-6">
           <div className="flex flex-wrap gap-2">
-            <Button variant={filterCategory === 'all' ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === 'all' ? 'bg-gradient-to-r from-emerald-700 to-emerald-900' : ''}`} onClick={() => { setFilterCategory('all'); setPage(1); }}>Semua</Button>
+            <Button variant={filterCategory === 'all' ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === 'all' ? 'bg-gradient-to-r from-emerald-700 to-emerald-900' : ''}`} onClick={() => handleCategoryChange('all')}>Semua</Button>
             {categories.map((cat) => (
-              <Button key={cat.id} variant={filterCategory === cat.id ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === cat.id ? 'bg-gradient-to-r from-emerald-700 to-emerald-900' : ''}`} onClick={() => { setFilterCategory(cat.id); setPage(1); }}>{cat.name}</Button>
+              <Button key={cat.id} variant={filterCategory === cat.id ? 'default' : 'outline'} size="sm" className={`rounded-full ${filterCategory === cat.id ? 'bg-gradient-to-r from-emerald-700 to-emerald-900' : ''}`} onClick={() => handleCategoryChange(cat.id)}>{cat.name}</Button>
             ))}
           </div>
         </div>
@@ -123,7 +156,7 @@ export default function SearchPageClient({ initialQuery }: Props) {
             <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-600 mb-1">Produk Tidak Ditemukan</h3>
             <p className="text-muted-foreground mb-4">Coba ubah kata kunci atau filter pencarian</p>
-            <Button variant="outline" className="rounded-xl" onClick={() => { setFilterCategory('all'); setLocalSearch(''); setPage(1); }}>Reset Filter</Button>
+            <Button variant="outline" className="rounded-xl" onClick={() => { setFilterCategory('all'); setLocalSearch(''); setPage(1); updateUrl(1, 'popular'); }}>Reset Filter</Button>
           </div>
         ) : (
           <div className={`grid ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2'} gap-4`}>
@@ -161,12 +194,20 @@ export default function SearchPageClient({ initialQuery }: Props) {
 
         {totalProducts > 20 && (
           <div className="flex items-center justify-center gap-2 mt-8">
-            <Button variant="outline" className="rounded-xl" disabled={page === 1} onClick={() => setPage(page - 1)}>Sebelumnya</Button>
+            <Button variant="outline" className="rounded-xl" disabled={page === 1} onClick={() => handlePageChange(page - 1)}>Sebelumnya</Button>
             <span className="text-sm text-muted-foreground">Hal {page} dari {Math.ceil(totalProducts / 20)}</span>
-            <Button variant="outline" className="rounded-xl" disabled={page >= Math.ceil(totalProducts / 20)} onClick={() => setPage(page + 1)}>Selanjutnya</Button>
+            <Button variant="outline" className="rounded-xl" disabled={page >= Math.ceil(totalProducts / 20)} onClick={() => handlePageChange(page + 1)}>Selanjutnya</Button>
           </div>
         )}
       </div>
     </section>
+  );
+}
+
+export default function SearchPageClient(props: Props) {
+  return (
+    <Suspense>
+      <SearchPageContent {...props} />
+    </Suspense>
   );
 }

@@ -303,7 +303,7 @@ export default function ImageUploader({
             Drag & drop gambar di sini
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Dari komputer atau dari website (Shopee, dll) • JPG, PNG, WebP, GIF
+            JPG, PNG, WebP, GIF
           </p>
         </div>
         {(uploading || uploadingUrl) && (

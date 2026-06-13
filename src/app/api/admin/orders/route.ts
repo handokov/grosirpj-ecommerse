@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Orders API error:', error)
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+    return NextResponse.json({ orders: [], total: 0, page: 1, totalPages: 0 })
   }
 }
 

@@ -25,16 +25,20 @@ export default function ProductDetailClient({ product, related }: Props) {
   const [quantity, setQuantity] = useState(product.minOrder);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+<<<<<<< HEAD
 
   // Touch/swipe state
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const isSwiping = useRef(false);
+=======
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
 
   const discount = calculateDiscount(product.price, product.wholesalePrice);
   const sizeList = product.sizes ? product.sizes.split(',') : [];
   const allImages = getAllImageUrls(product.images);
   const hasMultipleImages = allImages.length > 1;
+<<<<<<< HEAD
 
   const goToImage = useCallback((index: number) => {
     setSelectedImageIndex(index);
@@ -71,6 +75,8 @@ export default function ProductDetailClient({ product, related }: Props) {
       goPrev();
     }
   }, [goNext, goPrev]);
+=======
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedSize || undefined);
@@ -95,6 +101,7 @@ export default function ProductDetailClient({ product, related }: Props) {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Product images */}
           <div>
+<<<<<<< HEAD
             {/* Main image with swipe support */}
             <div
               className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 group select-none"
@@ -105,11 +112,21 @@ export default function ProductDetailClient({ product, related }: Props) {
               {allImages.length > 0 ? (
                 <Image
                   key={selectedImageIndex}
+=======
+            {/* Main image */}
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 group">
+              {allImages.length > 0 ? (
+                <Image
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
                   src={getOptimizedImageUrl(allImages[selectedImageIndex] || allImages[0], { width: 800, quality: 'auto' })}
                   alt={`${product.name} - ${selectedImageIndex + 1}`}
                   fill
                   className="object-cover"
+<<<<<<< HEAD
                   priority={selectedImageIndex === 0}
+=======
+                  priority={true}
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
                   unoptimized={allImages[selectedImageIndex]?.startsWith('http')}
                 />
               ) : (
@@ -118,6 +135,7 @@ export default function ProductDetailClient({ product, related }: Props) {
               {discount > 0 && (
                 <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 z-10">-{discount}% OFF</Badge>
               )}
+<<<<<<< HEAD
 
               {/* Navigation arrows - always visible on mobile, hover on desktop */}
               {hasMultipleImages && (
@@ -125,19 +143,36 @@ export default function ProductDetailClient({ product, related }: Props) {
                   <button
                     onClick={goPrev}
                     className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all md:opacity-0 md:group-hover:opacity-100 z-10"
+=======
+              {/* Navigation arrows */}
+              {hasMultipleImages && (
+                <>
+                  {/* Left arrow */}
+                  <button
+                    onClick={() => setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all opacity-0 group-hover:opacity-100 z-10"
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
                     aria-label="Gambar sebelumnya"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
+<<<<<<< HEAD
                   <button
                     onClick={goNext}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all md:opacity-0 md:group-hover:opacity-100 z-10"
+=======
+                  {/* Right arrow */}
+                  <button
+                    onClick={() => setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all opacity-0 group-hover:opacity-100 z-10"
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
                     aria-label="Gambar selanjutnya"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
                 </>
               )}
+<<<<<<< HEAD
 
               {/* Image counter */}
               {hasMultipleImages && (
@@ -152,15 +187,31 @@ export default function ProductDetailClient({ product, related }: Props) {
                   ← Geser →
                 </div>
               )}
+=======
+              {/* Image counter */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  {selectedImageIndex + 1} / {allImages.length}
+                </div>
+              )}
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
             </div>
 
             {/* Thumbnail gallery */}
             {hasMultipleImages && (
+<<<<<<< HEAD
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => goToImage(idx)}
+=======
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+>>>>>>> 56bf120d4ab59d1e79a4145511a71b69a6390cec
                     className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
                       idx === selectedImageIndex
                         ? 'border-emerald-600 shadow-md'

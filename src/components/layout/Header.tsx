@@ -183,7 +183,7 @@ export default function Header() {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-full sm:w-[420px] p-0">
+                <SheetContent className="w-full sm:w-[420px] p-0 [&>button.absolute]:hidden">
                   <SheetTitle className="sr-only">Keranjang Belanja</SheetTitle>
                   <CartDrawer />
                 </SheetContent>
@@ -471,7 +471,7 @@ function CartDrawer() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 pr-12 border-b bg-emerald-50">
+      <div className="p-4 border-b bg-emerald-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {step !== 'cart' && (
@@ -487,6 +487,9 @@ function CartDrawer() {
             {step === 'cart' && cartItems.length > 0 && (
               <Badge variant="secondary" className="bg-emerald-100 text-emerald-900">{cartItems.length} item</Badge>
             )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleClose}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

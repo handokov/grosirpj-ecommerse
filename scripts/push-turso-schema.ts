@@ -100,6 +100,9 @@ async function pushSchema() {
       paymentStatus TEXT NOT NULL DEFAULT 'unpaid',
       totalAmount REAL NOT NULL,
       shippingCost REAL NOT NULL DEFAULT 0,
+      courier TEXT,
+      courierService TEXT,
+      destinationCity TEXT,
       note TEXT,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -152,6 +155,27 @@ async function pushSchema() {
     )
   `)
   console.log('✅ Banner table created')
+
+  // Add new columns to Order table if they don't exist
+  try {
+    const orderColumns = await turso.execute("PRAGMA table_info('Order')")
+    const columnNames = orderColumns.rows.map(r => r.name as string)
+
+    if (!columnNames.includes('courier')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN courier TEXT')
+      console.log('✅ Added courier column to Order table')
+    }
+    if (!columnNames.includes('courierService')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN courierService TEXT')
+      console.log('✅ Added courierService column to Order table')
+    }
+    if (!columnNames.includes('destinationCity')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN destinationCity TEXT')
+      console.log('✅ Added destinationCity column to Order table')
+    }
+  } catch (e) {
+    console.log('⚠️ Column migration warning:', e)
+  }
 
   // Check if admin user exists
   const adminUser = await turso.execute("SELECT id FROM User WHERE email = 'admin@grosirpj.com'")

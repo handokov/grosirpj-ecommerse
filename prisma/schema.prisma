@@ -80,6 +80,9 @@ model Order {
   paymentStatus String      @default("unpaid") // unpaid, paid, refunded
   totalAmount   Float
   shippingCost  Float       @default(0)
+  courier       String?
+  courierService String?
+  destinationCity String?
   note          String?
   items         OrderItem[]
   createdAt     DateTime    @default(now())

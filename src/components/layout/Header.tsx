@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
+import ShippingCalculator, { type SelectedShipping } from '@/components/shipping/ShippingCalculator';
 
 export default function Header() {
   const {
@@ -323,6 +324,9 @@ function CartDrawer() {
     customerPhone: string;
     totalAmount: number;
     shippingCost: number;
+    courier: string;
+    courierService: string;
+    destinationCity: string;
     items: { name: string; quantity: number; size?: string; price: number }[];
     createdAt: string;
   } | null>(null);
@@ -333,10 +337,23 @@ function CartDrawer() {
   const [custAddr, setCustAddr] = useState('');
   const [custNote, setCustNote] = useState('');
   const [shippingCost, setShippingCost] = useState(0);
+  const [selectedShipping, setSelectedShipping] = useState<SelectedShipping | null>(null);
 
   const WA_NUMBER = '6281281756262';
   const BCA_REKENING = '4130327970';
   const grandTotal = total + shippingCost;
+
+  // Calculate total weight from cart items
+  const totalWeight = cartItems.reduce((sum, item) => {
+    const itemWeight = parseInt(item.product.weight || '250') || 250; // default 250g per item
+    return sum + itemWeight * item.quantity;
+  }, 0);
+
+  // Handle shipping selection from ShippingCalculator
+  const handleShippingSelected = (shipping: SelectedShipping | null) => {
+    setSelectedShipping(shipping);
+    setShippingCost(shipping?.cost || 0);
+  };
 
   const handleSubmitOrder = async () => {
     if (!custName.trim() || !custPhone.trim()) return;
@@ -359,6 +376,9 @@ function CartDrawer() {
           customerAddr: custAddr.trim(),
           note: custNote.trim(),
           shippingCost,
+          courier: selectedShipping?.courier || '',
+          courierService: selectedShipping?.service?.code || '',
+          destinationCity: selectedShipping?.destinationName || '',
           items: orderItems,
         }),
       });
@@ -376,6 +396,9 @@ function CartDrawer() {
         customerPhone: order.customerPhone || custPhone.trim(),
         totalAmount: order.totalAmount || 0,
         shippingCost: order.shippingCost ?? shippingCost,
+        courier: order.courier || selectedShipping?.courier || '',
+        courierService: order.courierService || selectedShipping?.service?.code || '',
+        destinationCity: order.destinationCity || selectedShipping?.destinationName || '',
         items: Array.isArray(order.items)
           ? order.items.map((i: Record<string, unknown>) => ({
               name: (i.product as Record<string, string>)?.name || 'Produk',
@@ -405,7 +428,9 @@ function CartDrawer() {
     message += 'GrosirPJ - Harga OK Kualitas OK\n';
     message += '━━━━━━━━━━━━━━━━━━━━━\n\n';
     message += `👤 ${invoice.customerName}\n`;
-    message += `📱 ${invoice.customerPhone}\n\n`;
+    message += `📱 ${invoice.customerPhone}\n`;
+    if (invoice.destinationCity) message += `📍 ${invoice.destinationCity}\n`;
+    message += '\n';
     message += '📦 *Detail Pesanan:*\n';
 
     invoice.items.forEach((item, idx) => {
@@ -416,7 +441,11 @@ function CartDrawer() {
 
     message += '\n━━━━━━━━━━━━━━━━━━━━━\n';
     message += `📦 Subtotal: ${formatRupiah(invoice.totalAmount)}\n`;
-    message += `🚚 Ongkir: ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
+    if (invoice.courier && invoice.courier !== 'manual') {
+      message += `🚚 Ongkir (${invoice.courier.toUpperCase()} ${invoice.courierService}): ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
+    } else {
+      message += `🚚 Ongkir: ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
+    }
     message += `💰 *TOTAL BAYAR: ${formatRupiah(invoice.totalAmount + invoice.shippingCost)}*\n\n`;
     message += '💳 *Pembayaran:*\n';
     message += 'Transfer BCA\n';
@@ -435,6 +464,7 @@ function CartDrawer() {
     setCustAddr('');
     setCustNote('');
     setShippingCost(0);
+    setSelectedShipping(null);
     setIsCartOpen(false);
   };
 
@@ -570,68 +600,12 @@ function CartDrawer() {
               />
             </div>
 
-            {/* Shipping cost */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Ongkos Kirim</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShippingCost(0)}
-                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
-                    shippingCost === 0
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
-                  }`}
-                >
-                  Akan dikonfirmasi
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShippingCost(10000)}
-                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
-                    shippingCost === 10000
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
-                  }`}
-                >
-                  Rp 10.000
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShippingCost(15000)}
-                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
-                    shippingCost === 15000
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
-                  }`}
-                >
-                  Rp 15.000
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShippingCost(25000)}
-                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
-                    shippingCost === 25000
-                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
-                  }`}
-                >
-                  Rp 25.000
-                </button>
-              </div>
-              <div className="mt-2">
-                <Input
-                  type="number"
-                  placeholder="Atau masukkan nominal lain"
-                  value={shippingCost > 0 && ![10000, 15000, 25000].includes(shippingCost) ? shippingCost : ''}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    setShippingCost(isNaN(val) ? 0 : val);
-                  }}
-                  className="h-9 text-sm"
-                />
-              </div>
-            </div>
+            {/* Shipping calculator */}
+            <ShippingCalculator
+              totalWeight={totalWeight}
+              onShippingSelected={handleShippingSelected}
+              currentShippingCost={shippingCost}
+            />
 
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Catatan</label>
@@ -673,6 +647,9 @@ function CartDrawer() {
                   <p className="text-muted-foreground text-xs">Pemesan</p>
                   <p className="font-semibold">{invoice.customerName}</p>
                   <p className="text-muted-foreground">{invoice.customerPhone}</p>
+                  {invoice.destinationCity && (
+                    <p className="text-muted-foreground text-xs mt-0.5">📍 {invoice.destinationCity}</p>
+                  )}
                 </div>
 
                 <div className="border-t" />
@@ -702,7 +679,14 @@ function CartDrawer() {
                     <span className="font-medium">{formatRupiah(invoice.totalAmount)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Ongkos Kirim</span>
+                    <span className="text-gray-600">
+                      Ongkos Kirim
+                      {invoice.courier && invoice.courier !== 'manual' && (
+                        <span className="text-xs text-gray-400 ml-1">
+                          ({invoice.courier.toUpperCase()} {invoice.courierService})
+                        </span>
+                      )}
+                    </span>
                     <span className="font-medium">{invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between items-center">

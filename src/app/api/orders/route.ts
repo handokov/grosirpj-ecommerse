@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { items, customerName, customerPhone, customerEmail, customerAddr, note } = body
+    const { items, customerName, customerPhone, customerEmail, customerAddr, note, shippingCost, courier, courierService, destinationCity } = body
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Items required' }, { status: 400 })
@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
         paymentStatus: 'unpaid',
         totalAmount,
         shippingCost: parseFloat(body.shippingCost) || 0,
+        courier: courier || '',
+        courierService: courierService || '',
+        destinationCity: destinationCity || '',
         note: note || '',
         items: {
           create: items.map((item: { productId: string; quantity: number; size?: string; price: number }) => ({

@@ -1,69 +1,28 @@
 ---
-Task ID: 1-11
+Task ID: 1
 Agent: Main Agent
-Task: Build Admin Seller Centre (Shopee-style) for GrosirPJ
+Task: Implement RajaOngkir integration for automatic shipping cost calculation
 
 Work Log:
-- Updated Prisma schema with User, Order, OrderItem models
-- Configured NextAuth.js with credentials provider (JWT strategy, 24h session)
-- Created middleware for admin route protection (checks session token)
-- Created StorefrontWrapperClient to separate storefront/admin layouts
-- Built admin login page with email/password form
-- Built admin dashboard with KPI cards, revenue chart, top products, low stock, recent orders
-- Built product management pages (list, add, edit, delete) with Cloudinary upload
-- Built category management page with CRUD dialog
-- Built order management pages (list with status tabs, detail with status stepper)
-- Built shop settings page (placeholder)
-- Created all admin API routes (dashboard, products, categories, orders, upload)
-- Created admin layout with Shopee-style sidebar navigation
-- Created admin header with search and profile dropdown
-- Seeded admin user (admin@grosirpj.com / admin123) and sample orders
-- Added NEXTAUTH_SECRET and NEXTAUTH_URL to .env
-- Pushed all changes to GitHub
+- Explored current codebase: Header.tsx (CartDrawer with 3-step checkout), useStore.ts, orders API, Prisma schema
+- Updated .env with RAJAONGKIR_API_KEY, RAJAONGKIR_ORIGIN_CITY_ID (default: 153/Jakarta), RAJAONGKIR_BASE_URL
+- Updated Prisma schema: added courier, courierService, destinationCity fields to Order model
+- Ran db:push to sync local SQLite schema
+- Created /api/ongkir/cities/route.ts: City search API proxying to RajaOngkir with 24h cache
+- Created /api/ongkir/cost/route.ts: Shipping cost calculation API supporting JNE, POS, TIKI (Starter plan)
+- Created ShippingCalculator.tsx component with: city search dropdown, "Cek Ongkir" button, courier service selection, manual input fallback when API key not configured
+- Updated Header.tsx CartDrawer: replaced static ongkir buttons with ShippingCalculator component, added totalWeight calculation, updated order submission with courier info
+- Updated invoice display: shows destination city, courier name, courier service
+- Updated WhatsApp message: includes destination city, courier info in ongkir line
+- Updated orders API route: saves courier, courierService, destinationCity to database
+- Updated Turso schema push script with ALTER TABLE for new columns, ran successfully
+- Lint passes cleanly
+- API endpoints tested via curl - graceful handling of missing API key
+- Page loads correctly (verified via curl - 94KB content with GrosirPJ)
 
 Stage Summary:
-- Admin Seller Centre is fully built and committed
-- Key files: src/app/admin/*, src/app/api/admin/*, src/lib/auth.ts, src/middleware.ts
-- Login credentials: admin@grosirpj.com / admin123
-- Admin routes: /admin/login, /admin, /admin/products, /admin/categories, /admin/orders, /admin/settings
-- Vercel needs NEXTAUTH_SECRET environment variable added
-- Turso DB needs User, Order, OrderItem tables (run db:push after deploy or manually)
-
----
-Task ID: 2
-Agent: Main Agent
-Task: Redesign Admin Seller Centre with Shopee-style UI
-
-Work Log:
-- Redesigned AdminSidebar with Shopee-style navigation, collapsible menu, better mobile support
-- Redesigned AdminHeader with top accent gradient bar, breadcrumb navigation, notification bell, profile dropdown
-- Redesigned AdminLayout with lighter background (#f5f6fa), 260px sidebar width
-- Redesigned Admin Dashboard with:
-  - Welcome banner with gradient background and quick action buttons
-  - KPI summary cards (Total Produk, Total Pesanan, Pendapatan, Perlu Proses)
-  - Shopee-style order status pipeline (Perlu Proses, Dikonfirmasi, Sedang Dikirim, Selesai, Dibatalkan)
-  - Revenue chart with category distribution sidebar
-  - Top products and low stock panels
-  - Recent orders table
-- Redesigned Products page with:
-  - Tab-based navigation (Semua, Aktif, Featured, Stok Rendah, Habis)
-  - Export/Import buttons
-  - Improved table with compact styling
-- Redesigned Orders page with:
-  - Status tabs with colored dots
-  - Compact order cards with better layout
-  - Export button
-- Redesigned Categories page with compact table and modern dialogs
-- Redesigned Login page with gradient background, shield icon, modern card
-- Redesigned Settings page with gradient feature banner, better info layout
-- Redesigned Add/Edit Product pages with color-coded section icons
-- Redesigned Order Detail page with compact status stepper, better typography
-- All lint checks pass
-- Server tested: login page renders (42KB), homepage renders (95KB), dashboard redirects correctly (307)
-
-Stage Summary:
-- Complete UI overhaul of Admin Seller Centre to match Shopee's design language
-- Key design changes: lighter backgrounds, border-0 cards with shadow-sm, compact typography, color-coded sections, gradient accents
-- All pages use consistent design tokens: emerald-600 primary, rounded-xl corners, text-xs/text-sm base
-- No backend changes needed - all API routes remain the same
-- Dev server verified working with curl (agent-browser unreliable due to sandbox memory)
+- RajaOngkir integration complete with graceful fallback when API key not configured
+- User needs to: 1) Register at rajaongkir.com, 2) Get API key, 3) Add RAJAONGKIR_API_KEY to .env
+- Starter plan (free) supports JNE, POS, TIKI couriers
+- Pro plan (paid) supports J&T, SiCepat, Wahana, etc. - easy to upgrade by changing RAJAONGKIR_BASE_URL
+- All changes pushed to both local SQLite and Turso production database

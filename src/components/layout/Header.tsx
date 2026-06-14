@@ -331,7 +331,7 @@ function CartDrawer() {
     message += '💳 *Metode Pembayaran:*\n';
     message += 'Transfer BCA\n';
     message += `🏦 BCA: ${BCA_REKENING}\n`; 
-    message += '   a.n. GrosirPJ\n\n';
+    message += '   a.n. Rahmawati\n\n';
     message += 'Mohon kirim bukti transfer setelah pembayaran. Terima kasih! 🙏';
 
     const encoded = encodeURIComponent(message);

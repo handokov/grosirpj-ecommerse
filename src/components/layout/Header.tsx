@@ -332,7 +332,7 @@ function CartDrawer() {
     message += 'Transfer BCA\n';
     message += `🏦 BCA: ${BCA_REKENING}\n`; 
     message += '   a.n. Rahmawati\n\n';
-    message += 'Mohon kirim bukti transfer setelah pembayaran. Terima kasih! 🙏';
+    message += 'Mohon kirim bukti transfer setelah pembayaran. Terima kasih 🙏';
 
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${WA_NUMBER}?text=${encoded}`, '_blank', 'noopener,noreferrer');

@@ -30,6 +30,8 @@ export default function ProductDetailClient({ product, related }: Props) {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const isSwiping = useRef(false);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const discount = calculateDiscount(product.price, product.wholesalePrice);
   const sizeList = product.sizes ? product.sizes.split(',') : [];
@@ -37,16 +39,43 @@ export default function ProductDetailClient({ product, related }: Props) {
   const hasMultipleImages = allImages.length > 1;
 
   const goToImage = useCallback((index: number) => {
-    setSelectedImageIndex(index);
-  }, []);
+    if (index === selectedImageIndex) return;
+    setSlideDirection(index > selectedImageIndex ? 'left' : 'right');
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setSelectedImageIndex(index);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setSlideDirection(null);
+      }, 50);
+    }, 200);
+  }, [selectedImageIndex]);
 
   const goNext = useCallback(() => {
-    setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
-  }, [allImages.length]);
+    if (isTransitioning) return;
+    setSlideDirection('left');
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setSlideDirection(null);
+      }, 50);
+    }, 200);
+  }, [allImages.length, isTransitioning]);
 
   const goPrev = useCallback(() => {
-    setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
-  }, [allImages.length]);
+    if (isTransitioning) return;
+    setSlideDirection('right');
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setSlideDirection(null);
+      }, 50);
+    }, 200);
+  }, [allImages.length, isTransitioning]);
 
   // Touch handlers for swipe
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -103,15 +132,25 @@ export default function ProductDetailClient({ product, related }: Props) {
               onTouchEnd={hasMultipleImages ? handleTouchEnd : undefined}
             >
               {allImages.length > 0 ? (
-                <Image
-                  key={selectedImageIndex}
-                  src={getOptimizedImageUrl(allImages[selectedImageIndex] || allImages[0], { width: 800, quality: 'auto' })}
-                  alt={`${product.name} - ${selectedImageIndex + 1}`}
-                  fill
-                  className="object-cover"
-                  priority={selectedImageIndex === 0}
-                  unoptimized={allImages[selectedImageIndex]?.startsWith('http')}
-                />
+                <div
+                  className={`w-full h-full transition-all duration-200 ease-out ${
+                    isTransitioning
+                      ? slideDirection === 'left'
+                        ? 'opacity-0 translate-x-[-8%] scale-95'
+                        : 'opacity-0 translate-x-[8%] scale-95'
+                      : 'opacity-100 translate-x-0 scale-100'
+                  }`}
+                >
+                  <Image
+                    key={selectedImageIndex}
+                    src={getOptimizedImageUrl(allImages[selectedImageIndex] || allImages[0], { width: 800, quality: 'auto' })}
+                    alt={`${product.name} - ${selectedImageIndex + 1}`}
+                    fill
+                    className="object-cover"
+                    priority={selectedImageIndex === 0}
+                    unoptimized={allImages[selectedImageIndex]?.startsWith('http')}
+                  />
+                </div>
               ) : (
                 <ProductImage src="" alt={product.name} className="w-full h-full object-cover" priority={true} />
               )}
@@ -146,12 +185,7 @@ export default function ProductDetailClient({ product, related }: Props) {
                 </div>
               )}
 
-              {/* Swipe hint on mobile */}
-              {hasMultipleImages && (
-                <div className="absolute bottom-3 right-3 md:hidden bg-black/40 text-white/70 text-[10px] px-2 py-0.5 rounded-full z-10">
-                  ← Geser →
-                </div>
-              )}
+
             </div>
 
             {/* Thumbnail gallery */}

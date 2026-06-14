@@ -340,6 +340,13 @@ function CartDrawer() {
     setIsSubmitting(true);
 
     try {
+      const orderItems = cartItems.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        size: item.size || '',
+        price: item.product.wholesalePrice,
+      }));
+
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -348,30 +355,31 @@ function CartDrawer() {
           customerPhone: custPhone.trim(),
           customerAddr: custAddr.trim(),
           note: custNote.trim(),
-          items: cartItems.map(item => ({
-            productId: item.product.id,
-            quantity: item.quantity,
-            size: item.size || '',
-            price: item.product.wholesalePrice,
-          })),
+          items: orderItems,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal membuat pesanan');
 
+      // Safely extract order data
+      const order = data.order;
+      if (!order || !order.orderNumber) throw new Error('Invalid response from server');
+
       setInvoice({
-        orderNumber: data.order.orderNumber,
-        customerName: data.order.customerName,
-        customerPhone: data.order.customerPhone,
-        totalAmount: data.order.totalAmount,
-        items: data.order.items.map((i: { product: { name: string }; quantity: number; size: string; price: number }) => ({
-          name: i.product.name,
-          quantity: i.quantity,
-          size: i.size || undefined,
-          price: i.price,
-        })),
-        createdAt: data.order.createdAt,
+        orderNumber: order.orderNumber || '',
+        customerName: order.customerName || custName.trim(),
+        customerPhone: order.customerPhone || custPhone.trim(),
+        totalAmount: order.totalAmount || 0,
+        items: Array.isArray(order.items)
+          ? order.items.map((i: Record<string, unknown>) => ({
+              name: (i.product as Record<string, string>)?.name || 'Produk',
+              quantity: (i.quantity as number) || 0,
+              size: (i.size as string) || undefined,
+              price: (i.price as number) || 0,
+            }))
+          : [],
+        createdAt: order.createdAt || new Date().toISOString(),
       });
 
       setStep('invoice');
@@ -633,7 +641,7 @@ function CartDrawer() {
                 </div>
 
                 <p className="text-[10px] text-muted-foreground text-center">
-                  {new Date(invoice.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(invoice.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} {new Date(invoice.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>

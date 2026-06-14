@@ -377,6 +377,8 @@ function CartDrawer() {
       clearCart();
     } catch (err) {
       console.error('Order error:', err);
+      const errorMsg = err instanceof Error ? err.message : 'Gagal membuat pesanan. Coba lagi.';
+      alert(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

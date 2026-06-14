@@ -137,6 +137,21 @@ async function pushSchema() {
   `)
   console.log('✅ _prisma_migrations table created')
 
+  // Create Banner table
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS Banner (
+      id TEXT PRIMARY KEY NOT NULL,
+      title TEXT NOT NULL,
+      image TEXT NOT NULL,
+      link TEXT,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      active BOOLEAN NOT NULL DEFAULT true,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+  console.log('✅ Banner table created')
+
   // Check if admin user exists
   const adminUser = await turso.execute("SELECT id FROM User WHERE email = 'admin@grosirpj.com'")
   

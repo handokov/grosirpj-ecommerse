@@ -7,10 +7,11 @@ import {
   Search,
   MapPin,
   Truck,
-  ChevronDown,
   Loader2,
   AlertCircle,
   X,
+  Clock,
+  BadgeCheck,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 
@@ -50,6 +51,41 @@ interface ShippingCalculatorProps {
   currentShippingCost: number;
 }
 
+// Courier color scheme for visual distinction
+function getCourierColor(code: string) {
+  const colors: Record<string, string> = {
+    jne: 'bg-orange-50 border-orange-200 text-orange-800',
+    tiki: 'bg-red-50 border-red-200 text-red-800',
+    pos: 'bg-red-50 border-red-200 text-red-700',
+    jnt: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    sicepat: 'bg-sky-50 border-sky-200 text-sky-800',
+    anteraja: 'bg-purple-50 border-purple-200 text-purple-800',
+    wahana: 'bg-amber-50 border-amber-200 text-amber-800',
+    ninja: 'bg-teal-50 border-teal-200 text-teal-800',
+    lion: 'bg-rose-50 border-rose-200 text-rose-800',
+    gosend: 'bg-green-50 border-green-200 text-green-800',
+    grab: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+  };
+  return colors[code] || 'bg-gray-50 border-gray-200 text-gray-800';
+}
+
+function getCourierHeaderColor(code: string) {
+  const colors: Record<string, string> = {
+    jne: 'bg-orange-100 text-orange-900',
+    tiki: 'bg-red-100 text-red-900',
+    pos: 'bg-red-100 text-red-800',
+    jnt: 'bg-yellow-100 text-yellow-900',
+    sicepat: 'bg-sky-100 text-sky-900',
+    anteraja: 'bg-purple-100 text-purple-900',
+    wahana: 'bg-amber-100 text-amber-900',
+    ninja: 'bg-teal-100 text-teal-900',
+    lion: 'bg-rose-100 text-rose-900',
+    gosend: 'bg-green-100 text-green-900',
+    grab: 'bg-emerald-100 text-emerald-900',
+  };
+  return colors[code] || 'bg-gray-100 text-gray-900';
+}
+
 export default function ShippingCalculator({
   totalWeight,
   onShippingSelected,
@@ -61,16 +97,20 @@ export default function ShippingCalculator({
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isSearchingCity, setIsSearchingCity] = useState(false);
-  const [apiKeyMissing, setApiKeyMissing] = useState(false);
+  const [apiUnavailable, setApiUnavailable] = useState(false);
 
   // Courier results
   const [courierResults, setCourierResults] = useState<CourierResult[]>([]);
   const [isCheckingCost, setIsCheckingCost] = useState(false);
   const [selectedService, setSelectedService] = useState<{
     courier: string;
+    courierName: string;
     service: CourierService;
   } | null>(null);
   const [hasChecked, setHasChecked] = useState(false);
+
+  // Find cheapest across all results
+  const [cheapestCost, setCheapestCost] = useState<number | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -99,14 +139,17 @@ export default function ShippingCalculator({
         const res = await fetch(`/api/ongkir/cities?q=${encodeURIComponent(citySearch.trim())}`);
         const data = await res.json();
 
-        if (data.error && data.cities?.length === 0) {
-          setApiKeyMissing(true);
+        if (data.cities?.length === 0 && data.error) {
+          setApiUnavailable(true);
+        } else {
+          setApiUnavailable(false);
         }
 
         setCities(data.cities || []);
         setShowCityDropdown(true);
       } catch {
         setCities([]);
+        setApiUnavailable(true);
       } finally {
         setIsSearchingCity(false);
       }
@@ -122,6 +165,7 @@ export default function ShippingCalculator({
     setIsCheckingCost(true);
     setCourierResults([]);
     setSelectedService(null);
+    setCheapestCost(null);
     setHasChecked(true);
 
     try {
@@ -137,12 +181,27 @@ export default function ShippingCalculator({
       const data = await res.json();
 
       if (data.error && (!data.results || data.results.length === 0)) {
-        setApiKeyMissing(true);
+        setApiUnavailable(true);
+      } else {
+        setApiUnavailable(false);
       }
 
-      setCourierResults(data.results || []);
+      const results = data.results || [];
+      setCourierResults(results);
+
+      // Find cheapest
+      if (results.length > 0) {
+        let minCost = Infinity;
+        results.forEach((courier: CourierResult) => {
+          courier.services.forEach((s: CourierService) => {
+            if (s.cost > 0 && s.cost < minCost) minCost = s.cost;
+          });
+        });
+        setCheapestCost(minCost === Infinity ? null : minCost);
+      }
     } catch {
       setCourierResults([]);
+      setApiUnavailable(true);
     } finally {
       setIsCheckingCost(false);
     }
@@ -150,7 +209,7 @@ export default function ShippingCalculator({
 
   // Select a courier service
   const handleSelectService = (courier: string, courierName: string, service: CourierService) => {
-    setSelectedService({ courier, service });
+    setSelectedService({ courier, courierName, service });
     onShippingSelected({
       courier,
       courierName,
@@ -166,6 +225,7 @@ export default function ShippingCalculator({
     setSelectedService(null);
     setCourierResults([]);
     setHasChecked(false);
+    setCheapestCost(null);
     onShippingSelected(null);
   };
 
@@ -179,8 +239,17 @@ export default function ShippingCalculator({
   // Weight display
   const weightKg = (totalWeight / 1000).toFixed(1);
 
-  // API key missing state
-  if (apiKeyMissing) {
+  // Format ETD for display
+  const formatEtd = (etd: string) => {
+    if (!etd || etd === '-') return '';
+    const lower = etd.toLowerCase();
+    if (lower.includes('same day') || lower.includes('jam')) return etd;
+    if (lower.includes('hari')) return etd;
+    return `${etd} hari`;
+  };
+
+  // API unavailable fallback
+  if (apiUnavailable) {
     return (
       <div>
         <label className="text-sm font-medium text-gray-700 mb-1 block">Ongkos Kirim</label>
@@ -314,7 +383,7 @@ export default function ShippingCalculator({
           ) : (
             <>
               <Search className="h-4 w-4 mr-2" />
-              Cek Ongkir
+              Cek Ongkir (11 Ekspedisi)
             </>
           )}
         </Button>
@@ -324,11 +393,11 @@ export default function ShippingCalculator({
       {isCheckingCost && (
         <div className="flex items-center justify-center py-4">
           <Loader2 className="h-6 w-6 text-emerald-600 animate-spin" />
-          <span className="ml-2 text-sm text-gray-600">Mengecek ongkir dari berbagai ekspedisi...</span>
+          <span className="ml-2 text-sm text-gray-600">Mengecek ongkir dari 11 ekspedisi...</span>
         </div>
       )}
 
-      {/* Courier results */}
+      {/* No results */}
       {hasChecked && !isCheckingCost && courierResults.length === 0 && (
         <div className="bg-gray-50 border rounded-lg p-3 text-center">
           <p className="text-sm text-gray-500">Tidak ada layanan pengiriman tersedia untuk tujuan ini.</p>
@@ -343,10 +412,14 @@ export default function ShippingCalculator({
         </div>
       )}
 
+      {/* Courier results */}
       {courierResults.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-gray-700">Pilih Ekspedisi</p>
+            <p className="text-xs font-semibold text-gray-700">
+              Pilih Ekspedisi
+              <span className="font-normal text-gray-500 ml-1">({courierResults.length} kurir)</span>
+            </p>
             <Button
               variant="ghost"
               size="sm"
@@ -358,18 +431,23 @@ export default function ShippingCalculator({
           </div>
 
           {courierResults.map((courier) => (
-            <div key={courier.courier} className="border rounded-lg overflow-hidden">
+            <div key={courier.courier} className={`border rounded-lg overflow-hidden ${getCourierColor(courier.courier)}`}>
               {/* Courier header */}
-              <div className="bg-gray-50 px-3 py-2 border-b">
-                <p className="text-sm font-semibold text-gray-800 uppercase">{courier.courierName}</p>
+              <div className={`px-3 py-2 border-b ${getCourierHeaderColor(courier.courier)}`}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold uppercase">{courier.courierName}</p>
+                  <span className="text-[10px] opacity-70">{courier.services.length} layanan</span>
+                </div>
               </div>
 
               {/* Services */}
-              <div className="divide-y">
+              <div className="divide-y divide-black/5">
                 {courier.services.map((service) => {
                   const isSelected =
                     selectedService?.courier === courier.courier &&
                     selectedService?.service.code === service.code;
+
+                  const isCheapest = cheapestCost !== null && service.cost === cheapestCost;
 
                   return (
                     <button
@@ -378,22 +456,32 @@ export default function ShippingCalculator({
                       onClick={() => handleSelectService(courier.courier, courier.courierName, service)}
                       className={`w-full text-left px-3 py-2.5 transition-colors ${
                         isSelected
-                          ? 'bg-emerald-50 border-l-2 border-l-emerald-600'
-                          : 'hover:bg-gray-50 border-l-2 border-l-transparent'
+                          ? 'bg-emerald-50/80 border-l-2 border-l-emerald-600'
+                          : 'hover:bg-white/50 border-l-2 border-l-transparent'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">
-                            {service.code}
-                            <span className="text-xs text-gray-500 font-normal ml-1">({service.description})</span>
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Estimasi: {service.etd} hari
-                          </p>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium truncate">
+                              {service.description}
+                            </p>
+                            {isCheapest && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold bg-emerald-600 text-white px-1.5 py-0.5 rounded shrink-0">
+                                <BadgeCheck className="h-3 w-3" />
+                                Termurah
+                              </span>
+                            )}
+                          </div>
+                          {service.etd && service.etd !== '-' && (
+                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                              <Clock className="h-3 w-3" />
+                              Estimasi: {formatEtd(service.etd)}
+                            </p>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-emerald-900">
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold">
                             {formatRupiah(service.cost)}
                           </p>
                           {isSelected && (
@@ -418,9 +506,11 @@ export default function ShippingCalculator({
               <Truck className="h-4 w-4 text-emerald-600" />
               <div>
                 <p className="text-xs font-medium text-emerald-900">
-                  {selectedService.courier.toUpperCase()} - {selectedService.service.code}
+                  {selectedService.courierName} - {selectedService.service.description}
                 </p>
-                <p className="text-[10px] text-emerald-700">Est. {selectedService.service.etd} hari</p>
+                {selectedService.service.etd && selectedService.service.etd !== '-' && (
+                  <p className="text-[10px] text-emerald-700">Est. {formatEtd(selectedService.service.etd)}</p>
+                )}
               </div>
             </div>
             <p className="text-sm font-bold text-emerald-900">{formatRupiah(selectedService.service.cost)}</p>

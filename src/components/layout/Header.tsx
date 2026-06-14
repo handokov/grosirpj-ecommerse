@@ -310,81 +310,339 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
 }
 
 function CartDrawer() {
-  const { cartItems, removeFromCart, updateCartQuantity, getCartTotal, clearCart } = useStore();
+  const { cartItems, removeFromCart, updateCartQuantity, getCartTotal, clearCart, setIsCartOpen } = useStore();
   const total = getCartTotal();
 
-  const handleCheckout = () => {
-    const WA_NUMBER = '6281281756262';
-    const BCA_REKENING = '4130327970';
+  // Step: 'cart' | 'form' | 'invoice'
+  const [step, setStep] = useState<'cart' | 'form' | 'invoice'>('cart');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [invoice, setInvoice] = useState<{
+    orderNumber: string;
+    customerName: string;
+    customerPhone: string;
+    totalAmount: number;
+    items: { name: string; quantity: number; size?: string; price: number }[];
+    createdAt: string;
+  } | null>(null);
 
-    let message = '🛒 *PESANAN BARU - GrosirPJ*\n';
+  // Customer form
+  const [custName, setCustName] = useState('');
+  const [custPhone, setCustPhone] = useState('');
+  const [custAddr, setCustAddr] = useState('');
+  const [custNote, setCustNote] = useState('');
+
+  const WA_NUMBER = '6281281756262';
+  const BCA_REKENING = '4130327970';
+
+  const handleSubmitOrder = async () => {
+    if (!custName.trim() || !custPhone.trim()) return;
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: custName.trim(),
+          customerPhone: custPhone.trim(),
+          customerAddr: custAddr.trim(),
+          note: custNote.trim(),
+          items: cartItems.map(item => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+            size: item.size || '',
+            price: item.product.wholesalePrice,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal membuat pesanan');
+
+      setInvoice({
+        orderNumber: data.order.orderNumber,
+        customerName: data.order.customerName,
+        customerPhone: data.order.customerPhone,
+        totalAmount: data.order.totalAmount,
+        items: data.order.items.map((i: { product: { name: string }; quantity: number; size: string; price: number }) => ({
+          name: i.product.name,
+          quantity: i.quantity,
+          size: i.size || undefined,
+          price: i.price,
+        })),
+        createdAt: data.order.createdAt,
+      });
+
+      setStep('invoice');
+      clearCart();
+    } catch (err) {
+      console.error('Order error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleWhatsApp = () => {
+    if (!invoice) return;
+
+    let message = `🧾 *INVOICE ${invoice.orderNumber}*\n`;
+    message += 'GrosirPJ - Harga OK Kualitas OK\n';
     message += '━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += `👤 ${invoice.customerName}\n`;
+    message += `📱 ${invoice.customerPhone}\n\n`;
+    message += '📦 *Detail Pesanan:*\n';
 
-    cartItems.forEach((item, idx) => {
-      message += `${idx + 1}. *${item.product.name}*\n`;
+    invoice.items.forEach((item, idx) => {
+      message += `${idx + 1}. ${item.name}\n`;
       if (item.size) message += `   Ukuran: ${item.size}\n`;
-      message += `   ${item.quantity} x ${formatRupiah(item.product.wholesalePrice)} = ${formatRupiah(item.product.wholesalePrice * item.quantity)}\n\n`;
+      message += `   ${item.quantity} x ${formatRupiah(item.price)} = ${formatRupiah(item.price * item.quantity)}\n`;
     });
 
-    message += '━━━━━━━━━━━━━━━━━━━━━\n';
-    message += `💰 *TOTAL: ${formatRupiah(total)}*\n\n`;
-    message += '💳 *Metode Pembayaran:*\n';
+    message += '\n━━━━━━━━━━━━━━━━━━━━━\n';
+    message += `💰 *TOTAL: ${formatRupiah(invoice.totalAmount)}*\n\n`;
+    message += '💳 *Pembayaran:*\n';
     message += 'Transfer BCA\n';
-    message += `🏦 BCA: ${BCA_REKENING}\n`; 
-    message += '   a.n. Rahmawati\n\n';
-    message += 'Mohon kirim bukti transfer setelah pembayaran. Terima kasih 🙏';
+    message += `🏦 ${BCA_REKENING} a.n. Rahmawati\n\n`;
+    message += `Nomor Invoice: *${invoice.orderNumber}*\n\n`;
+    message += 'Mohon kirim bukti transfer dengan menyertakan nomor invoice ini. Terima kasih 🙏';
 
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encoded}`, '_blank', 'noopener,noreferrer');
-    clearCart();
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleClose = () => {
+    setStep('cart');
+    setInvoice(null);
+    setCustName('');
+    setCustPhone('');
+    setCustAddr('');
+    setCustNote('');
+    setIsCartOpen(false);
   };
 
   return (
     <div className="flex flex-col h-full">
+      {/* Header */}
       <div className="p-4 border-b bg-emerald-50">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-emerald-950">Keranjang Belanja</h2>
-          <Badge variant="secondary" className="bg-emerald-100 text-emerald-900">{cartItems.length} item</Badge>
+          <div className="flex items-center gap-2">
+            {step !== 'cart' && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={() => setStep(step === 'invoice' ? 'form' : 'cart')}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <h2 className="text-lg font-bold text-emerald-950">
+              {step === 'cart' ? 'Keranjang Belanja' : step === 'form' ? 'Data Pemesan' : 'Invoice'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {step === 'cart' && cartItems.length > 0 && (
+              <Badge variant="secondary" className="bg-emerald-100 text-emerald-900">{cartItems.length} item</Badge>
+            )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
-      {cartItems.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-          <ShoppingCart className="h-16 w-16 text-gray-300 mb-4" />
-          <h3 className="font-semibold text-gray-600 mb-1">Keranjang Kosong</h3>
-          <p className="text-sm text-muted-foreground">Mulai belanja fashion anak & baby kids</p>
-        </div>
-      ) : (
+
+      {/* Step: Cart */}
+      {step === 'cart' && (
+        <>
+          {cartItems.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <ShoppingCart className="h-16 w-16 text-gray-300 mb-4" />
+              <h3 className="font-semibold text-gray-600 mb-1">Keranjang Kosong</h3>
+              <p className="text-sm text-muted-foreground">Mulai belanja fashion anak & baby kids</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {cartItems.map((item, idx) => (
+                  <div key={`${item.product.id}-${item.size}-${idx}`} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
+                    <ProductImage src={item.product.images} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.product.name}</p>
+                      {item.size && <p className="text-xs text-muted-foreground">Ukuran: {item.size}</p>}
+                      <p className="text-sm text-emerald-800 font-semibold">{formatRupiah(item.product.wholesalePrice)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.size)} disabled={item.quantity <= item.product.minOrder}>-</Button>
+                        <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.size)} disabled={item.quantity >= item.product.stock}>+</Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeFromCart(item.product.id, item.size)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {item.product.minOrder > 1 && <p className="text-[10px] text-muted-foreground mt-0.5">Min. {item.product.minOrder} pcs</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t p-4 bg-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-muted-foreground">Total</span>
+                  <span className="text-lg font-bold text-emerald-900">{formatRupiah(total)}</span>
+                </div>
+                <Button onClick={() => setStep('form')} className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white h-11 rounded-xl font-semibold">
+                  Checkout
+                </Button>
+                <p className="text-xs text-center text-muted-foreground mt-2">Min. order sesuai ketentuan produk</p>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* Step: Customer Form */}
+      {step === 'form' && (
         <>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {cartItems.map((item, idx) => (
-              <div key={`${item.product.id}-${item.size}-${idx}`} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
-                <ProductImage src={item.product.images} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{item.product.name}</p>
-                  {item.size && <p className="text-xs text-muted-foreground">Ukuran: {item.size}</p>}
-                  <p className="text-sm text-emerald-800 font-semibold">{formatRupiah(item.product.wholesalePrice)}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.size)} disabled={item.quantity <= item.product.minOrder}>-</Button>
-                    <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.size)} disabled={item.quantity >= item.product.stock}>+</Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeFromCart(item.product.id, item.size)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {item.product.minOrder > 1 && <p className="text-[10px] text-muted-foreground mt-0.5">Min. {item.product.minOrder} pcs</p>}
+            {/* Order summary */}
+            <div className="bg-emerald-50 rounded-xl p-3 mb-2">
+              <p className="text-xs font-semibold text-emerald-900 mb-2">Ringkasan Pesanan</p>
+              {cartItems.map((item, idx) => (
+                <div key={idx} className="flex justify-between text-xs mb-1">
+                  <span className="text-gray-700 truncate flex-1">{item.product.name} x{item.quantity}</span>
+                  <span className="font-medium ml-2">{formatRupiah(item.product.wholesalePrice * item.quantity)}</span>
                 </div>
+              ))}
+              <div className="border-t border-emerald-200 mt-2 pt-2 flex justify-between">
+                <span className="text-sm font-bold text-emerald-900">Total</span>
+                <span className="text-sm font-bold text-emerald-900">{formatRupiah(total)}</span>
               </div>
-            ))}
+            </div>
+
+            {/* Customer data */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Nama Lengkap *</label>
+              <Input
+                placeholder="Masukkan nama Anda"
+                value={custName}
+                onChange={(e) => setCustName(e.target.value)}
+                className="h-10"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">No. WhatsApp *</label>
+              <Input
+                placeholder="08xxxxxxxxxx"
+                value={custPhone}
+                onChange={(e) => setCustPhone(e.target.value)}
+                className="h-10"
+                type="tel"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Alamat Pengiriman</label>
+              <Input
+                placeholder="Alamat lengkap (opsional)"
+                value={custAddr}
+                onChange={(e) => setCustAddr(e.target.value)}
+                className="h-10"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Catatan</label>
+              <Input
+                placeholder="Catatan pesanan (opsional)"
+                value={custNote}
+                onChange={(e) => setCustNote(e.target.value)}
+                className="h-10"
+              />
+            </div>
           </div>
           <div className="border-t p-4 bg-gray-50">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-lg font-bold text-emerald-900">{formatRupiah(total)}</span>
-            </div>
-            <Button onClick={handleCheckout} className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white h-11 rounded-xl font-semibold">
-              <MessageCircle className="h-4 w-4 mr-2" /> Checkout via WhatsApp
+            <Button
+              onClick={handleSubmitOrder}
+              disabled={!custName.trim() || !custPhone.trim() || isSubmitting}
+              className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white h-11 rounded-xl font-semibold"
+            >
+              {isSubmitting ? 'Memproses...' : 'Buat Invoice'}
             </Button>
-            <p className="text-xs text-center text-muted-foreground mt-2">Min. order sesuai ketentuan produk</p>
+            <p className="text-xs text-center text-muted-foreground mt-2">Invoice akan digenerate otomatis</p>
+          </div>
+        </>
+      )}
+
+      {/* Step: Invoice */}
+      {step === 'invoice' && invoice && (
+        <>
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
+              {/* Invoice header */}
+              <div className="bg-gradient-to-r from-emerald-700 to-emerald-900 text-white p-4 text-center">
+                <h3 className="text-lg font-bold">INVOICE</h3>
+                <p className="text-emerald-200 text-sm font-mono">{invoice.orderNumber}</p>
+              </div>
+
+              <div className="p-4 space-y-4">
+                {/* Customer info */}
+                <div className="text-sm">
+                  <p className="text-muted-foreground text-xs">Pemesan</p>
+                  <p className="font-semibold">{invoice.customerName}</p>
+                  <p className="text-muted-foreground">{invoice.customerPhone}</p>
+                </div>
+
+                <div className="border-t" />
+
+                {/* Items */}
+                <div className="space-y-2">
+                  {invoice.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <div className="flex-1">
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.quantity} x {formatRupiah(item.price)}
+                          {item.size ? ` • ${item.size}` : ''}
+                        </p>
+                      </div>
+                      <p className="font-medium">{formatRupiah(item.price * item.quantity)}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t" />
+
+                {/* Total */}
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-gray-900">TOTAL</span>
+                  <span className="text-xl font-bold text-emerald-900">{formatRupiah(invoice.totalAmount)}</span>
+                </div>
+
+                <div className="border-t" />
+
+                {/* Payment info */}
+                <div className="bg-blue-50 rounded-xl p-3">
+                  <p className="font-semibold text-blue-900 text-sm mb-2">💳 Pembayaran Transfer BCA</p>
+                  <div className="bg-white rounded-lg p-3 text-center">
+                    <p className="text-xs text-muted-foreground">Nomor Rekening</p>
+                    <p className="text-2xl font-bold font-mono text-blue-900 tracking-wider">{BCA_REKENING}</p>
+                    <p className="text-sm text-muted-foreground">a.n. Rahmawati</p>
+                  </div>
+                  <p className="text-xs text-blue-800 mt-2">
+                    ⚠️ Harap sertakan <b>nomor invoice {invoice.orderNumber}</b> saat kirim bukti transfer
+                  </p>
+                </div>
+
+                {/* Status */}
+                <div className="flex items-center gap-2 bg-yellow-50 rounded-lg p-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-medium text-yellow-800">Menunggu Pembayaran</span>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground text-center">
+                  {new Date(invoice.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="border-t p-4 bg-gray-50 space-y-2">
+            <Button
+              onClick={handleWhatsApp}
+              className="w-full bg-[#25D366] hover:bg-[#20BD5A] text-white h-11 rounded-xl font-semibold"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" /> Kirim Bukti Bayar via WhatsApp
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">Sertakan nomor invoice & bukti transfer</p>
           </div>
         </>
       )}

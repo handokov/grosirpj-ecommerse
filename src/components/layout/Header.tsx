@@ -168,7 +168,7 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
-              <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+              <Sheet open={isCartOpen} onOpenChange={(open) => { if (!open) handleClose(); else setIsCartOpen(true); }}>
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"
@@ -471,7 +471,7 @@ function CartDrawer() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b bg-emerald-50">
+      <div className="p-4 pr-12 border-b bg-emerald-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {step !== 'cart' && (
@@ -487,9 +487,6 @@ function CartDrawer() {
             {step === 'cart' && cartItems.length > 0 && (
               <Badge variant="secondary" className="bg-emerald-100 text-emerald-900">{cartItems.length} item</Badge>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   X,
   Package,
   MapPin,
+  MessageCircle,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
@@ -309,8 +310,34 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
 }
 
 function CartDrawer() {
-  const { cartItems, removeFromCart, updateCartQuantity, getCartTotal } = useStore();
+  const { cartItems, removeFromCart, updateCartQuantity, getCartTotal, clearCart } = useStore();
   const total = getCartTotal();
+
+  const handleCheckout = () => {
+    const WA_NUMBER = '6281281756262';
+    const BCA_REKENING = '4130327970';
+
+    let message = '🛒 *PESANAN BARU - GrosirPJ*\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━\n\n';
+
+    cartItems.forEach((item, idx) => {
+      message += `${idx + 1}. *${item.product.name}*\n`;
+      if (item.size) message += `   Ukuran: ${item.size}\n`;
+      message += `   ${item.quantity} x ${formatRupiah(item.product.wholesalePrice)} = ${formatRupiah(item.product.wholesalePrice * item.quantity)}\n\n`;
+    });
+
+    message += '━━━━━━━━━━━━━━━━━━━━━\n';
+    message += `💰 *TOTAL: ${formatRupiah(total)}*\n\n`;
+    message += '💳 *Metode Pembayaran:*\n';
+    message += 'Transfer BCA\n';
+    message += `🏦 BCA: ${BCA_REKENING}\n`; 
+    message += '   a.n. GrosirPJ\n\n';
+    message += 'Mohon kirim bukti transfer setelah pembayaran. Terima kasih! 🙏';
+
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encoded}`, '_blank', 'noopener,noreferrer');
+    clearCart();
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -353,8 +380,8 @@ function CartDrawer() {
               <span className="text-sm text-muted-foreground">Total</span>
               <span className="text-lg font-bold text-emerald-900">{formatRupiah(total)}</span>
             </div>
-            <Button className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white h-11 rounded-xl font-semibold">
-              Checkout
+            <Button onClick={handleCheckout} className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white h-11 rounded-xl font-semibold">
+              <MessageCircle className="h-4 w-4 mr-2" /> Checkout via WhatsApp
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-2">Min. order sesuai ketentuan produk</p>
           </div>

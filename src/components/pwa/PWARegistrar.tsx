@@ -14,23 +14,22 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-// Check dismissal synchronously before first render
-function getInitiallyDismissed(): boolean {
-  if (typeof window === 'undefined') return false;
-  const dismissed = localStorage.getItem('pwa-install-dismissed');
-  if (dismissed) {
-    const daysSinceDismissed = (Date.now() - parseInt(dismissed)) / (1000 * 60 * 60 * 24);
-    return daysSinceDismissed < 7;
-  }
-  return false;
-}
-
 export default function PWARegistrar() {
-  const [showInstallPrompt, setShowInstallPrompt] = useState(!getInitiallyDismissed());
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+    // Check dismissal status only on client side to avoid hydration mismatch
+    const dismissed = localStorage.getItem('pwa-install-dismissed');
+    if (dismissed) {
+      const daysSinceDismissed = (Date.now() - parseInt(dismissed)) / (1000 * 60 * 60 * 24);
+      if (daysSinceDismissed < 7) {
+        // Still within dismissal period, don't show prompt
+        return;
+      }
+    }
+
+    if (!('serviceWorker' in navigator)) return;
 
     // Register the service worker
     navigator.serviceWorker
@@ -53,8 +52,9 @@ export default function PWARegistrar() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Only show if not recently dismissed
-      if (!getInitiallyDismissed()) {
+      // Show the install prompt
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (!dismissed || (Date.now() - parseInt(dismissed)) / (1000 * 60 * 60 * 24) >= 7) {
         setShowInstallPrompt(true);
       }
     };

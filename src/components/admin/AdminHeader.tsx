@@ -21,6 +21,7 @@ const BREADCRUMB_MAP: Record<string, { label: string; parent?: { label: string; 
   '/admin/products/add': { label: 'Tambah Produk', parent: { label: 'Produk', href: '/admin/products' } },
   '/admin/orders': { label: 'Pesanan', parent: { label: 'Dashboard', href: '/admin' } },
   '/admin/categories': { label: 'Kategori', parent: { label: 'Dashboard', href: '/admin' } },
+  '/admin/banners': { label: 'Banner', parent: { label: 'Dashboard', href: '/admin' } },
   '/admin/settings': { label: 'Pengaturan', parent: { label: 'Dashboard', href: '/admin' } },
 }
 

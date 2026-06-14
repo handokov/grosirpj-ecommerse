@@ -91,6 +91,12 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Error fetching products:', error);
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
+    // Return empty data instead of 500 to prevent frontend crash
+    return NextResponse.json({
+      products: [],
+      total: 0,
+      page: 1,
+      totalPages: 0,
+    });
   }
 }

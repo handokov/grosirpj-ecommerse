@@ -1,18 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useStore, type Product } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
-  Star, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Package, BarChart3, Weight,
+  Star, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Package, BarChart3, Weight, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import { toast } from 'sonner';
-import ProductImage from '@/components/ui/product-image';
+import ProductImage, { getAllImageUrls, getOptimizedImageUrl } from '@/components/ui/product-image';
 
 interface Props {
   product: Product;
@@ -23,9 +24,53 @@ export default function ProductDetailClient({ product, related }: Props) {
   const { addToCart } = useStore();
   const [quantity, setQuantity] = useState(product.minOrder);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  // Touch/swipe state
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const isSwiping = useRef(false);
 
   const discount = calculateDiscount(product.price, product.wholesalePrice);
   const sizeList = product.sizes ? product.sizes.split(',') : [];
+  const allImages = getAllImageUrls(product.images);
+  const hasMultipleImages = allImages.length > 1;
+
+  const goToImage = useCallback((index: number) => {
+    setSelectedImageIndex(index);
+  }, []);
+
+  const goNext = useCallback(() => {
+    setSelectedImageIndex(prev => prev === allImages.length - 1 ? 0 : prev + 1);
+  }, [allImages.length]);
+
+  const goPrev = useCallback(() => {
+    setSelectedImageIndex(prev => prev === 0 ? allImages.length - 1 : prev - 1);
+  }, [allImages.length]);
+
+  // Touch handlers for swipe
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+    isSwiping.current = false;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+    const diff = Math.abs(touchStartX.current - touchEndX.current);
+    if (diff > 10) isSwiping.current = true;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isSwiping.current) return;
+    const diff = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 50;
+    if (diff > minSwipeDistance) {
+      goNext();
+    } else if (diff < -minSwipeDistance) {
+      goPrev();
+    }
+  }, [goNext, goPrev]);
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedSize || undefined);
@@ -48,11 +93,90 @@ export default function ProductDetailClient({ product, related }: Props) {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* Product image */}
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
-            <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover" priority={true} />
-            {discount > 0 && (
-              <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1">-{discount}% OFF</Badge>
+          {/* Product images */}
+          <div>
+            {/* Main image with swipe support */}
+            <div
+              className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 group select-none"
+              onTouchStart={hasMultipleImages ? handleTouchStart : undefined}
+              onTouchMove={hasMultipleImages ? handleTouchMove : undefined}
+              onTouchEnd={hasMultipleImages ? handleTouchEnd : undefined}
+            >
+              {allImages.length > 0 ? (
+                <Image
+                  key={selectedImageIndex}
+                  src={getOptimizedImageUrl(allImages[selectedImageIndex] || allImages[0], { width: 800, quality: 'auto' })}
+                  alt={`${product.name} - ${selectedImageIndex + 1}`}
+                  fill
+                  className="object-cover"
+                  priority={selectedImageIndex === 0}
+                  unoptimized={allImages[selectedImageIndex]?.startsWith('http')}
+                />
+              ) : (
+                <ProductImage src="" alt={product.name} className="w-full h-full object-cover" priority={true} />
+              )}
+              {discount > 0 && (
+                <Badge className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 z-10">-{discount}% OFF</Badge>
+              )}
+
+              {/* Navigation arrows - always visible on mobile, hover on desktop */}
+              {hasMultipleImages && (
+                <>
+                  <button
+                    onClick={goPrev}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all md:opacity-0 md:group-hover:opacity-100 z-10"
+                    aria-label="Gambar sebelumnya"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={goNext}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white shadow-md flex items-center justify-center text-gray-700 hover:text-emerald-800 transition-all md:opacity-0 md:group-hover:opacity-100 z-10"
+                    aria-label="Gambar selanjutnya"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+
+              {/* Image counter */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full z-10">
+                  {selectedImageIndex + 1} / {allImages.length}
+                </div>
+              )}
+
+              {/* Swipe hint on mobile */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-3 right-3 md:hidden bg-black/40 text-white/70 text-[10px] px-2 py-0.5 rounded-full z-10">
+                  ← Geser →
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail gallery */}
+            {hasMultipleImages && (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToImage(idx)}
+                    className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                      idx === selectedImageIndex
+                        ? 'border-emerald-600 shadow-md'
+                        : 'border-gray-200 hover:border-emerald-300'
+                    }`}
+                  >
+                    <Image
+                      src={getOptimizedImageUrl(img, { width: 100, quality: 'auto' })}
+                      alt={`${product.name} thumb ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      unoptimized={img.startsWith('http')}
+                    />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 

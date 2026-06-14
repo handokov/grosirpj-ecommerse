@@ -98,10 +98,13 @@ export const useStore = create<StoreState>((set, get) => ({
       return;
     }
     const key = `${productId}-${size || 'no-size'}`;
+    const item = get().cartItems.find(i => `${i.product.id}-${i.size || 'no-size'}` === key);
+    const minOrder = item?.product.minOrder ?? 1;
+    const clampedQty = Math.max(minOrder, quantity);
     set({
       cartItems: get().cartItems.map((item) =>
         `${item.product.id}-${item.size || 'no-size'}` === key
-          ? { ...item, quantity }
+          ? { ...item, quantity: clampedQty }
           : item
       ),
     });

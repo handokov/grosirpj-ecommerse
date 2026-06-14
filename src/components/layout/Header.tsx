@@ -364,13 +364,14 @@ function CartDrawer() {
                   {item.size && <p className="text-xs text-muted-foreground">Ukuran: {item.size}</p>}
                   <p className="text-sm text-emerald-800 font-semibold">{formatRupiah(item.product.wholesalePrice)}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.size)}>-</Button>
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.size)} disabled={item.quantity <= item.product.minOrder}>-</Button>
                     <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.size)}>+</Button>
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.size)} disabled={item.quantity >= item.product.stock}>+</Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeFromCart(item.product.id, item.size)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
+                  {item.product.minOrder > 1 && <p className="text-[10px] text-muted-foreground mt-0.5">Min. {item.product.minOrder} pcs</p>}
                 </div>
               </div>
             ))}

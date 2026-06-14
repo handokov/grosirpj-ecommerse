@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ categorySlug: string }>;
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; sort?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -44,7 +44,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorySlug } = await params;
-  const { q } = await searchParams;
+  const { q, page: pageParam, sort } = await searchParams;
+  const page = parseInt(pageParam || '1');
+  const sortField = sort || 'popular';
 
   const category = await db.category.findUnique({
     where: { slug: categorySlug },
@@ -54,25 +56,38 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  // Fetch initial products for this category
-  const products = await db.product.findMany({
-    where: {
-      categoryId: category.id,
-      ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }, { tags: { contains: q } }] } : {}),
-    },
-    include: {
-      category: { select: { name: true, slug: true } },
-    },
-    orderBy: { sold: 'desc' },
-    take: 20,
-  });
+  // Build orderBy based on sort
+  let orderBy: Record<string, string> = { sold: 'desc' };
+  switch (sortField) {
+    case 'newest': orderBy = { createdAt: 'desc' }; break;
+    case 'price-low': orderBy = { wholesalePrice: 'asc' }; break;
+    case 'price-high': orderBy = { wholesalePrice: 'desc' }; break;
+    case 'rating': orderBy = { rating: 'desc' }; break;
+  }
 
-  const total = await db.product.count({
-    where: {
-      categoryId: category.id,
-      ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }, { tags: { contains: q } }] } : {}),
-    },
-  });
+  const skip = (page - 1) * 20;
+
+  // Fetch initial products for this category
+  const [products, total] = await Promise.all([
+    db.product.findMany({
+      where: {
+        categoryId: category.id,
+        ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }, { tags: { contains: q } }] } : {}),
+      },
+      include: {
+        category: { select: { name: true, slug: true } },
+      },
+      orderBy,
+      skip,
+      take: 20,
+    }),
+    db.product.count({
+      where: {
+        categoryId: category.id,
+        ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }, { tags: { contains: q } }] } : {}),
+      },
+    }),
+  ]);
 
   const serializedProducts = products.map((p) => ({
     ...p,

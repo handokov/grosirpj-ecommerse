@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod/v4'
@@ -8,9 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import {
   ArrowLeft,
-  Upload,
-  X,
-  ImagePlus,
   Loader2,
   Package,
   DollarSign,
@@ -19,7 +16,6 @@ import {
   ImageIcon,
   Star,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import ImageUploader, { type UploadedImage } from '@/components/admin/ImageUploader'
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi'),
@@ -75,8 +72,6 @@ export default function AddProductPage() {
   const [submitting, setSubmitting] = useState(false)
   const [images, setImages] = useState<UploadedImage[]>([])
   const [uploadingImage, setUploadingImage] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
     register,
@@ -121,97 +116,7 @@ export default function AddProductPage() {
     fetchCategories()
   }, [fetchCategories])
 
-  const uploadFile = async (file: File): Promise<UploadedImage | null> => {
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'grosirpj/products')
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formData,
-      })
-      if (!res.ok) throw new Error('Upload gagal')
-      const data = await res.json()
-      return { url: data.url, publicId: data.publicId }
-    } catch {
-      toast.error(`Gagal upload gambar: ${file.name}`)
-      return null
-    }
-  }
-
-  const handleFiles = async (files: FileList | File[]) => {
-    const fileArray = Array.from(files).filter((f) =>
-      ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(f.type)
-    )
-
-    if (fileArray.length === 0) {
-      toast.error('Format file tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.')
-      return
-    }
-
-    // Add previews immediately
-    const newImages: UploadedImage[] = fileArray.map((file) => ({
-      url: '',
-      publicId: '',
-      file,
-      preview: URL.createObjectURL(file),
-    }))
-
-    setImages((prev) => [...prev, ...newImages])
-
-    // Upload each file
-    setUploadingImage(true)
-    for (let i = 0; i < fileArray.length; i++) {
-      const result = await uploadFile(fileArray[i])
-      if (result) {
-        setImages((prev) => {
-          const updated = [...prev]
-          const index = prev.findIndex(
-            (img) => img.preview === newImages[i].preview
-          )
-          if (index !== -1) {
-            updated[index] = { ...result, preview: newImages[i].preview }
-          }
-          return updated
-        })
-      }
-    }
-    setUploadingImage(false)
-  }
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files)
-    }
-  }
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFiles(e.target.files)
-      e.target.value = ''
-    }
-  }
-
-  const removeImage = (index: number) => {
-    setImages((prev) => {
-      const img = prev[index]
-      if (img.preview) URL.revokeObjectURL(img.preview)
-      return prev.filter((_, i) => i !== index)
-    })
-  }
+  // Image handling is now done by ImageUploader component
 
   const onSubmit = async (data: ProductFormData) => {
     // Check if all images are uploaded
@@ -474,107 +379,12 @@ export default function AddProductPage() {
             <h2 className="text-sm font-bold text-gray-900">Media</h2>
           </div>
           <Separator className="mb-5" />
-          <div className="space-y-4">
-            {/* Drop Zone */}
-            <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                'relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 transition-colors cursor-pointer',
-                dragActive
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-              )}
-            >
-              <div
-                className={cn(
-                  'flex h-12 w-12 items-center justify-center rounded-full transition-colors',
-                  dragActive ? 'bg-emerald-100' : 'bg-gray-100'
-                )}
-              >
-                <Upload
-                  className={cn(
-                    'h-6 w-6',
-                    dragActive ? 'text-emerald-600' : 'text-gray-400'
-                  )}
-                />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-700">
-                  Drag & drop gambar di sini
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  atau klik untuk memilih file (JPG, PNG, WebP, GIF)
-                </p>
-              </div>
-              {uploadingImage && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
-                  <div className="flex items-center gap-2 text-emerald-700">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-sm font-medium">Mengupload...</span>
-                  </div>
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                className="hidden"
-                onChange={handleFileInput}
-              />
-            </div>
-
-            {/* Image Previews */}
-            {images.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {images.map((img, index) => (
-                  <div
-                    key={index}
-                    className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50"
-                  >
-                    <img
-                      src={img.preview || img.url}
-                      alt={`Preview ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                    {!img.url && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-                        <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
-                      </div>
-                    )}
-                    {index === 0 && img.url && (
-                      <Badge className="absolute top-1.5 left-1.5 bg-emerald-700 text-white text-[10px] px-1.5 py-0">
-                        Utama
-                      </Badge>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeImage(index)
-                      }}
-                      className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-                {/* Add more images button */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square rounded-lg border-2 border-dashed border-gray-200 hover:border-emerald-300 bg-gray-50 hover:bg-emerald-50 flex flex-col items-center justify-center gap-1.5 transition-colors"
-                >
-                  <ImagePlus className="h-6 w-6 text-gray-400" />
-                  <span className="text-xs text-gray-400">Tambah</span>
-                </button>
-              </div>
-            )}
-          </div>
+          <ImageUploader
+            images={images}
+            onImagesChange={setImages}
+            uploading={uploadingImage}
+            setUploading={setUploadingImage}
+          />
         </Card>
 
         {/* Section 5: Lainnya */}

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { type Product, type Category } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,13 +23,17 @@ interface Props {
   searchQuery: string;
 }
 
-export default function CategoryPageClient({ category, initialProducts, initialTotal, searchQuery: initialSearchQuery }: Props) {
+function CategoryPageContent({ category, initialProducts, initialTotal, searchQuery: initialSearchQuery }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read initial state from URL params
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [loading, setLoading] = useState(false);
-  const [sort, setSort] = useState('popular');
+  const [sort, setSort] = useState(searchParams.get('sort') || 'popular');
   const [totalProducts, setTotalProducts] = useState(initialTotal);
-  const [page, setPage] = useState(1);
-  const [localSearch, setLocalSearch] = useState(initialSearchQuery);
+  const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
+  const [localSearch, setLocalSearch] = useState(searchParams.get('q') || initialSearchQuery);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const fetchProducts = useCallback(async () => {
@@ -44,9 +50,34 @@ export default function CategoryPageClient({ category, initialProducts, initialT
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
+  // Update URL when page/sort/search changes (without full navigation)
+  const updateUrl = useCallback((newPage: number, newSort: string, newSearch?: string) => {
+    const params = new URLSearchParams();
+    if (newPage > 1) params.set('page', newPage.toString());
+    if (newSort && newSort !== 'popular') params.set('sort', newSort);
+    if (newSearch) params.set('q', newSearch);
+    const queryString = params.toString();
+    const url = `/${category.slug}${queryString ? `?${queryString}` : ''}`;
+    router.replace(url, { scroll: false });
+  }, [category.slug, router]);
+
+  const handleSortChange = (newSort: string) => {
+    setSort(newSort);
+    setPage(1);
+    updateUrl(1, newSort, localSearch || undefined);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    updateUrl(newPage, sort, localSearch || undefined);
+    // Scroll to top of product grid
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
+    updateUrl(1, sort, localSearch || undefined);
     fetchProducts();
   };
 
@@ -77,7 +108,7 @@ export default function CategoryPageClient({ category, initialProducts, initialT
             <Button type="submit" variant="default" className="rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950">Cari</Button>
           </form>
           <div className="flex gap-2">
-            <Select value={sort} onValueChange={(v) => { setSort(v); setPage(1); }}>
+            <Select value={sort} onValueChange={handleSortChange}>
               <SelectTrigger className="w-[160px] rounded-xl"><SelectValue placeholder="Urutkan" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="popular">Terpopuler</SelectItem>
@@ -106,7 +137,7 @@ export default function CategoryPageClient({ category, initialProducts, initialT
             <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-600 mb-1">Produk Tidak Ditemukan</h3>
             <p className="text-muted-foreground mb-4">Coba ubah kata kunci atau filter pencarian</p>
-            <Button variant="outline" className="rounded-xl" onClick={() => { setLocalSearch(''); setPage(1); }}>Reset Filter</Button>
+            <Button variant="outline" className="rounded-xl" onClick={() => { setLocalSearch(''); setPage(1); updateUrl(1, sort); }}>Reset Filter</Button>
           </div>
         ) : (
           <div className={`grid ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2'} gap-4`}>
@@ -144,12 +175,20 @@ export default function CategoryPageClient({ category, initialProducts, initialT
 
         {totalProducts > 20 && (
           <div className="flex items-center justify-center gap-2 mt-8">
-            <Button variant="outline" className="rounded-xl" disabled={page === 1} onClick={() => setPage(page - 1)}>Sebelumnya</Button>
+            <Button variant="outline" className="rounded-xl" disabled={page === 1} onClick={() => handlePageChange(page - 1)}>Sebelumnya</Button>
             <span className="text-sm text-muted-foreground">Hal {page} dari {Math.ceil(totalProducts / 20)}</span>
-            <Button variant="outline" className="rounded-xl" disabled={page >= Math.ceil(totalProducts / 20)} onClick={() => setPage(page + 1)}>Selanjutnya</Button>
+            <Button variant="outline" className="rounded-xl" disabled={page >= Math.ceil(totalProducts / 20)} onClick={() => handlePageChange(page + 1)}>Selanjutnya</Button>
           </div>
         )}
       </div>
     </section>
+  );
+}
+
+export default function CategoryPageClient(props: Props) {
+  return (
+    <Suspense>
+      <CategoryPageContent {...props} />
+    </Suspense>
   );
 }

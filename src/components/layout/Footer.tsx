@@ -1,9 +1,25 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Mail, MapPin, Clock, Facebook, Instagram, Youtube } from 'lucide-react';
 
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export default function Footer() {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then((data: Category[]) => setCategories(data.slice(0, 5)))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -27,18 +43,12 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Kategori */}
+          {/* Kategori - from database, max 5 */}
           <div>
             <h4 className="text-white font-semibold mb-4">Kategori</h4>
             <ul className="space-y-2">
-              {[
-                { name: 'Bayi (0-12 Bulan)', slug: 'bayi-0-12-bulan' },
-                { name: 'Balita (1-5 Tahun)', slug: 'balita-1-5-tahun' },
-                { name: 'Anak-Anak (6-12 Tahun)', slug: 'anak-anak-6-12-tahun' },
-                { name: 'Aksesoris Baby Kids', slug: 'aksesoris-baby-kids' },
-                { name: 'Sepatu', slug: 'sepatu' },
-              ].map((cat) => (
-                <li key={cat.slug}>
+              {categories.map((cat) => (
+                <li key={cat.id}>
                   <Link href={`/${cat.slug}`} className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">{cat.name}</Link>
                 </li>
               ))}

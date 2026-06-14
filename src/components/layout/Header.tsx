@@ -322,6 +322,7 @@ function CartDrawer() {
     customerName: string;
     customerPhone: string;
     totalAmount: number;
+    shippingCost: number;
     items: { name: string; quantity: number; size?: string; price: number }[];
     createdAt: string;
   } | null>(null);
@@ -331,9 +332,11 @@ function CartDrawer() {
   const [custPhone, setCustPhone] = useState('');
   const [custAddr, setCustAddr] = useState('');
   const [custNote, setCustNote] = useState('');
+  const [shippingCost, setShippingCost] = useState(0);
 
   const WA_NUMBER = '6281281756262';
   const BCA_REKENING = '4130327970';
+  const grandTotal = total + shippingCost;
 
   const handleSubmitOrder = async () => {
     if (!custName.trim() || !custPhone.trim()) return;
@@ -355,6 +358,7 @@ function CartDrawer() {
           customerPhone: custPhone.trim(),
           customerAddr: custAddr.trim(),
           note: custNote.trim(),
+          shippingCost,
           items: orderItems,
         }),
       });
@@ -371,6 +375,7 @@ function CartDrawer() {
         customerName: order.customerName || custName.trim(),
         customerPhone: order.customerPhone || custPhone.trim(),
         totalAmount: order.totalAmount || 0,
+        shippingCost: order.shippingCost ?? shippingCost,
         items: Array.isArray(order.items)
           ? order.items.map((i: Record<string, unknown>) => ({
               name: (i.product as Record<string, string>)?.name || 'Produk',
@@ -410,7 +415,9 @@ function CartDrawer() {
     });
 
     message += '\n━━━━━━━━━━━━━━━━━━━━━\n';
-    message += `💰 *TOTAL: ${formatRupiah(invoice.totalAmount)}*\n\n`;
+    message += `📦 Subtotal: ${formatRupiah(invoice.totalAmount)}\n`;
+    message += `🚚 Ongkir: ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
+    message += `💰 *TOTAL BAYAR: ${formatRupiah(invoice.totalAmount + invoice.shippingCost)}*\n\n`;
     message += '💳 *Pembayaran:*\n';
     message += 'Transfer BCA\n';
     message += `🏦 ${BCA_REKENING} a.n. Rahmawati\n\n`;
@@ -427,6 +434,7 @@ function CartDrawer() {
     setCustPhone('');
     setCustAddr('');
     setCustNote('');
+    setShippingCost(0);
     setIsCartOpen(false);
   };
 
@@ -516,9 +524,19 @@ function CartDrawer() {
                   <span className="font-medium ml-2">{formatRupiah(item.product.wholesalePrice * item.quantity)}</span>
                 </div>
               ))}
-              <div className="border-t border-emerald-200 mt-2 pt-2 flex justify-between">
-                <span className="text-sm font-bold text-emerald-900">Total</span>
-                <span className="text-sm font-bold text-emerald-900">{formatRupiah(total)}</span>
+              <div className="border-t border-emerald-200 mt-2 pt-2 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-emerald-800">Subtotal</span>
+                  <span className="font-medium">{formatRupiah(total)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-emerald-800">Ongkir</span>
+                  <span className="font-medium">{shippingCost > 0 ? formatRupiah(shippingCost) : 'Akan dikonfirmasi'}</span>
+                </div>
+                <div className="flex justify-between pt-1">
+                  <span className="text-sm font-bold text-emerald-900">Total Bayar</span>
+                  <span className="text-sm font-bold text-emerald-900">{formatRupiah(grandTotal)}</span>
+                </div>
               </div>
             </div>
 
@@ -551,6 +569,70 @@ function CartDrawer() {
                 className="h-10"
               />
             </div>
+
+            {/* Shipping cost */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Ongkos Kirim</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShippingCost(0)}
+                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
+                    shippingCost === 0
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
+                  }`}
+                >
+                  Akan dikonfirmasi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShippingCost(10000)}
+                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
+                    shippingCost === 10000
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
+                  }`}
+                >
+                  Rp 10.000
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShippingCost(15000)}
+                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
+                    shippingCost === 15000
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
+                  }`}
+                >
+                  Rp 15.000
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShippingCost(25000)}
+                  className={`px-3 py-2.5 rounded-lg text-xs font-medium border transition-all ${
+                    shippingCost === 25000
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
+                  }`}
+                >
+                  Rp 25.000
+                </button>
+              </div>
+              <div className="mt-2">
+                <Input
+                  type="number"
+                  placeholder="Atau masukkan nominal lain"
+                  value={shippingCost > 0 && ![10000, 15000, 25000].includes(shippingCost) ? shippingCost : ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setShippingCost(isNaN(val) ? 0 : val);
+                  }}
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Catatan</label>
               <Input
@@ -613,10 +695,20 @@ function CartDrawer() {
 
                 <div className="border-t" />
 
-                {/* Total */}
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-gray-900">TOTAL</span>
-                  <span className="text-xl font-bold text-emerald-900">{formatRupiah(invoice.totalAmount)}</span>
+                {/* Subtotal + Ongkir + Total */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal Produk</span>
+                    <span className="font-medium">{formatRupiah(invoice.totalAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Ongkos Kirim</span>
+                    <span className="font-medium">{invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}</span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between items-center">
+                    <span className="font-bold text-gray-900">TOTAL BAYAR</span>
+                    <span className="text-xl font-bold text-emerald-900">{formatRupiah(invoice.totalAmount + invoice.shippingCost)}</span>
+                  </div>
                 </div>
 
                 <div className="border-t" />

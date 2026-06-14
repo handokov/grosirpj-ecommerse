@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         paymentMethod: 'transfer',
         paymentStatus: 'unpaid',
         totalAmount,
+        shippingCost: parseFloat(body.shippingCost) || 0,
         note: note || '',
         items: {
           create: items.map((item: { productId: string; quantity: number; size?: string; price: number }) => ({

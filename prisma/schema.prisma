@@ -79,6 +79,7 @@ model Order {
   paymentMethod String      @default("whatsapp") // whatsapp, transfer, cod
   paymentStatus String      @default("unpaid") // unpaid, paid, refunded
   totalAmount   Float
+  shippingCost  Float       @default(0)
   note          String?
   items         OrderItem[]
   createdAt     DateTime    @default(now())

@@ -99,6 +99,7 @@ async function pushSchema() {
       paymentMethod TEXT NOT NULL DEFAULT 'whatsapp',
       paymentStatus TEXT NOT NULL DEFAULT 'unpaid',
       totalAmount REAL NOT NULL,
+      shippingCost REAL NOT NULL DEFAULT 0,
       note TEXT,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

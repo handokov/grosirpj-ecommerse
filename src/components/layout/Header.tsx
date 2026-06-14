@@ -16,6 +16,7 @@ import {
   Package,
   MapPin,
   MessageCircle,
+  ChevronLeft,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';

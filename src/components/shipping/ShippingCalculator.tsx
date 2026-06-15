@@ -252,7 +252,7 @@ export default function ShippingCalculator({
   if (apiUnavailable) {
     return (
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Ongkos Kirim</label>
+        <label className="text-sm font-medium text-gray-700 mb-1 block">Estimasi Ongkir</label>
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
           <div className="flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
@@ -263,6 +263,7 @@ export default function ShippingCalculator({
               </p>
             </div>
           </div>
+          <p className="text-[10px] text-amber-600 mt-2 italic">⚠️ Harga estimasi, bukan harga resmi. Cek ke kurir untuk harga pasti.</p>
           <div className="mt-2">
             <Input
               type="number"
@@ -293,7 +294,7 @@ export default function ShippingCalculator({
 
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-gray-700 block">Ongkos Kirim</label>
+      <label className="text-sm font-medium text-gray-700 block">Estimasi Ongkir</label>
 
       {/* City Selection */}
       {!selectedCity ? (
@@ -383,7 +384,7 @@ export default function ShippingCalculator({
           ) : (
             <>
               <Search className="h-4 w-4 mr-2" />
-              Cek Ongkir (11 Ekspedisi)
+              Cek Estimasi Ongkir
             </>
           )}
         </Button>
@@ -393,7 +394,7 @@ export default function ShippingCalculator({
       {isCheckingCost && (
         <div className="flex items-center justify-center py-4">
           <Loader2 className="h-6 w-6 text-emerald-600 animate-spin" />
-          <span className="ml-2 text-sm text-gray-600">Mengecek ongkir dari 11 ekspedisi...</span>
+          <span className="ml-2 text-sm text-gray-600">Mengecek estimasi ongkir...</span>
         </div>
       )}
 
@@ -495,6 +496,16 @@ export default function ShippingCalculator({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Disclaimer */}
+      {selectedService && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+          <div className="flex items-start gap-1.5">
+            <AlertCircle className="h-3 w-3 text-amber-500 mt-0.5 shrink-0" />
+            <p className="text-[10px] text-amber-700 italic">Harga estimasi, bukan harga resmi. Cek ke kurir untuk harga pasti.</p>
+          </div>
         </div>
       )}
 

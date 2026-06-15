@@ -442,9 +442,9 @@ function CartDrawer() {
     message += '\n━━━━━━━━━━━━━━━━━━━━━\n';
     message += `📦 Subtotal: ${formatRupiah(invoice.totalAmount)}\n`;
     if (invoice.courier && invoice.courier !== 'manual') {
-      message += `🚚 Ongkir (${invoice.courier.toUpperCase()} ${invoice.courierService}): ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
+      message += `🚚 Estimasi Ongkir (${invoice.courier.toUpperCase()} ${invoice.courierService}): ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
     } else {
-      message += `🚚 Ongkir: ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
+      message += `🚚 Estimasi Ongkir: ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
     }
     message += `💰 *TOTAL BAYAR: ${formatRupiah(invoice.totalAmount + invoice.shippingCost)}*\n\n`;
     message += '💳 *Pembayaran:*\n';
@@ -560,7 +560,7 @@ function CartDrawer() {
                   <span className="font-medium">{formatRupiah(total)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-emerald-800">Ongkir</span>
+                  <span className="text-emerald-800">Estimasi Ongkir</span>
                   <span className="font-medium">{shippingCost > 0 ? formatRupiah(shippingCost) : 'Akan dikonfirmasi'}</span>
                 </div>
                 <div className="flex justify-between pt-1">
@@ -680,7 +680,7 @@ function CartDrawer() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">
-                      Ongkos Kirim
+                      Estimasi Ongkir
                       {invoice.courier && invoice.courier !== 'manual' && (
                         <span className="text-xs text-gray-400 ml-1">
                           ({invoice.courier.toUpperCase()} {invoice.courierService})

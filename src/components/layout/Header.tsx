@@ -24,6 +24,7 @@ import ProductImage from '@/components/ui/product-image';
 import ShippingCalculator, { type SelectedShipping } from '@/components/shipping/ShippingCalculator';
 import { WA_NUMBER, BCA_REKENING, getWhatsAppLink } from '@/lib/store-config';
 import { toast } from 'sonner';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export default function Header() {
   const {
@@ -36,6 +37,7 @@ export default function Header() {
   } = useStore();
 
   const [localSearch, setLocalSearch] = useState('');
+  const debouncedSearch = useDebounce(localSearch, 300);
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -51,24 +53,31 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Search suggestions — triggered by debounced search value
   useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (localSearch.trim().length >= 2) {
-        try {
-          const res = await fetch(`/api/search?q=${encodeURIComponent(localSearch)}`);
-          const data = await res.json();
-          setSuggestions(data.suggestions);
-          setShowSuggestions(true);
-        } catch {
-          setSuggestions([]);
-        }
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [localSearch]);
+    if (debouncedSearch.trim().length >= 2) {
+      let cancelled = false
+      fetch(`/api/search?q=${encodeURIComponent(debouncedSearch)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!cancelled) {
+            setSuggestions(data.suggestions)
+            setShowSuggestions(true)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setSuggestions([])
+        })
+      return () => { cancelled = true }
+    } else {
+      // Clear suggestions when search is too short — use a timeout to avoid synchronous setState
+      const timer = setTimeout(() => {
+        setSuggestions([])
+        setShowSuggestions(false)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [debouncedSearch]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

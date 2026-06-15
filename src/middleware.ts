@@ -12,7 +12,8 @@ let lastCleanup = Date.now()
 function checkRateLimit(
   ip: string,
   windowMs: number,
-  maxRequests: number
+  maxRequests: number,
+  endpoint: string = ''
 ): boolean {
   // Cleanup
   const now = Date.now()
@@ -23,9 +24,11 @@ function checkRateLimit(
     }
   }
 
-  const existing = rateLimitStore.get(ip)
+  // Use endpoint-specific key to allow different limits per endpoint per IP
+  const key = endpoint ? `${ip}:${endpoint}` : ip
+  const existing = rateLimitStore.get(key)
   if (!existing || now > existing.resetTime) {
-    rateLimitStore.set(ip, { count: 1, resetTime: now + windowMs })
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs })
     return true
   }
 
@@ -46,65 +49,83 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('X-XSS-Protection', '1; mode=block')
+  // Add Permissions-Policy to restrict browser features
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   return response
+}
+
+function rateLimitResponse(message: string, retryAfter: string): NextResponse {
+  return addSecurityHeaders(NextResponse.json(
+    { error: message },
+    { status: 429, headers: { 'Retry-After': retryAfter } }
+  ))
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const ip = getClientIp(request)
 
   // ===== Rate limiting for auth endpoints =====
   if (pathname.startsWith('/api/auth') && pathname.includes('callback')) {
-    const ip = getClientIp(request)
-    if (!checkRateLimit(ip, 60_000, 5)) {
-      return addSecurityHeaders(NextResponse.json(
-        { error: 'Terlalu banyak percobaan login. Coba lagi dalam 1 menit.' },
-        { status: 429, headers: { 'Retry-After': '60' } }
-      ))
+    if (!checkRateLimit(ip, 60_000, 5, 'auth')) {
+      return rateLimitResponse('Terlalu banyak percobaan login. Coba lagi dalam 1 menit.', '60')
     }
   }
 
-  // ===== Rate limiting for public order endpoints =====
+  // ===== Rate limiting for public order creation =====
   if (pathname === '/api/orders' && request.method === 'POST') {
-    const ip = getClientIp(request)
-    if (!checkRateLimit(ip, 60_000, 3)) {
-      return addSecurityHeaders(NextResponse.json(
-        { error: 'Terlalu banyak order dibuat. Coba lagi dalam 1 menit.' },
-        { status: 429, headers: { 'Retry-After': '60' } }
-      ))
+    if (!checkRateLimit(ip, 60_000, 3, 'order-create')) {
+      return rateLimitResponse('Terlalu banyak order dibuat. Coba lagi dalam 1 menit.', '60')
     }
   }
 
-  // Order lookup by orderNumber (GET /api/orders/GPJ-XXXXXXXX-XXXX)
+  // Order lookup by orderNumber
   if (pathname.match(/^\/api\/orders\/GPJ-/) && request.method === 'GET') {
-    const ip = getClientIp(request)
-    if (!checkRateLimit(ip, 60_000, 10)) {
-      return addSecurityHeaders(NextResponse.json(
-        { error: 'Terlalu banyak request. Coba lagi dalam 1 menit.' },
-        { status: 429, headers: { 'Retry-After': '60' } }
-      ))
+    if (!checkRateLimit(ip, 60_000, 10, 'order-lookup')) {
+      return rateLimitResponse('Terlalu banyak request. Coba lagi dalam 1 menit.', '60')
     }
   }
 
   // ===== Rate limiting for ongkir =====
   if (pathname.startsWith('/api/ongkir')) {
-    const ip = getClientIp(request)
     const limit = pathname.includes('/cost') ? 10 : 20
-    if (!checkRateLimit(ip, 60_000, limit)) {
-      return addSecurityHeaders(NextResponse.json(
-        { error: 'Terlalu banyak request ongkir. Coba lagi dalam 1 menit.' },
-        { status: 429, headers: { 'Retry-After': '60' } }
-      ))
+    if (!checkRateLimit(ip, 60_000, limit, 'ongkir')) {
+      return rateLimitResponse('Terlalu banyak request ongkir. Coba lagi dalam 1 menit.', '60')
     }
   }
 
   // ===== Rate limiting for search =====
   if (pathname === '/api/search') {
-    const ip = getClientIp(request)
-    if (!checkRateLimit(ip, 60_000, 20)) {
-      return addSecurityHeaders(NextResponse.json(
-        { error: 'Terlalu banyak pencarian. Coba lagi dalam 1 menit.' },
-        { status: 429, headers: { 'Retry-After': '60' } }
-      ))
+    if (!checkRateLimit(ip, 60_000, 20, 'search')) {
+      return rateLimitResponse('Terlalu banyak pencarian. Coba lagi dalam 1 menit.', '60')
+    }
+  }
+
+  // ===== Rate limiting for product listing (including search) =====
+  if (pathname === '/api/products' && request.method === 'GET') {
+    if (!checkRateLimit(ip, 60_000, 30, 'products')) {
+      return rateLimitResponse('Terlalu banyak request. Coba lagi dalam 1 menit.', '60')
+    }
+  }
+
+  // ===== Rate limiting for product detail =====
+  if (pathname === '/api/products/detail' && request.method === 'GET') {
+    if (!checkRateLimit(ip, 60_000, 60, 'product-detail')) {
+      return rateLimitResponse('Terlalu banyak request. Coba lagi dalam 1 menit.', '60')
+    }
+  }
+
+  // ===== Rate limiting for categories =====
+  if (pathname === '/api/categories' && request.method === 'GET') {
+    if (!checkRateLimit(ip, 60_000, 60, 'categories')) {
+      return rateLimitResponse('Terlalu banyak request. Coba lagi dalam 1 menit.', '60')
+    }
+  }
+
+  // ===== Rate limiting for admin API mutation endpoints =====
+  if (pathname.startsWith('/api/admin') && ['POST', 'PUT', 'DELETE'].includes(request.method)) {
+    if (!checkRateLimit(ip, 60_000, 100, 'admin-mutation')) {
+      return rateLimitResponse('Terlalu banyak operasi admin. Coba lagi dalam 1 menit.', '60')
     }
   }
 
@@ -147,7 +168,7 @@ export function middleware(request: NextRequest) {
   return addSecurityHeaders(NextResponse.next())
 }
 
-// Expand matcher to include public API routes that need rate limiting
+// Expand matcher to include all public API routes that need rate limiting
 export const config = {
   matcher: [
     '/admin/:path*',
@@ -156,5 +177,8 @@ export const config = {
     '/api/orders/:path*',
     '/api/ongkir/:path*',
     '/api/search',
+    '/api/products',
+    '/api/products/detail',
+    '/api/categories',
   ],
 }

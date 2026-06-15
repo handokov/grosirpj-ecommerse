@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
-import { validateBody, updateProductSchema } from '@/lib/validations'
+import { validateBody, updateProductSchema, isCuid } from '@/lib/validations'
 import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 // GET - Single product
@@ -14,6 +14,9 @@ export async function GET(
 
   try {
     const { id } = await params
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID produk tidak valid' }, { status: 400 })
+    }
     const product = await db.product.findUnique({
       where: { id },
       include: { category: { select: { name: true, slug: true } } },
@@ -40,6 +43,9 @@ export async function PUT(
 
   try {
     const { id } = await params
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID produk tidak valid' }, { status: 400 })
+    }
     const data = await validateBody(request, updateProductSchema)
     if (data instanceof NextResponse) return data
 
@@ -99,6 +105,9 @@ export async function DELETE(
 
   try {
     const { id } = await params
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID produk tidak valid' }, { status: 400 })
+    }
 
     // Wrap cart item delete + product soft-delete in a transaction
     await db.$transaction(async (tx) => {

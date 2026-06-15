@@ -2,6 +2,21 @@ import { z, type ZodSchema } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
+ * Validate that a string is a CUID (Prisma's default ID format).
+ * CUIDs start with 'c' and are 25 characters of lowercase letters and numbers.
+ */
+export function isCuid(id: string): boolean {
+  return /^c[a-z0-9]{24}$/.test(id)
+}
+
+/**
+ * Validate that a string looks like a slug (lowercase letters, numbers, hyphens).
+ */
+export function isValidSlug(slug: string): boolean {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 200
+}
+
+/**
  * Validate a request body against a Zod schema.
  * Returns the parsed data on success, or a 400 NextResponse on failure.
  *
@@ -16,7 +31,17 @@ export async function validateBody<T>(
   request: NextRequest,
   schema: ZodSchema<T>
 ): Promise<T | NextResponse> {
-  const body = await request.json()
+  // Safely parse JSON body — handle malformed JSON gracefully
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: 'Format request tidak valid. Body harus berupa JSON yang valid.' },
+      { status: 400 }
+    )
+  }
+
   const result = schema.safeParse(body)
   if (!result.success) {
     return NextResponse.json(
@@ -101,10 +126,10 @@ export const updateOrderSchema = z.object({
   status: orderStatusEnum.optional(),
   paymentStatus: paymentStatusEnum.optional(),
   paymentMethod: paymentMethodEnum.optional(),
-  note: z.string().optional(),
-  customerName: z.string().optional(),
-  customerPhone: z.string().optional(),
-  customerAddr: z.string().optional(),
+  note: z.string().max(1000).optional(),
+  customerName: z.string().max(200).optional(),
+  customerPhone: z.string().max(50).optional(),
+  customerAddr: z.string().max(500).optional(),
 })
 
 export const createOrderSchema = z.object({

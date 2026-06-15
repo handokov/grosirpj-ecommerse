@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { isValidSlug } from '@/lib/validations';
 
 export const revalidate = 300;
 
@@ -9,6 +10,11 @@ export async function GET(request: Request) {
     const slug = searchParams.get('slug');
 
     if (slug) {
+      // Validate slug format to prevent injection
+      if (!isValidSlug(slug)) {
+        return NextResponse.json({ error: 'Format slug tidak valid' }, { status: 400 });
+      }
+
       const category = await db.category.findUnique({
         where: { slug },
         include: {
@@ -44,7 +50,7 @@ export async function GET(request: Request) {
       }))
     );
   } catch (error) {
-    console.error('Error fetching categories:');
+    console.error('Error fetching categories:', error);
     // Return empty array instead of 500 to prevent frontend crash
     return NextResponse.json([]);
   }

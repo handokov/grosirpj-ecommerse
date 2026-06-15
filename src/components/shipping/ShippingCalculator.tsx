@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useDebounce } from '@/hooks/use-debounce';
 import {
   Search,
   MapPin,
@@ -108,6 +109,7 @@ function ShippingCalculatorEnabled({
 }: ShippingCalculatorProps) {
   // City search
   const [citySearch, setCitySearch] = useState('');
+  const debouncedCitySearch = useDebounce(citySearch, 400);
   const [cities, setCities] = useState<City[]>([]);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
@@ -142,36 +144,32 @@ function ShippingCalculatorEnabled({
 
   // Search cities with debounce
   useEffect(() => {
-    if (!citySearch.trim()) {
+    if (!debouncedCitySearch.trim()) {
       setCities([]);
       setShowCityDropdown(false);
       return;
     }
 
-    const timeout = setTimeout(async () => {
-      setIsSearchingCity(true);
-      try {
-        const res = await fetch(`/api/ongkir/cities?q=${encodeURIComponent(citySearch.trim())}`);
-        const data = await res.json();
-
+    setIsSearchingCity(true);
+    fetch(`/api/ongkir/cities?q=${encodeURIComponent(debouncedCitySearch.trim())}`)
+      .then((res) => res.json())
+      .then((data) => {
         if (data.cities?.length === 0 && data.error) {
           setApiUnavailable(true);
         } else {
           setApiUnavailable(false);
         }
-
         setCities(data.cities || []);
         setShowCityDropdown(true);
-      } catch {
+      })
+      .catch(() => {
         setCities([]);
         setApiUnavailable(true);
-      } finally {
+      })
+      .finally(() => {
         setIsSearchingCity(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(timeout);
-  }, [citySearch]);
+      });
+  }, [debouncedCitySearch]);
 
   // Check shipping cost
   const handleCheckCost = async () => {

@@ -8,15 +8,12 @@ export async function GET() {
   const session = await requireAdmin();
   if (isAdminError(session)) return session;
 
+  // Minimal diagnostics — don't expose env var names
   const diagnostics: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     env: {
-      TURSO_DATABASE_URL: process.env.TURSO_DATABASE_URL ? 'SET' : 'NOT SET',
-      TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN ? 'SET' : 'NOT SET',
-      DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
-      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? 'SET' : 'NOT SET',
-      CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
-      NODE_ENV: process.env.NODE_ENV,
+      configured: !!(process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL),
+      nodeEnv: process.env.NODE_ENV,
     },
   };
 

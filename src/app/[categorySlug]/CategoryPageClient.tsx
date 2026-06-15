@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Search, Grid3X3, List, Package } from 'lucide-react';
 import { ProductCard, ProductCardSkeletonGrid } from '@/components/shared/ProductCard';
+import { useDebounce } from '@/hooks/use-debounce';
 
 interface Props {
   category: Category;
@@ -31,14 +32,8 @@ function CategoryPageContent({ category, initialProducts, initialTotal, searchQu
   const [totalProducts, setTotalProducts] = useState(initialTotal);
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
   const [localSearch, setLocalSearch] = useState(searchParams.get('q') || initialSearchQuery);
-  const [debouncedSearch, setDebouncedSearch] = useState(localSearch);
+  const debouncedSearch = useDebounce(localSearch, 300);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
-  // Debounce search input — update debouncedSearch 300ms after user stops typing
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(localSearch), 300);
-    return () => clearTimeout(timer);
-  }, [localSearch]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);

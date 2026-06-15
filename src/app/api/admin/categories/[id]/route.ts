@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
-import { validateBody, updateCategorySchema } from '@/lib/validations'
+import { validateBody, updateCategorySchema, isCuid } from '@/lib/validations'
 import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 // GET - Single category
@@ -14,6 +14,9 @@ export async function GET(
 
   try {
     const { id } = await params
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID kategori tidak valid' }, { status: 400 })
+    }
     const category = await db.category.findUnique({
       where: { id },
       include: { _count: { select: { products: true } } },
@@ -40,6 +43,9 @@ export async function PUT(
 
   try {
     const { id } = await params
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID kategori tidak valid' }, { status: 400 })
+    }
     const data = await validateBody(request, updateCategorySchema)
     if (data instanceof NextResponse) return data
 
@@ -88,6 +94,9 @@ export async function DELETE(
 
   try {
     const { id } = await params
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID kategori tidak valid' }, { status: 400 })
+    }
 
     // Wrap count check + delete in a transaction for atomicity
     await db.$transaction(async (tx) => {

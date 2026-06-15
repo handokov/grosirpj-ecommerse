@@ -6,9 +6,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const q = searchParams.get('q');
+    const q = (searchParams.get('q') || '').trim().slice(0, 200); // Limit query length
 
-    if (!q || q.trim().length < 2) {
+    if (!q || q.length < 2) {
       return NextResponse.json({ suggestions: [] });
     }
 
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    console.error('Error searching:');
+    console.error('Error searching:', error);
     return NextResponse.json({ suggestions: [] });
   }
 }

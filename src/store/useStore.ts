@@ -6,12 +6,10 @@ import type { Product, CartItemType, Category } from '@/types';
 export type { Product, CartItemType, Category } from '@/types';
 
 interface StoreState {
-  searchQuery: string;
   cartItems: CartItemType[];
   isCartOpen: boolean;
   isMobileMenuOpen: boolean;
 
-  setSearchQuery: (query: string) => void;
   addToCart: (product: Product, quantity?: number, size?: string) => void;
   removeFromCart: (productId: string, size?: string) => void;
   updateCartQuantity: (productId: string, quantity: number, size?: string) => void;
@@ -25,12 +23,9 @@ interface StoreState {
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      searchQuery: '',
       cartItems: [],
       isCartOpen: false,
       isMobileMenuOpen: false,
-
-      setSearchQuery: (query) => set({ searchQuery: query }),
 
       addToCart: (product, quantity = 1, size) => {
         const { cartItems } = get();

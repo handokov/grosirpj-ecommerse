@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { validateBody, updateOrderSchema } from '@/lib/validations'
+import { validateBody, updateOrderSchema, isCuid } from '@/lib/validations'
 import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+
+// Valid order status transitions — enforced server-side to prevent invalid state
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['processing', 'cancelled'],
+  processing: ['shipped', 'cancelled'],
+  shipped: ['completed', 'cancelled'],
+  completed: [], // Terminal state — no transitions allowed
+  cancelled: [], // Terminal state — no transitions allowed
+}
 
 // GET - Single order
 export async function GET(
@@ -13,6 +23,12 @@ export async function GET(
 
   try {
     const { id } = await params
+
+    // Validate ID format
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID order tidak valid' }, { status: 400 })
+    }
+
     const order = await db.order.findUnique({
       where: { id },
       include: {
@@ -25,13 +41,13 @@ export async function GET(
     })
 
     if (!order || order.deletedAt) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Order tidak ditemukan' }, { status: 404 })
     }
 
     return NextResponse.json({ order })
   } catch (error) {
     console.error('Get order error:', error)
-    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal mengambil data order' }, { status: 500 })
   }
 }
 
@@ -45,6 +61,12 @@ export async function PUT(
 
   try {
     const { id } = await params
+
+    // Validate ID format
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID order tidak valid' }, { status: 400 })
+    }
+
     const data = await validateBody(request, updateOrderSchema)
     if (data instanceof NextResponse) return data
 
@@ -66,6 +88,27 @@ export async function PUT(
     if (data.customerPhone !== undefined) updateData.customerPhone = data.customerPhone
     if (data.customerAddr !== undefined) updateData.customerAddr = data.customerAddr
 
+    // When status changes, validate the transition
+    if (data.status !== undefined) {
+      const existingOrder = await db.order.findUnique({
+        where: { id },
+        select: { status: true, deletedAt: true },
+      })
+
+      if (!existingOrder || existingOrder.deletedAt) {
+        return NextResponse.json({ error: 'Order tidak ditemukan' }, { status: 404 })
+      }
+
+      // Validate status transition
+      const allowedNextStatuses = VALID_TRANSITIONS[existingOrder.status]
+      if (!allowedNextStatuses || !allowedNextStatuses.includes(data.status)) {
+        return NextResponse.json(
+          { error: `Transisi status dari "${existingOrder.status}" ke "${data.status}" tidak valid. Status yang diizinkan: ${allowedNextStatuses.length > 0 ? allowedNextStatuses.join(', ') : 'tidak ada (status final)'}` },
+          { status: 400 }
+        )
+      }
+    }
+
     // When status changes to 'cancelled', restore stock in a transaction
     if (data.status === 'cancelled') {
       const order = await db.$transaction(async (tx) => {
@@ -76,17 +119,21 @@ export async function PUT(
         })
 
         if (!existingOrder || existingOrder.deletedAt) {
-          throw new Error('Order not found')
+          throw Object.assign(new Error('Order tidak ditemukan'), { statusCode: 404 })
         }
 
         // Prevent double-cancellation race condition
         if (existingOrder.status === 'cancelled') {
-          throw new Error('Order sudah dibatalkan')
+          throw Object.assign(new Error('Order sudah dibatalkan'), { statusCode: 400 })
         }
 
-        // Prevent cancelling completed orders (already shipped/received)
-        if (existingOrder.status === 'completed') {
-          throw new Error('Order yang sudah selesai tidak dapat dibatalkan')
+        // Validate transition server-side (redundant with earlier check, but safe inside tx)
+        const allowedNextStatuses = VALID_TRANSITIONS[existingOrder.status]
+        if (!allowedNextStatuses || !allowedNextStatuses.includes('cancelled')) {
+          throw Object.assign(
+            new Error(`Order dengan status "${existingOrder.status}" tidak dapat dibatalkan`),
+            { statusCode: 400 }
+          )
         }
 
         // If old status is NOT cancelled and new status IS cancelled, restore stock
@@ -137,8 +184,14 @@ export async function PUT(
     return NextResponse.json({ order })
   } catch (error) {
     console.error('Update order error:', error)
-    const message = error instanceof Error ? error.message : 'Failed to update order'
-    return NextResponse.json({ error: message }, { status: 500 })
+
+    // Check if this is a controlled validation error with statusCode
+    if (error instanceof Error && 'statusCode' in error) {
+      const statusCode = (error as Error & { statusCode: number }).statusCode
+      return NextResponse.json({ error: error.message }, { status: statusCode })
+    }
+
+    return NextResponse.json({ error: 'Gagal mengupdate order' }, { status: 500 })
   }
 }
 
@@ -153,7 +206,18 @@ export async function DELETE(
   try {
     const { id } = await params
 
+    // Validate ID format
+    if (!isCuid(id)) {
+      return NextResponse.json({ error: 'ID order tidak valid' }, { status: 400 })
+    }
+
     await db.$transaction(async (tx) => {
+      // Check order exists
+      const order = await tx.order.findUnique({ where: { id } })
+      if (!order || order.deletedAt) {
+        throw Object.assign(new Error('Order tidak ditemukan'), { statusCode: 404 })
+      }
+
       // Soft delete: set deletedAt instead of hard deleting
       await tx.order.update({
         where: { id },
@@ -164,6 +228,12 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Delete order error:', error)
-    return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 })
+
+    if (error instanceof Error && 'statusCode' in error) {
+      const statusCode = (error as Error & { statusCode: number }).statusCode
+      return NextResponse.json({ error: error.message }, { status: statusCode })
+    }
+
+    return NextResponse.json({ error: 'Gagal menghapus order' }, { status: 500 })
   }
 }

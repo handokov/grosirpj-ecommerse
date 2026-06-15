@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 export async function GET() {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     // Get total products
     const totalProducts = await db.product.count()
@@ -74,7 +79,7 @@ export async function GET() {
       orderBy: { order: 'asc' },
     })
 
-    // Monthly revenue (last 6 months mock - we'll enhance later)
+    // Monthly revenue (last 6 months)
     const now = new Date()
     const monthlyData = []
     for (let i = 5; i >= 0; i--) {

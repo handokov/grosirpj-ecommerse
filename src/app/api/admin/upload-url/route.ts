@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { uploadUrlSchema } from '@/lib/validations'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,28 +10,31 @@ export const dynamic = 'force-dynamic'
  * Used for importing images from external sources (e.g., Shopee).
  */
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
-    const { url, folder } = await request.json()
+    const body = await request.json()
 
-    if (!url || typeof url !== 'string') {
-      return NextResponse.json({ error: 'URL is required' }, { status: 400 })
+    // Validate input
+    const result = uploadUrlSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
     }
-
-    // Validate URL format
-    let parsedUrl: URL
-    try {
-      parsedUrl = new URL(url)
-    } catch {
-      return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 })
-    }
+    const data = result.data
 
     // Only allow http/https
+    const parsedUrl = new URL(data.url)
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
       return NextResponse.json({ error: 'Only HTTP/HTTPS URLs are allowed' }, { status: 400 })
     }
 
     // Download the image
-    const response = await fetch(url, {
+    const response = await fetch(data.url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'image/*,*/*',
@@ -51,11 +56,11 @@ export async function POST(request: NextRequest) {
     const base64 = `data:${contentType};base64,${buffer.toString('base64')}`
 
     // Upload to Cloudinary
-    const result = await uploadImage(base64, folder || 'grosirpj/products')
+    const uploadResult = await uploadImage(base64, data.folder)
 
     return NextResponse.json({
-      url: result.url,
-      publicId: result.publicId,
+      url: uploadResult.url,
+      publicId: uploadResult.publicId,
     })
   } catch (error) {
     console.error('Upload URL error:', error)

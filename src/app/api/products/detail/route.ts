@@ -14,17 +14,20 @@ export async function GET(request: Request) {
 
     const product = await db.product.findUnique({
       where: { slug },
-      include: { category: true },
+      include: { category: { select: { name: true, slug: true } } },
     });
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
+    // Strip supplier data from buyer-facing API
+    const { supplierName, supplierLink, supplierPhone, category, ...publicData } = product;
+
     return NextResponse.json({
-      ...product,
-      categoryName: product.category.name,
-      categorySlug: product.category.slug,
+      ...publicData,
+      categoryName: category.name,
+      categorySlug: category.slug,
     });
   } catch (error) {
     console.error('Error fetching product detail:', error);

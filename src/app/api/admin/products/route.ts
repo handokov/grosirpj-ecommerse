@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { createProductSchema } from '@/lib/validations'
 
 // GET - List products with filters
 export async function GET(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -48,38 +54,61 @@ export async function GET(request: NextRequest) {
 
 // POST - Create product
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const body = await request.json()
     
+    // Validate input
+    const result = createProductSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
+
     // Generate slug from name
-    const slug = body.name
+    const slug = data.name
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim()
 
+    // Check slug uniqueness
+    const existing = await db.product.findUnique({ where: { slug } })
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Nama produk sudah digunakan, gunakan nama berbeda' },
+        { status: 409 }
+      )
+    }
+
     const product = await db.product.create({
       data: {
-        name: body.name,
+        name: data.name,
         slug,
-        description: body.description || '',
-        price: parseFloat(body.price),
-        wholesalePrice: parseFloat(body.wholesalePrice),
-        minOrder: parseInt(body.minOrder) || 1,
-        stock: parseInt(body.stock),
-        images: body.images || '',
-        categoryId: body.categoryId,
+        description: data.description,
+        price: data.price,
+        wholesalePrice: data.wholesalePrice,
+        minOrder: data.minOrder,
+        stock: data.stock,
+        images: data.images,
+        categoryId: data.categoryId,
         rating: 0,
         reviewCount: 0,
         sold: 0,
-        featured: body.featured || false,
-        tags: body.tags || '',
-        weight: body.weight || '',
-        sizes: body.sizes || '',
-        supplierName: body.supplierName || null,
-        supplierLink: body.supplierLink || null,
-        supplierPhone: body.supplierPhone || null,
+        featured: data.featured,
+        tags: data.tags,
+        weight: data.weight,
+        sizes: data.sizes,
+        supplierName: data.supplierName,
+        supplierLink: data.supplierLink,
+        supplierPhone: data.supplierPhone,
       },
       include: { category: { select: { name: true } } },
     })

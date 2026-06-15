@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { createCategorySchema } from '@/lib/validations'
 
 // GET - List categories
 export async function GET() {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const categories = await db.category.findMany({
       include: {
@@ -20,24 +26,47 @@ export async function GET() {
 
 // POST - Create category
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const body = await request.json()
     
-    const slug = body.name
+    // Validate input
+    const result = createCategorySchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
+
+    const slug = data.name
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim()
 
+    // Check slug uniqueness
+    const existing = await db.category.findUnique({ where: { slug } })
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Nama kategori sudah digunakan' },
+        { status: 409 }
+      )
+    }
+
     const category = await db.category.create({
       data: {
-        name: body.name,
+        name: data.name,
         slug,
-        description: body.description || '',
-        icon: body.icon || '',
-        image: body.image || '',
-        order: body.order || 0,
+        description: data.description,
+        icon: data.icon,
+        image: data.image,
+        order: data.order,
       },
     })
 

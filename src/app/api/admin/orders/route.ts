@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { createOrderSchema } from '@/lib/validations'
 
 // GET - List orders with filters
 export async function GET(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -51,8 +57,22 @@ export async function GET(request: NextRequest) {
 
 // POST - Create order
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const body = await request.json()
+
+    // Validate input
+    const result = createOrderSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
 
     // Generate order number
     const orderCount = await db.order.count()
@@ -61,20 +81,20 @@ export async function POST(request: NextRequest) {
     const order = await db.order.create({
       data: {
         orderNumber,
-        customerName: body.customerName,
-        customerPhone: body.customerPhone,
-        customerEmail: body.customerEmail || '',
-        customerAddr: body.customerAddr || '',
-        status: body.status || 'pending',
-        paymentMethod: body.paymentMethod || 'whatsapp',
-        paymentStatus: body.paymentStatus || 'unpaid',
-        totalAmount: parseFloat(body.totalAmount),
-        note: body.note || '',
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        customerEmail: data.customerEmail,
+        customerAddr: data.customerAddr,
+        status: 'pending',
+        paymentMethod: data.paymentMethod,
+        paymentStatus: 'unpaid',
+        totalAmount: data.totalAmount,
+        note: data.note,
         items: {
-          create: body.items.map((item: { productId: string; quantity: number; size?: string; price: number }) => ({
+          create: data.items.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
-            size: item.size || '',
+            size: item.size,
             price: item.price,
           })),
         },

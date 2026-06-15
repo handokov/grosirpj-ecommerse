@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { getFirstImageUrl } from '@/lib/image-utils'
 import {
   Plus,
   Search,
@@ -193,11 +194,6 @@ export default function ProductsPage() {
     setPage(1)
   }
 
-  const getFirstImage = (images: string) => {
-    if (!images) return ''
-    return images.split(',')[0] || ''
-  }
-
   // Filter products based on tab
   const filteredProducts = products.filter(product => {
     switch (activeTab) {
@@ -369,7 +365,7 @@ export default function ProductsPage() {
                 </TableRow>
               ) : (
                 filteredProducts.map((product) => {
-                  const firstImage = getFirstImage(product.images)
+                  const firstImage = getFirstImageUrl(product.images)
                   return (
                     <TableRow key={product.id} className="group hover:bg-gray-50/50 border-gray-50">
                       <TableCell>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { getFirstImageUrl } from '@/lib/image-utils'
 import {
   Package,
   ShoppingCart,
@@ -95,13 +96,6 @@ interface DashboardData {
   }[]
 }
 
-
-
-// Helper to parse product images - simple split by comma
-function parseProductImage(imagesStr: string): string {
-  if (!imagesStr) return ''
-  return imagesStr.split(',')[0]?.trim() || ''
-}
 
 // Status badge config
 function getStatusBadge(status: string) {
@@ -487,7 +481,7 @@ export default function AdminDashboardPage() {
                       {/* Product image */}
                       <Avatar className="h-10 w-10 rounded-lg border border-gray-100">
                         <AvatarImage
-                          src={parseProductImage(product.images)}
+                          src={getFirstImageUrl(product.images)}
                           alt={product.name}
                           className="object-cover"
                         />
@@ -577,7 +571,7 @@ export default function AdminDashboardPage() {
                       {/* Product image */}
                       <Avatar className="h-10 w-10 rounded-lg border border-gray-100">
                         <AvatarImage
-                          src={parseProductImage(product.images)}
+                          src={getFirstImageUrl(product.images)}
                           alt={product.name}
                           className="object-cover"
                         />
@@ -687,7 +681,7 @@ export default function AdminDashboardPage() {
                 <TableBody>
                   {data?.recentOrders.map((order) => {
                     const firstItemImage = order.items[0]?.product?.images
-                      ? parseProductImage(order.items[0].product.images)
+                      ? getFirstImageUrl(order.items[0].product.images)
                       : ''
                     const itemCount = order.items.length
                     return (

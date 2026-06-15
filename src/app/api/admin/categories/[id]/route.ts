@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { updateCategorySchema } from '@/lib/validations'
 
 // GET - Single category
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const category = await db.category.findUnique({
@@ -29,24 +35,51 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const body = await request.json()
 
+    // Validate input
+    const result = updateCategorySchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
+
     const updateData: Record<string, unknown> = {}
-    if (body.name !== undefined) {
-      updateData.name = body.name
-      updateData.slug = body.name
+    if (data.name !== undefined) {
+      updateData.name = data.name
+      updateData.slug = data.name
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
         .trim()
     }
-    if (body.description !== undefined) updateData.description = body.description
-    if (body.icon !== undefined) updateData.icon = body.icon
-    if (body.image !== undefined) updateData.image = body.image
-    if (body.order !== undefined) updateData.order = body.order
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.icon !== undefined) updateData.icon = data.icon
+    if (data.image !== undefined) updateData.image = data.image
+    if (data.order !== undefined) updateData.order = data.order
+
+    // Check slug uniqueness if name changed
+    if (updateData.slug) {
+      const existing = await db.category.findFirst({
+        where: { slug: updateData.slug as string, NOT: { id } },
+      })
+      if (existing) {
+        return NextResponse.json(
+          { error: 'Nama kategori sudah digunakan' },
+          { status: 409 }
+        )
+      }
+    }
 
     const category = await db.category.update({
       where: { id },
@@ -65,6 +98,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
 

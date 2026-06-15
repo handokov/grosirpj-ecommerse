@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { deleteImage } from '@/lib/cloudinary'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { updateProductSchema } from '@/lib/validations'
 
 // GET - Single product
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const product = await db.product.findUnique({
@@ -30,34 +36,61 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const body = await request.json()
 
+    // Validate input
+    const result = updateProductSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
+
     const updateData: Record<string, unknown> = {}
-    if (body.name !== undefined) {
-      updateData.name = body.name
-      updateData.slug = body.name
+    if (data.name !== undefined) {
+      updateData.name = data.name
+      updateData.slug = data.name
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
         .trim()
     }
-    if (body.description !== undefined) updateData.description = body.description
-    if (body.price !== undefined) updateData.price = parseFloat(body.price)
-    if (body.wholesalePrice !== undefined) updateData.wholesalePrice = parseFloat(body.wholesalePrice)
-    if (body.minOrder !== undefined) updateData.minOrder = parseInt(body.minOrder)
-    if (body.stock !== undefined) updateData.stock = parseInt(body.stock)
-    if (body.images !== undefined) updateData.images = body.images
-    if (body.categoryId !== undefined) updateData.categoryId = body.categoryId
-    if (body.featured !== undefined) updateData.featured = body.featured
-    if (body.tags !== undefined) updateData.tags = body.tags
-    if (body.weight !== undefined) updateData.weight = body.weight
-    if (body.sizes !== undefined) updateData.sizes = body.sizes
-    if (body.supplierName !== undefined) updateData.supplierName = body.supplierName || null
-    if (body.supplierLink !== undefined) updateData.supplierLink = body.supplierLink || null
-    if (body.supplierPhone !== undefined) updateData.supplierPhone = body.supplierPhone || null
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.price !== undefined) updateData.price = data.price
+    if (data.wholesalePrice !== undefined) updateData.wholesalePrice = data.wholesalePrice
+    if (data.minOrder !== undefined) updateData.minOrder = data.minOrder
+    if (data.stock !== undefined) updateData.stock = data.stock
+    if (data.images !== undefined) updateData.images = data.images
+    if (data.categoryId !== undefined) updateData.categoryId = data.categoryId
+    if (data.featured !== undefined) updateData.featured = data.featured
+    if (data.tags !== undefined) updateData.tags = data.tags
+    if (data.weight !== undefined) updateData.weight = data.weight
+    if (data.sizes !== undefined) updateData.sizes = data.sizes
+    if (data.supplierName !== undefined) updateData.supplierName = data.supplierName || null
+    if (data.supplierLink !== undefined) updateData.supplierLink = data.supplierLink || null
+    if (data.supplierPhone !== undefined) updateData.supplierPhone = data.supplierPhone || null
+
+    // Check slug uniqueness if name changed
+    if (updateData.slug) {
+      const existing = await db.product.findFirst({
+        where: { slug: updateData.slug as string, NOT: { id } },
+      })
+      if (existing) {
+        return NextResponse.json(
+          { error: 'Nama produk sudah digunakan, gunakan nama berbeda' },
+          { status: 409 }
+        )
+      }
+    }
 
     const product = await db.product.update({
       where: { id },
@@ -77,6 +110,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
 

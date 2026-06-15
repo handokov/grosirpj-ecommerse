@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
+import { getFirstImageUrl } from '@/lib/image-utils'
 import {
   Search,
   ShoppingCart,
@@ -164,11 +165,6 @@ const STATUS_TABS = [
   { value: 'completed', label: 'Selesai' },
   { value: 'cancelled', label: 'Dibatalkan' },
 ]
-
-function getFirstImage(imagesStr: string): string {
-  if (!imagesStr) return ''
-  return imagesStr.split(',')[0]?.trim() || ''
-}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('id-ID', {
@@ -447,7 +443,7 @@ function OrdersContent() {
                             <div className="w-11 h-11 rounded-lg bg-gray-100 border border-gray-100 flex-shrink-0 overflow-hidden">
                               {item.product.images ? (
                                 <img
-                                  src={getFirstImage(item.product.images)}
+                                  src={getFirstImageUrl(item.product.images)}
                                   alt={item.product.name}
                                   className="w-full h-full object-cover"
                                 />

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { getFirstImageUrl } from '@/lib/image-utils'
 import {
   ArrowLeft,
   Loader2,
@@ -170,11 +171,6 @@ const STATUS_STEPS: {
   { key: 'shipped', label: 'Dikirim', icon: Truck, color: 'text-orange-600', bgColor: 'bg-orange-50' },
   { key: 'completed', label: 'Selesai', icon: Check, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
 ]
-
-function getFirstImage(imagesStr: string): string {
-  if (!imagesStr) return ''
-  return imagesStr.split(',')[0]?.trim() || ''
-}
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('id-ID', {
@@ -632,7 +628,7 @@ export default function OrderDetailPage() {
                       <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden">
                         {item.product.images ? (
                           <img
-                            src={getFirstImage(item.product.images)}
+                            src={getFirstImageUrl(item.product.images)}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                           />

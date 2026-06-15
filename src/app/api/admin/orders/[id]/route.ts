@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { updateOrderSchema } from '@/lib/validations'
 
 // GET - Single order
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const order = await db.order.findUnique({
@@ -35,18 +41,32 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const body = await request.json()
 
+    // Validate input
+    const result = updateOrderSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
+
     const updateData: Record<string, unknown> = {}
-    if (body.status !== undefined) updateData.status = body.status
-    if (body.paymentStatus !== undefined) updateData.paymentStatus = body.paymentStatus
-    if (body.paymentMethod !== undefined) updateData.paymentMethod = body.paymentMethod
-    if (body.note !== undefined) updateData.note = body.note
-    if (body.customerName !== undefined) updateData.customerName = body.customerName
-    if (body.customerPhone !== undefined) updateData.customerPhone = body.customerPhone
-    if (body.customerAddr !== undefined) updateData.customerAddr = body.customerAddr
+    if (data.status !== undefined) updateData.status = data.status
+    if (data.paymentStatus !== undefined) updateData.paymentStatus = data.paymentStatus
+    if (data.paymentMethod !== undefined) updateData.paymentMethod = data.paymentMethod
+    if (data.note !== undefined) updateData.note = data.note
+    if (data.customerName !== undefined) updateData.customerName = data.customerName
+    if (data.customerPhone !== undefined) updateData.customerPhone = data.customerPhone
+    if (data.customerAddr !== undefined) updateData.customerAddr = data.customerAddr
 
     const order = await db.order.update({
       where: { id },
@@ -72,6 +92,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     await db.orderItem.deleteMany({ where: { orderId: id } })

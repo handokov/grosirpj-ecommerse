@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { updateBannerSchema } from '@/lib/validations'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,6 +10,10 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const banner = await db.banner.findUnique({ where: { id } })
@@ -26,19 +32,32 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     const body = await request.json()
-    const { title, image, link, order, active } = body
+
+    // Validate input
+    const result = updateBannerSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
 
     const banner = await db.banner.update({
       where: { id },
       data: {
-        ...(title !== undefined && { title }),
-        ...(image !== undefined && { image }),
-        ...(link !== undefined && { link: link || null }),
-        ...(order !== undefined && { order }),
-        ...(active !== undefined && { active }),
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.image !== undefined && { image: data.image }),
+        ...(data.link !== undefined && { link: data.link || null }),
+        ...(data.order !== undefined && { order: data.order }),
+        ...(data.active !== undefined && { active: data.active }),
       },
     })
 
@@ -54,6 +73,10 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { id } = await params
     await db.banner.delete({ where: { id } })

@@ -4,10 +4,7 @@ const nextConfig: NextConfig = {
   // Vercel handles build output automatically - no need for "standalone"
   // output: "standalone",  // REMOVED for Vercel compatibility
 
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  reactStrictMode: false,
+  reactStrictMode: true,
 
   // Allow cross-origin requests from preview panel
   allowedDevOrigins: [

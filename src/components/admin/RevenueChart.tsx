@@ -1,6 +1,7 @@
 'use client'
 
 import { TrendingUp, ArrowUpRight } from 'lucide-react'
+import { formatRupiah } from '@/lib/format'
 import {
   Card,
   CardContent,
@@ -43,15 +44,6 @@ const chartConfig: ChartConfig = {
     label: 'Pesanan',
     color: '#059669',
   },
-}
-
-function formatRupiah(amount: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
 }
 
 function chartTooltipFormatter(value: number, name: string) {

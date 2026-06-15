@@ -88,6 +88,25 @@ export const createOrderSchema = z.object({
   })).min(1, 'Minimal 1 item'),
 })
 
+// Public order creation (from buyer checkout) — NO price from client!
+// Price is calculated server-side from the database to prevent manipulation.
+export const publicCreateOrderSchema = z.object({
+  customerName: z.string().min(1, 'Nama pelanggan wajib diisi').max(200),
+  customerPhone: z.string().min(1, 'No. telepon wajib diisi').max(50),
+  customerEmail: z.string().email().optional().default(''),
+  customerAddr: z.string().max(500).optional().default(''),
+  note: z.string().max(1000).optional().default(''),
+  shippingCost: z.coerce.number().min(0).optional().default(0),
+  courier: z.string().max(100).optional().default(''),
+  courierService: z.string().max(200).optional().default(''),
+  destinationCity: z.string().max(200).optional().default(''),
+  items: z.array(z.object({
+    productId: z.string().min(1, 'Product ID wajib'),
+    quantity: z.coerce.number().int().min(1, 'Minimal 1 item').max(9999),
+    size: z.string().max(50).optional().default(''),
+  })).min(1, 'Minimal 1 item').max(50, 'Maksimal 50 item per order'),
+})
+
 // ===== BANNER SCHEMAS =====
 
 export const createBannerSchema = z.object({

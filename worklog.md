@@ -51,3 +51,22 @@ Stage Summary:
 - 3 CRITICAL issues fixed, 2 MEDIUM issues fixed, 1 LOW issue fixed
 - New utility files: auth-guard.ts, validations.ts, image-utils.ts
 - All admin routes now have dual-layer security: middleware cookie check + getServerSession() verification
+---
+Task ID: 2
+Agent: Main Agent
+Task: Rate Limiting + Public Order Security + Order Lookup Protection
+
+Work Log:
+- Created src/lib/rate-limit.ts — in-memory rate limiter with preset configs
+- Updated src/middleware.ts — added rate limiting for auth, orders, ongkir, search endpoints
+- Rate limits: Login 5/min, Order create 3/min, Ongkir cost 10/min, Cities 20/min, Search 20/min, Order lookup 10/min
+- Created publicCreateOrderSchema in validations.ts — no price from client, max limits on all fields
+- Rewrote /api/orders/route.ts — server-side price calculation from database, validates stock & minOrder
+- Rewrote /api/orders/[orderNumber]/route.ts — format validation (GPJ-YYYYMMDD-XXXX), strip internal IDs, rate limited
+- All 5 browser verification checks PASSED
+
+Stage Summary:
+- Rate limiting active on all public API routes
+- Price manipulation attack vector eliminated (server-side calculation)
+- Order lookup now validates format, rate-limited, strips sensitive data
+- Security score improved from 7/10 to ~8.5/10

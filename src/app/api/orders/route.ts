@@ -1,56 +1,117 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicCreateOrderSchema } from '@/lib/validations'
 
 // POST - Create order from public checkout (generates invoice)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { items, customerName, customerPhone, customerEmail, customerAddr, note, shippingCost, courier, courierService, destinationCity } = body
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'Items required' }, { status: 400 })
+    // Validate input with Zod (NO price from client!)
+    const result = publicCreateOrderSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+        { status: 400 }
+      )
+    }
+    const data = result.data
+
+    // ===== SERVER-SIDE PRICE CALCULATION =====
+    // Fetch all products from the database to get real prices
+    // This prevents price manipulation from the client
+    const productIds = data.items.map(item => item.productId)
+    const products = await db.product.findMany({
+      where: {
+        id: { in: productIds },
+        stock: { gt: 0 }, // Only in-stock products
+      },
+      select: {
+        id: true,
+        wholesalePrice: true,
+        price: true,
+        minOrder: true,
+        stock: true,
+        name: true,
+      },
+    })
+
+    // Build a lookup map
+    const productMap = new Map(products.map(p => [p.id, p]))
+
+    // Validate each item and calculate prices server-side
+    const orderItems: { productId: string; quantity: number; size: string; price: number }[] = []
+    let totalAmount = 0
+    const errors: string[] = []
+
+    for (const item of data.items) {
+      const product = productMap.get(item.productId)
+
+      if (!product) {
+        errors.push(`Produk ${item.productId} tidak ditemukan atau stok habis`)
+        continue
+      }
+
+      // Check min order
+      if (item.quantity < product.minOrder) {
+        errors.push(`Minimal order untuk ${product.name} adalah ${product.minOrder}`)
+        continue
+      }
+
+      // Check stock
+      if (item.quantity > product.stock) {
+        errors.push(`Stok ${product.name} tidak mencukupi (tersedia: ${product.stock})`)
+        continue
+      }
+
+      // Use wholesale price if quantity meets min order, otherwise retail price
+      const unitPrice = item.quantity >= product.minOrder ? product.wholesalePrice : product.price
+      totalAmount += unitPrice * item.quantity
+
+      orderItems.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        size: item.size,
+        price: unitPrice,
+      })
     }
 
-    if (!customerName || !customerPhone) {
-      return NextResponse.json({ error: 'Customer name and phone required' }, { status: 400 })
+    if (errors.length > 0) {
+      return NextResponse.json({ error: errors.join('. ') }, { status: 400 })
     }
 
-    // Generate order number: GPJ-YYYYMMDD-XXXXX
+    if (orderItems.length === 0) {
+      return NextResponse.json({ error: 'Tidak ada item yang valid untuk dipesan' }, { status: 400 })
+    }
+
+    // Add shipping cost
+    totalAmount += data.shippingCost
+
+    // Generate order number: GPJ-YYYYMMDD-XXXX
     const now = new Date()
     const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
     const orderCount = await db.order.count()
     const seq = String(orderCount + 1).padStart(4, '0')
     const orderNumber = `GPJ-${dateStr}-${seq}`
 
-    // Calculate total
-    const totalAmount = items.reduce(
-      (sum: number, item: { price: number; quantity: number }) => sum + item.price * item.quantity,
-      0
-    )
-
     const order = await db.order.create({
       data: {
         orderNumber,
-        customerName,
-        customerPhone,
-        customerEmail: customerEmail || '',
-        customerAddr: customerAddr || '',
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        customerEmail: data.customerEmail,
+        customerAddr: data.customerAddr,
         status: 'pending',
         paymentMethod: 'transfer',
         paymentStatus: 'unpaid',
         totalAmount,
-        shippingCost: parseFloat(body.shippingCost) || 0,
-        courier: courier || '',
-        courierService: courierService || '',
-        destinationCity: destinationCity || '',
-        note: note || '',
+        shippingCost: data.shippingCost,
+        courier: data.courier,
+        courierService: data.courierService,
+        destinationCity: data.destinationCity,
+        note: data.note,
         items: {
-          create: items.map((item: { productId: string; quantity: number; size?: string; price: number }) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            size: item.size || '',
-            price: item.price,
-          })),
+          create: orderItems,
         },
       },
       include: {

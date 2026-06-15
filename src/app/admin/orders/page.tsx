@@ -15,6 +15,8 @@ import {
   MapPin,
   Download,
   Filter,
+  Store,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -61,6 +63,9 @@ interface OrderItem {
   product: {
     name: string
     images: string
+    supplierName: string | null
+    supplierLink: string | null
+    supplierPhone: string | null
   }
 }
 
@@ -435,35 +440,71 @@ function OrdersContent() {
 
                     {/* Items */}
                     <div className="space-y-2">
-                      {order.items.map(item => (
-                        <div key={item.id} className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-lg bg-gray-100 border border-gray-100 flex-shrink-0 overflow-hidden">
-                            {item.product.images ? (
-                              <img
-                                src={getFirstImage(item.product.images)}
-                                alt={item.product.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                <ShoppingCart className="w-4 h-4" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-gray-900 truncate">
-                              {item.product.name}
-                            </p>
-                            <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                              {item.size && <span>Ukuran: {item.size}</span>}
-                              <span>{item.quantity}x {formatRupiah(item.price)}</span>
+                      {order.items.map(item => {
+                        const hasSupplier = item.product.supplierName || item.product.supplierLink || item.product.supplierPhone
+                        return (
+                          <div key={item.id} className="flex items-start gap-3">
+                            <div className="w-11 h-11 rounded-lg bg-gray-100 border border-gray-100 flex-shrink-0 overflow-hidden">
+                              {item.product.images ? (
+                                <img
+                                  src={getFirstImage(item.product.images)}
+                                  alt={item.product.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                  <ShoppingCart className="w-4 h-4" />
+                                </div>
+                              )}
                             </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-900 truncate">
+                                {item.product.name}
+                              </p>
+                              <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                                {item.size && <span>Ukuran: {item.size}</span>}
+                                <span>{item.quantity}x {formatRupiah(item.price)}</span>
+                              </div>
+                              {/* Supplier Info - only visible in seller dashboard */}
+                              {hasSupplier && (
+                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                  {item.product.supplierName && (
+                                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-teal-50 text-teal-700 border-teal-200 font-medium gap-0.5">
+                                      <Store className="w-2.5 h-2.5" />
+                                      {item.product.supplierName}
+                                    </Badge>
+                                  )}
+                                  {item.product.supplierLink && (
+                                    <a
+                                      href={item.product.supplierLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0 h-4 rounded-full border bg-blue-50 text-blue-600 border-blue-200 font-medium hover:bg-blue-100 transition-colors"
+                                    >
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                      Link Toko
+                                    </a>
+                                  )}
+                                  {item.product.supplierPhone && (
+                                    <a
+                                      href={`https://wa.me/${item.product.supplierPhone.replace(/^0/, '62').replace(/[^0-9]/g, '')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0 h-4 rounded-full border bg-emerald-50 text-emerald-600 border-emerald-200 font-medium hover:bg-emerald-100 transition-colors"
+                                    >
+                                      <Phone className="w-2.5 h-2.5" />
+                                      {item.product.supplierPhone}
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs font-semibold text-gray-700 mt-0.5">
+                              {formatRupiah(item.price * item.quantity)}
+                            </p>
                           </div>
-                          <p className="text-xs font-semibold text-gray-700">
-                            {formatRupiah(item.price * item.quantity)}
-                          </p>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
 

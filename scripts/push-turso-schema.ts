@@ -159,22 +159,43 @@ async function pushSchema() {
   // Add new columns to Order table if they don't exist
   try {
     const orderColumns = await turso.execute("PRAGMA table_info('Order')")
-    const columnNames = orderColumns.rows.map(r => r.name as string)
+    const orderColumnNames = orderColumns.rows.map(r => r.name as string)
 
-    if (!columnNames.includes('courier')) {
+    if (!orderColumnNames.includes('courier')) {
       await turso.execute('ALTER TABLE "Order" ADD COLUMN courier TEXT')
       console.log('✅ Added courier column to Order table')
     }
-    if (!columnNames.includes('courierService')) {
+    if (!orderColumnNames.includes('courierService')) {
       await turso.execute('ALTER TABLE "Order" ADD COLUMN courierService TEXT')
       console.log('✅ Added courierService column to Order table')
     }
-    if (!columnNames.includes('destinationCity')) {
+    if (!orderColumnNames.includes('destinationCity')) {
       await turso.execute('ALTER TABLE "Order" ADD COLUMN destinationCity TEXT')
       console.log('✅ Added destinationCity column to Order table')
     }
   } catch (e) {
     console.log('⚠️ Column migration warning:', e)
+  }
+
+  // Add new columns to Product table if they don't exist (supplier info)
+  try {
+    const productColumns = await turso.execute("PRAGMA table_info('Product')")
+    const productColumnNames = productColumns.rows.map(r => r.name as string)
+
+    if (!productColumnNames.includes('supplierName')) {
+      await turso.execute('ALTER TABLE Product ADD COLUMN supplierName TEXT')
+      console.log('✅ Added supplierName column to Product table')
+    }
+    if (!productColumnNames.includes('supplierLink')) {
+      await turso.execute('ALTER TABLE Product ADD COLUMN supplierLink TEXT')
+      console.log('✅ Added supplierLink column to Product table')
+    }
+    if (!productColumnNames.includes('supplierPhone')) {
+      await turso.execute('ALTER TABLE Product ADD COLUMN supplierPhone TEXT')
+      console.log('✅ Added supplierPhone column to Product table')
+    }
+  } catch (e) {
+    console.log('⚠️ Product column migration warning:', e)
   }
 
   // Check if admin user exists

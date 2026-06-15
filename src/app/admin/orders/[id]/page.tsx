@@ -17,6 +17,8 @@ import {
   Truck,
   CreditCard,
   RefreshCw,
+  Store,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -69,6 +71,9 @@ interface OrderItem {
   product: {
     name: string
     images: string
+    supplierName: string | null
+    supplierLink: string | null
+    supplierPhone: string | null
   }
 }
 
@@ -619,7 +624,9 @@ export default function OrderDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {order.items.map(item => (
+                {order.items.map(item => {
+                  const hasSupplier = item.product.supplierName || item.product.supplierLink || item.product.supplierPhone
+                  return (
                   <TableRow key={item.id}>
                     <TableCell>
                       <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden">
@@ -640,6 +647,39 @@ export default function OrderDetailPage() {
                       <span className="font-medium text-gray-900 text-xs">
                         {item.product.name}
                       </span>
+                      {/* Supplier Info - only visible in seller dashboard */}
+                      {hasSupplier && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {item.product.supplierName && (
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-teal-50 text-teal-700 border-teal-200 font-medium gap-0.5">
+                              <Store className="w-2.5 h-2.5" />
+                              {item.product.supplierName}
+                            </Badge>
+                          )}
+                          {item.product.supplierLink && (
+                            <a
+                              href={item.product.supplierLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0 h-4 rounded-full border bg-blue-50 text-blue-600 border-blue-200 font-medium hover:bg-blue-100 transition-colors"
+                            >
+                              <ExternalLink className="w-2.5 h-2.5" />
+                              Link Toko
+                            </a>
+                          )}
+                          {item.product.supplierPhone && (
+                            <a
+                              href={`https://wa.me/${item.product.supplierPhone.replace(/^0/, '62').replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0 h-4 rounded-full border bg-emerald-50 text-emerald-600 border-emerald-200 font-medium hover:bg-emerald-100 transition-colors"
+                            >
+                              <Phone className="w-2.5 h-2.5" />
+                              {item.product.supplierPhone}
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       {item.size ? (
@@ -660,7 +700,8 @@ export default function OrderDetailPage() {
                       {formatRupiah(item.price * item.quantity)}
                     </TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
               </TableBody>
             </Table>
           </div>

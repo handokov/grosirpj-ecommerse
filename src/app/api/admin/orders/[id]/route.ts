@@ -13,7 +13,7 @@ export async function GET(
       include: {
         items: {
           include: {
-            product: { select: { name: true, images: true, price: true } },
+            product: { select: { name: true, images: true, price: true, supplierName: true, supplierLink: true, supplierPhone: true } },
           },
         },
       },
@@ -54,7 +54,7 @@ export async function PUT(
       include: {
         items: {
           include: {
-            product: { select: { name: true, images: true } },
+            product: { select: { name: true, images: true, supplierName: true, supplierLink: true, supplierPhone: true } },
           },
         },
       },

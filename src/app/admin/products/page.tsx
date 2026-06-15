@@ -80,6 +80,9 @@ interface Product {
   tags: string | null
   weight: string | null
   sizes: string | null
+  supplierName: string | null
+  supplierLink: string | null
+  supplierPhone: string | null
   createdAt: string
   updatedAt: string
   category: { name: string; slug: string }
@@ -392,6 +395,11 @@ export default function ProductsPage() {
                           <p className="text-[10px] text-gray-400 mt-0.5">
                             Min. {product.minOrder} pcs
                           </p>
+                          {product.supplierName && (
+                            <p className="text-[9px] text-teal-600 mt-0.5 flex items-center gap-0.5">
+                              🏪 {product.supplierName}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">

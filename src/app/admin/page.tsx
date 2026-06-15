@@ -66,7 +66,7 @@ interface DashboardData {
     totalAmount: number
     status: string
     createdAt: string
-    items: { product: { name: string; images: string } }[]
+    items: { product: { name: string; images: string; supplierName: string | null; supplierLink: string | null; supplierPhone: string | null } }[]
   }[]
   topProducts: {
     id: string
@@ -725,6 +725,11 @@ export default function AdminDashboardPage() {
                             <p className="text-[10px] text-gray-400 truncate max-w-[140px]">
                               {order.items[0]?.product?.name || '-'}
                             </p>
+                            {order.items[0]?.product?.supplierName && (
+                              <p className="text-[9px] text-teal-600 mt-0.5 flex items-center gap-0.5">
+                                🏪 {order.items[0].product.supplierName}
+                              </p>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-right text-xs font-bold text-gray-900">

@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         orderBy: { order: 'asc' },
       }),
       db.product.findMany({
+        where: { deletedAt: null },
         select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
         orderBy: { updatedAt: 'desc' },
       }),

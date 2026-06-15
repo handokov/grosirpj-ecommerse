@@ -112,3 +112,25 @@ Stage Summary:
 - Dead code removed
 - All interactive elements now functional
 - Fake/misleading content replaced with honest alternatives
+---
+Task ID: 5
+Agent: Main Agent
+Task: Pre-launch Production Readiness Fixes
+
+Work Log:
+- Fix 1 (BLOCKING): Added examples, skills, mini-services to tsconfig.json exclude — build would fail on Vercel
+- Fix 2 (BLOCKING): Added deletedAt column migration to push-turso-schema.ts and pushed to Turso production DB
+- Fix 3 (BLOCKING): Fixed handleClose crash in Header.tsx — replaced with setIsCartOpen
+- Fix 4: NEXTAUTH_URL already exists in Vercel (user needs to update value after buying domain)
+- Fix 5: Created src/app/not-found.tsx — branded 404 page with navigation buttons
+- Fix 6: Fixed sitemap.ts and dashboard API to filter soft-deleted products
+- Fix 7: Deleted duplicate public/robots.txt (using dynamic src/app/robots.ts instead)
+- All fixes verified: lint clean, browser tested, zero errors
+
+Stage Summary:
+- Vercel build will now succeed (tsconfig fix)
+- Turso production DB is in sync (deletedAt column added)
+- Cart drawer no longer crashes on close
+- 404 page provides good UX for invalid URLs
+- Sitemap won't include deleted products
+- Dashboard counts are accurate

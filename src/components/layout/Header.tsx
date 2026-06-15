@@ -168,7 +168,7 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
-              <Sheet open={isCartOpen} onOpenChange={(open) => { if (!open) handleClose(); else setIsCartOpen(true); }}>
+              <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"

@@ -9,7 +9,7 @@ export async function GET() {
 
   try {
     // Get total products
-    const totalProducts = await db.product.count()
+    const totalProducts = await db.product.count({ where: { deletedAt: null } })
     
     // Get total categories
     const totalCategories = await db.category.count()
@@ -46,6 +46,7 @@ export async function GET() {
     
     // Get top products by sold
     const topProducts = await db.product.findMany({
+      where: { deletedAt: null },
       take: 5,
       orderBy: { sold: 'desc' },
       select: {
@@ -60,7 +61,7 @@ export async function GET() {
     
     // Get low stock products
     const lowStockProducts = await db.product.findMany({
-      where: { stock: { lte: 20 } },
+      where: { stock: { lte: 20 }, deletedAt: null },
       take: 5,
       orderBy: { stock: 'asc' },
       select: {

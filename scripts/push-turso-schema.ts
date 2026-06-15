@@ -204,6 +204,10 @@ async function pushSchema() {
       await turso.execute('ALTER TABLE Product ADD COLUMN supplierPhone TEXT')
       console.log('✅ Added supplierPhone column to Product table')
     }
+    if (!productColumnNames.includes('deletedAt')) {
+      await turso.execute('ALTER TABLE Product ADD COLUMN deletedAt DATETIME')
+      console.log('✅ Added deletedAt column to Product table')
+    }
   } catch (e) {
     console.log('⚠️ Product column migration warning:', e)
   }

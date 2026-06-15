@@ -40,6 +40,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { formatRupiah } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { getFirstImageUrl, getOptimizedImageUrl } from '@/components/ui/product-image'
 
 type OrderStatus =
   | 'pending'
@@ -160,12 +161,9 @@ const STATUS_TABS = [
 ]
 
 function getFirstImage(imagesStr: string): string {
-  try {
-    const imgs = JSON.parse(imagesStr)
-    return Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : ''
-  } catch {
-    return imagesStr || ''
-  }
+  if (!imagesStr) return ''
+  const firstUrl = getFirstImageUrl(imagesStr)
+  return getOptimizedImageUrl(firstUrl, { width: 100, quality: 'auto' })
 }
 
 function formatDate(dateStr: string): string {

@@ -40,7 +40,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { formatRupiah } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { getFirstImageUrl, getOptimizedImageUrl } from '@/components/ui/product-image'
+// Image helper - simple split by comma, matching products page approach
 
 type OrderStatus =
   | 'pending'
@@ -162,8 +162,7 @@ const STATUS_TABS = [
 
 function getFirstImage(imagesStr: string): string {
   if (!imagesStr) return ''
-  const firstUrl = getFirstImageUrl(imagesStr)
-  return getOptimizedImageUrl(firstUrl, { width: 100, quality: 'auto' })
+  return imagesStr.split(',')[0]?.trim() || ''
 }
 
 function formatDate(dateStr: string): string {

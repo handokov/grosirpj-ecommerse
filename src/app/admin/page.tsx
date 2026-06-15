@@ -97,16 +97,10 @@ interface DashboardData {
 
 
 
-// Helper to parse product images
+// Helper to parse product images - simple split by comma
 function parseProductImage(imagesStr: string): string {
-  try {
-    const parsed = JSON.parse(imagesStr)
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed[0]
-    if (typeof parsed === 'string') return parsed
-    return '/placeholder.png'
-  } catch {
-    return imagesStr || '/placeholder.png'
-  }
+  if (!imagesStr) return ''
+  return imagesStr.split(',')[0]?.trim() || ''
 }
 
 // Status badge config
@@ -681,6 +675,7 @@ export default function AdminDashboardPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-gray-100">
+                    <TableHead className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Produk</TableHead>
                     <TableHead className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Order #</TableHead>
                     <TableHead className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Customer</TableHead>
                     <TableHead className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide text-right">Total</TableHead>
@@ -690,42 +685,70 @@ export default function AdminDashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.recentOrders.map((order) => (
-                    <TableRow key={order.id} className="hover:bg-gray-50/50 border-gray-50">
-                      <TableCell className="font-mono text-xs font-bold text-emerald-800">
-                        #{order.orderNumber}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-900">
-                            {order.customerName}
-                          </p>
-                          <p className="text-[10px] text-gray-400 truncate max-w-[160px]">
-                            {order.items[0]?.product?.name || '-'}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right text-xs font-bold text-gray-900">
-                        {formatRupiah(order.totalAmount)}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
-                      <TableCell className="text-[11px] text-gray-500">
-                        {formatDate(order.createdAt)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Link
-                          href={`/admin/orders/${order.id}`}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 transition-colors"
-                        >
-                          <Eye className="w-3 h-3" />
-                          Detail
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {data?.recentOrders.map((order) => {
+                    const firstItemImage = order.items[0]?.product?.images
+                      ? parseProductImage(order.items[0].product.images)
+                      : ''
+                    const itemCount = order.items.length
+                    return (
+                      <TableRow key={order.id} className="hover:bg-gray-50/50 border-gray-50">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="h-9 w-9 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
+                              {firstItemImage ? (
+                                <img
+                                  src={firstItemImage}
+                                  alt={order.items[0]?.product?.name || 'Produk'}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-gray-300">
+                                  <ShoppingCart className="h-4 w-4" />
+                                </div>
+                              )}
+                            </div>
+                            {itemCount > 1 && (
+                              <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 bg-gray-100 text-gray-500">
+                                +{itemCount - 1}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs font-bold text-emerald-800">
+                          #{order.orderNumber}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-900">
+                              {order.customerName}
+                            </p>
+                            <p className="text-[10px] text-gray-400 truncate max-w-[140px]">
+                              {order.items[0]?.product?.name || '-'}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right text-xs font-bold text-gray-900">
+                          {formatRupiah(order.totalAmount)}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(order.status)}</TableCell>
+                        <TableCell className="text-[11px] text-gray-500">
+                          {formatDate(order.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Link
+                            href={`/admin/orders/${order.id}`}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 transition-colors"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Detail
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                   {(!data?.recentOrders || data.recentOrders.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-400 text-xs">
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-400 text-xs">
                         Belum ada pesanan
                       </TableCell>
                     </TableRow>

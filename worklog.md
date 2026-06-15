@@ -70,3 +70,22 @@ Stage Summary:
 - Price manipulation attack vector eliminated (server-side calculation)
 - Order lookup now validates format, rate-limited, strips sensitive data
 - Security score improved from 7/10 to ~8.5/10
+---
+Task ID: 3
+Agent: Main Agent
+Task: Disable Cek Ongkir feature (shipping API not yet configured)
+
+Work Log:
+- Restructured ShippingCalculator.tsx into 3 components: ShippingCalculatorDisabled, ShippingCalculatorEnabled, and a main wrapper
+- Added NEXT_PUBLIC_SHIPPING_API_ENABLED env var toggle (defaults to disabled/off)
+- Disabled mode shows: "Ongkir Akan Dikonfirmasi Admin" message + optional manual input field
+- Enabled mode preserves full API-powered shipping calculator (city search, courier selection, etc.)
+- Moved SelectedShipping to named export for proper import compatibility
+- Verified lint passes cleanly (0 errors)
+- Verified via agent-browser: checkout shows manual ongkir input instead of API calculator
+- No errors in dev.log
+
+Stage Summary:
+- Cek Ongkir disabled until user registers with shipping API provider
+- To re-enable: set NEXT_PUBLIC_SHIPPING_API_ENABLED=true in .env + configure CEKONGKIR_API_URL and CEKONGKIR_ORIGIN_CITY_ID
+- Checkout still functional with manual ongkir input as fallback

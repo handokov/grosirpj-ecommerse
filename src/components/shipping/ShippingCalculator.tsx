@@ -36,7 +36,7 @@ interface CourierResult {
   services: CourierService[];
 }
 
-interface SelectedShipping {
+export interface SelectedShipping {
   courier: string;
   courierName: string;
   service: CourierService;
@@ -51,42 +51,57 @@ interface ShippingCalculatorProps {
   currentShippingCost: number;
 }
 
-// Courier color scheme for visual distinction
-function getCourierColor(code: string) {
-  const colors: Record<string, string> = {
-    jne: 'bg-orange-50 border-orange-200 text-orange-800',
-    tiki: 'bg-red-50 border-red-200 text-red-800',
-    pos: 'bg-red-50 border-red-200 text-red-700',
-    jnt: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    sicepat: 'bg-sky-50 border-sky-200 text-sky-800',
-    anteraja: 'bg-purple-50 border-purple-200 text-purple-800',
-    wahana: 'bg-amber-50 border-amber-200 text-amber-800',
-    ninja: 'bg-teal-50 border-teal-200 text-teal-800',
-    lion: 'bg-rose-50 border-rose-200 text-rose-800',
-    gosend: 'bg-green-50 border-green-200 text-green-800',
-    grab: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-  };
-  return colors[code] || 'bg-gray-50 border-gray-200 text-gray-800';
+// Toggle: set to true when shipping API (CekOngkir/RajaOngkir) is configured
+const SHIPPING_API_ENABLED = process.env.NEXT_PUBLIC_SHIPPING_API_ENABLED === 'true';
+
+// ─── Disabled Mode: Manual ongkir input ─────────────────────────
+function ShippingCalculatorDisabled({
+  onShippingSelected,
+  currentShippingCost,
+}: ShippingCalculatorProps) {
+  return (
+    <div>
+      <label className="text-sm font-medium text-gray-700 mb-1 block">Ongkir</label>
+      <div className="bg-gray-50 border rounded-lg p-3">
+        <div className="flex items-start gap-2">
+          <Truck className="h-4 w-4 text-gray-500 mt-0.5 shrink-0" />
+          <div className="text-xs">
+            <p className="font-medium text-gray-700">Ongkir Akan Dikonfirmasi Admin</p>
+            <p className="text-gray-500 mt-1">
+              Cek ongkir otomatis belum tersedia. Ongkir akan dikonfirmasi via WhatsApp setelah checkout.
+            </p>
+          </div>
+        </div>
+        <div className="mt-2">
+          <Input
+            type="number"
+            placeholder="Masukkan nominal ongkir (opsional)"
+            value={currentShippingCost > 0 ? currentShippingCost : ''}
+            onChange={(e) => {
+              const val = parseInt(e.target.value);
+              onShippingSelected(
+                val > 0
+                  ? {
+                      courier: 'manual',
+                      courierName: 'Manual',
+                      service: { code: 'manual', description: 'Ongkir manual', cost: val, etd: '-', note: '' },
+                      cost: val,
+                      destinationId: '',
+                      destinationName: '',
+                    }
+                  : null
+              );
+            }}
+            className="h-9 text-sm"
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function getCourierHeaderColor(code: string) {
-  const colors: Record<string, string> = {
-    jne: 'bg-orange-100 text-orange-900',
-    tiki: 'bg-red-100 text-red-900',
-    pos: 'bg-red-100 text-red-800',
-    jnt: 'bg-yellow-100 text-yellow-900',
-    sicepat: 'bg-sky-100 text-sky-900',
-    anteraja: 'bg-purple-100 text-purple-900',
-    wahana: 'bg-amber-100 text-amber-900',
-    ninja: 'bg-teal-100 text-teal-900',
-    lion: 'bg-rose-100 text-rose-900',
-    gosend: 'bg-green-100 text-green-900',
-    grab: 'bg-emerald-100 text-emerald-900',
-  };
-  return colors[code] || 'bg-gray-100 text-gray-900';
-}
-
-export default function ShippingCalculator({
+// ─── Enabled Mode: Full shipping calculator with API ─────────────
+function ShippingCalculatorEnabled({
   totalWeight,
   onShippingSelected,
   currentShippingCost,
@@ -530,4 +545,47 @@ export default function ShippingCalculator({
       )}
     </div>
   );
+}
+
+// ─── Courier color scheme ────────────────────────────────────────
+function getCourierColor(code: string) {
+  const colors: Record<string, string> = {
+    jne: 'bg-orange-50 border-orange-200 text-orange-800',
+    tiki: 'bg-red-50 border-red-200 text-red-800',
+    pos: 'bg-red-50 border-red-200 text-red-700',
+    jnt: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    sicepat: 'bg-sky-50 border-sky-200 text-sky-800',
+    anteraja: 'bg-purple-50 border-purple-200 text-purple-800',
+    wahana: 'bg-amber-50 border-amber-200 text-amber-800',
+    ninja: 'bg-teal-50 border-teal-200 text-teal-800',
+    lion: 'bg-rose-50 border-rose-200 text-rose-800',
+    gosend: 'bg-green-50 border-green-200 text-green-800',
+    grab: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+  };
+  return colors[code] || 'bg-gray-50 border-gray-200 text-gray-800';
+}
+
+function getCourierHeaderColor(code: string) {
+  const colors: Record<string, string> = {
+    jne: 'bg-orange-100 text-orange-900',
+    tiki: 'bg-red-100 text-red-900',
+    pos: 'bg-red-100 text-red-800',
+    jnt: 'bg-yellow-100 text-yellow-900',
+    sicepat: 'bg-sky-100 text-sky-900',
+    anteraja: 'bg-purple-100 text-purple-900',
+    wahana: 'bg-amber-100 text-amber-900',
+    ninja: 'bg-teal-100 text-teal-900',
+    lion: 'bg-rose-100 text-rose-900',
+    gosend: 'bg-green-100 text-green-900',
+    grab: 'bg-emerald-100 text-emerald-900',
+  };
+  return colors[code] || 'bg-gray-100 text-gray-900';
+}
+
+// ─── Main export: switch between disabled/enabled mode ──────────
+export default function ShippingCalculator(props: ShippingCalculatorProps) {
+  if (!SHIPPING_API_ENABLED) {
+    return <ShippingCalculatorDisabled {...props} />;
+  }
+  return <ShippingCalculatorEnabled {...props} />;
 }

@@ -68,5 +68,5 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 24 hours
   },
-  secret: process.env.NEXTAUTH_SECRET || 'grosirpj-secret-change-in-production',
+  secret: process.env.NEXTAUTH_SECRET,
 }

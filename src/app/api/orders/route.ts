@@ -62,7 +62,16 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ order }, { status: 201 })
+    // Strip supplier info from response (buyer-facing)
+    const safeOrder = {
+      ...order,
+      items: order.items.map(({ product, ...item }) => ({
+        ...item,
+        product: { name: product.name, images: product.images },
+      })),
+    }
+
+    return NextResponse.json({ order: safeOrder }, { status: 201 })
   } catch (error) {
     console.error('Create order error:', error)
     const message = error instanceof Error ? error.message : 'Failed to create order'

@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     ]);
 
     return NextResponse.json({
-      products: products.map((p) => ({
+      products: products.map(({ supplierName, supplierLink, supplierPhone, ...p }) => ({
         ...p,
         categoryName: p.category.name,
         categorySlug: p.category.slug,

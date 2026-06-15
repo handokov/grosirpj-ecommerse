@@ -1,8 +1,18 @@
 import { createClient } from '@libsql/client'
 
+// Use environment variables instead of hardcoded credentials
+const tursoUrl = process.env.TURSO_DATABASE_URL || process.env.LIBSQL_URL
+const tursoToken = process.env.TURSO_AUTH_TOKEN || process.env.LIBSQL_AUTH_TOKEN
+
+if (!tursoUrl || !tursoToken) {
+  console.error('❌ Error: TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables are required')
+  console.error('Set them in your .env file or pass them as environment variables')
+  process.exit(1)
+}
+
 const turso = createClient({
-  url: 'libsql://grosirpj-ecommerse-handokov.aws-ap-northeast-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODEyNDU0NTAsImlkIjoiMDE5ZWJhN2QtNWIwMS03ODAzLThiMmQtNTk5NzZkYWM5Njg0IiwicmlkIjoiNzliZTc0ZjgtMTJlNS00OWMwLTllZGMtNDAzYWU4NmQ1OWZmIn0.DEo1_5Q4GcsrxZL3kTAuCQcY3G4LpwXiCmA53bHJSuDaOijPUdNPZanVfua8Pz6Zxxrt6cdJomeXlOcerKkMDA',
+  url: tursoUrl,
+  authToken: tursoToken,
 })
 
 async function pushSchema() {
@@ -202,24 +212,31 @@ async function pushSchema() {
   const adminUser = await turso.execute("SELECT id FROM User WHERE email = 'admin@grosirpj.com'")
   
   if (adminUser.rows.length === 0) {
-    // Insert admin user with pre-hashed password
-    // Password: admin123 -> bcrypt hash
-    const hashedPassword = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy' // admin123
-    
-    const cuid = () => {
-      const c = 'abcdefghijklmnopqrstuvwxyz0123456789'
-      let id = 'c'
-      for (let i = 0; i < 24; i++) {
-        id += c[Math.floor(Math.random() * c.length)]
+    // Insert admin user - password should be set via env var or manually after deployment
+    const adminPassword = process.env.ADMIN_PASSWORD
+    if (!adminPassword) {
+      console.log('⚠️ Skipping admin user creation: ADMIN_PASSWORD env var not set')
+      console.log('   To create admin user, set ADMIN_PASSWORD env var and re-run this script')
+    } else {
+      // Dynamic import of bcryptjs for hashing
+      const { hashSync } = await import('bcryptjs')
+      const hashedPassword = hashSync(adminPassword, 10)
+      
+      const cuid = () => {
+        const c = 'abcdefghijklmnopqrstuvwxyz0123456789'
+        let id = 'c'
+        for (let i = 0; i < 24; i++) {
+          id += c[Math.floor(Math.random() * c.length)]
+        }
+        return id
       }
-      return id
-    }
 
-    await turso.execute({
-      sql: `INSERT INTO User (id, name, email, password, role, isActive) VALUES (?, ?, ?, ?, ?, ?)`,
-      args: [cuid(), 'Admin GrosirPJ', 'admin@grosirpj.com', hashedPassword, 'admin', 1]
-    })
-    console.log('✅ Admin user created (email: admin@grosirpj.com, password: admin123)')
+      await turso.execute({
+        sql: `INSERT INTO User (id, name, email, password, role, isActive) VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [cuid(), 'Admin GrosirPJ', 'admin@grosirpj.com', hashedPassword, 'admin', 1]
+      })
+      console.log('✅ Admin user created (email: admin@grosirpj.com)')
+    }
   } else {
     console.log('ℹ️ Admin user already exists')
   }

@@ -55,6 +55,9 @@ export async function PUT(
     if (body.tags !== undefined) updateData.tags = body.tags
     if (body.weight !== undefined) updateData.weight = body.weight
     if (body.sizes !== undefined) updateData.sizes = body.sizes
+    if (body.supplierName !== undefined) updateData.supplierName = body.supplierName || null
+    if (body.supplierLink !== undefined) updateData.supplierLink = body.supplierLink || null
+    if (body.supplierPhone !== undefined) updateData.supplierPhone = body.supplierPhone || null
 
     const product = await db.product.update({
       where: { id },

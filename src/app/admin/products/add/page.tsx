@@ -15,6 +15,9 @@ import {
   Settings2,
   ImageIcon,
   Star,
+  Store,
+  Phone,
+  ExternalLink,
 } from 'lucide-react'
 import { formatRupiah } from '@/lib/format'
 import { Button } from '@/components/ui/button'
@@ -47,6 +50,9 @@ const productSchema = z.object({
   weight: z.string().optional().default(''),
   tags: z.string().optional().default(''),
   featured: z.boolean().optional().default(false),
+  supplierName: z.string().optional().default(''),
+  supplierLink: z.string().optional().default(''),
+  supplierPhone: z.string().optional().default(''),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -93,6 +99,9 @@ export default function AddProductPage() {
       weight: '',
       tags: '',
       featured: false,
+      supplierName: '',
+      supplierLink: '',
+      supplierPhone: '',
     },
   })
 
@@ -387,7 +396,65 @@ export default function AddProductPage() {
           />
         </Card>
 
-        {/* Section 5: Lainnya */}
+        {/* Section 5: Info Supplier */}
+        <Card className="p-5 border-0 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-100">
+              <Store className="h-4 w-4 text-teal-700" />
+            </div>
+            <h2 className="text-sm font-bold text-gray-900">Info Supplier</h2>
+            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-gray-100 text-gray-500 font-medium">
+              Hanya di Dashboard Seller
+            </Badge>
+          </div>
+          <Separator className="mb-5" />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="supplierName" className="flex items-center gap-1.5">
+                <Store className="h-3.5 w-3.5 text-gray-400" />
+                Nama Supplier / Toko
+              </Label>
+              <Input
+                id="supplierName"
+                placeholder="Contoh: Toko Batik Jaya, Shopee: batik_jaya"
+                {...register('supplierName')}
+              />
+              <p className="text-xs text-gray-400">
+                Nama toko atau supplier tempat Anda mengambil barang
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="supplierLink" className="flex items-center gap-1.5">
+                <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
+                Link Alamat Toko Supplier
+              </Label>
+              <Input
+                id="supplierLink"
+                placeholder="https://shopee.co.id/batik_jaya atau link toko lain"
+                {...register('supplierLink')}
+              />
+              <p className="text-xs text-gray-400">
+                Link Shopee, Tokopedia, WhatsApp, atau marketplace lainnya
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="supplierPhone" className="flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5 text-gray-400" />
+                No. Telp / WhatsApp Supplier
+              </Label>
+              <Input
+                id="supplierPhone"
+                placeholder="081234567890"
+                {...register('supplierPhone')}
+              />
+              <p className="text-xs text-gray-400">
+                Nomor telepon atau WhatsApp supplier untuk konfirmasi stok
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Section 6: Lainnya */}
         <Card className="p-5 border-0 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100">

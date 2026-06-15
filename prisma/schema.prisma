@@ -39,6 +39,9 @@ model Product {
   tags        String?
   weight      String?
   sizes       String?
+  supplierName  String?   // Nama supplier/toko supplier
+  supplierLink  String?   // Link alamat toko supplier (Shopee, Tokopedia, dll)
+  supplierPhone String?  // No telp/WhatsApp supplier
   cartItems   CartItem[]
   orderItems  OrderItem[]
   createdAt   DateTime  @default(now())

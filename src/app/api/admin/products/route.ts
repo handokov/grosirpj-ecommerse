@@ -77,6 +77,9 @@ export async function POST(request: NextRequest) {
         tags: body.tags || '',
         weight: body.weight || '',
         sizes: body.sizes || '',
+        supplierName: body.supplierName || null,
+        supplierLink: body.supplierLink || null,
+        supplierPhone: body.supplierPhone || null,
       },
       include: { category: { select: { name: true } } },
     })

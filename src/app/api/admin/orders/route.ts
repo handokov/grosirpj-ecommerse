@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         include: {
           items: {
             include: {
-              product: { select: { name: true, images: true } },
+              product: { select: { name: true, images: true, supplierName: true, supplierLink: true, supplierPhone: true } },
             },
           },
         },

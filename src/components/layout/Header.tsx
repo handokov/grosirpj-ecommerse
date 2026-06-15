@@ -21,6 +21,7 @@ import {
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
 import ShippingCalculator, { type SelectedShipping } from '@/components/shipping/ShippingCalculator';
+import { WA_NUMBER, BCA_REKENING, getWhatsAppLink } from '@/lib/store-config';
 
 export default function Header() {
   const {
@@ -339,8 +340,7 @@ function CartDrawer() {
   const [shippingCost, setShippingCost] = useState(0);
   const [selectedShipping, setSelectedShipping] = useState<SelectedShipping | null>(null);
 
-  const WA_NUMBER = '6281281756262';
-  const BCA_REKENING = '4130327970';
+  // Use centralized config
   const grandTotal = total + shippingCost;
 
   // Calculate total weight from cart items
@@ -357,6 +357,9 @@ function CartDrawer() {
 
   const handleSubmitOrder = async () => {
     if (!custName.trim() || !custPhone.trim()) return;
+    // Validate phone format
+    const phoneValid = /^0[0-9]{9,12}$/.test(custPhone) || /^62[0-9]{9,12}$/.test(custPhone);
+    if (!phoneValid) return;
     setIsSubmitting(true);
 
     try {
@@ -585,10 +588,13 @@ function CartDrawer() {
               <Input
                 placeholder="08xxxxxxxxxx"
                 value={custPhone}
-                onChange={(e) => setCustPhone(e.target.value)}
-                className="h-10"
+                onChange={(e) => setCustPhone(e.target.value.replace(/[^0-9+]/g, ''))}
+                className={`h-10 ${custPhone && !/^0[0-9]{9,12}$/.test(custPhone) && !/^62[0-9]{9,12}$/.test(custPhone) ? 'border-red-300 focus-visible:ring-red-200' : ''}`}
                 type="tel"
               />
+              {custPhone && !/^0[0-9]{9,12}$/.test(custPhone) && !/^62[0-9]{9,12}$/.test(custPhone) && (
+                <p className="text-xs text-red-500 mt-1">Format: 08xx atau 62xxx (10-13 digit)</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Alamat Pengiriman</label>
@@ -620,7 +626,7 @@ function CartDrawer() {
           <div className="border-t p-4 bg-gray-50">
             <Button
               onClick={handleSubmitOrder}
-              disabled={!custName.trim() || !custPhone.trim() || isSubmitting}
+              disabled={!custName.trim() || !custPhone.trim() || !(/^0[0-9]{9,12}$/.test(custPhone) || /^62[0-9]{9,12}$/.test(custPhone)) || isSubmitting}
               className="w-full bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white h-11 rounded-xl font-semibold"
             >
               {isSubmitting ? 'Memproses...' : 'Buat Invoice'}

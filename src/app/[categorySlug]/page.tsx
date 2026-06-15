@@ -72,6 +72,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     db.product.findMany({
       where: {
         categoryId: category.id,
+        deletedAt: null,
         ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }, { tags: { contains: q } }] } : {}),
       },
       include: {
@@ -84,6 +85,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     db.product.count({
       where: {
         categoryId: category.id,
+        deletedAt: null,
         ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }, { tags: { contains: q } }] } : {}),
       },
     }),

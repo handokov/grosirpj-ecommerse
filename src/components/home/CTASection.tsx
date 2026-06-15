@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Phone, ArrowRight } from 'lucide-react';
+import { getWhatsAppLink } from '@/lib/store-config';
 
 export default function CTASection() {
   return (
@@ -26,7 +27,7 @@ export default function CTASection() {
                 </Button>
               </Link>
               <a
-                href="https://wa.me/6281281756262?text=Halo%20GrosirPJ%2C%20saya%20tertarik%20untuk%20menjadi%20reseller"
+                href={getWhatsAppLink('Halo GrosirPJ, saya tertarik untuk menjadi reseller')}
                 target="_blank"
                 rel="noopener noreferrer"
               >

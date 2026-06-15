@@ -1,14 +1,13 @@
 'use client';
 
 import { MessageCircle } from 'lucide-react';
+import { WA_NUMBER } from '@/lib/store-config';
 
 /**
  * WhatsApp Floating Chat Button
- * Number is hidden from display - only used in the WhatsApp API URL
- * Phone: 081281756262 → international format: 6281281756262
+ * Uses centralized WA_NUMBER from store-config.ts
  */
 export default function WhatsAppButton() {
-  const WA_NUMBER = '6281281756262';
   const WA_MESSAGE = encodeURIComponent('Halo GrosirPJ! Saya ingin bertanya tentang produk fashion anak & baby kids.');
 
   const handleClick = () => {

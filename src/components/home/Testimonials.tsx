@@ -1,39 +1,43 @@
 'use client';
 
-import { Star, Quote } from 'lucide-react';
+import { Shield, Truck, RefreshCw, Headphones, BadgeCheck, TrendingUp } from 'lucide-react';
 
-const testimonials = [
+const reasons = [
   {
-    name: 'Rina Wulandari',
-    role: 'Owner Toko Baju Anak',
-    location: 'Jakarta',
-    rating: 5,
-    text: 'GrosirPJ benar-benar penyelamat bisnis saya! Koleksi baju anaknya lengkap banget dari bayi sampai anak-anak, harga grosirnya paling murah. Kualitas bajunya juga bagus-bagus, pelanggan saya selalu repeat order!',
-    avatar: 'RW',
+    icon: Shield,
+    title: 'Produk Berkualitas',
+    desc: 'Semua produk baru dan telah melalui quality check sebelum dikirim',
+    color: 'text-emerald-600 bg-emerald-50',
   },
   {
-    name: 'Dewi Susanti',
-    role: 'Reseller Online Shop',
-    location: 'Bandung',
-    rating: 5,
-    text: 'Sudah 2 tahun jadi reseller GrosirPJ dan tidak pernah mengecewakan. Model bajunya selalu update dan follow trend. Margin keuntungan juga besar karena harga grosirnya sangat kompetitif.',
-    avatar: 'DS',
+    icon: TrendingUp,
+    title: 'Harga Grosir Termurah',
+    desc: 'Harga langsung dari supplier tanpa perantara, margin keuntungan besar',
+    color: 'text-amber-600 bg-amber-50',
   },
   {
-    name: 'Ahmad Fauzi',
-    role: 'Pemilik Konveksi',
-    location: 'Surabaya',
-    rating: 5,
-    text: 'Pengiriman cepat dan packaging rapi. Koleksi gamis anak dan dress bayinya paling laris di toko saya. Customer service juga sangat responsif dan membantu.',
-    avatar: 'AF',
+    icon: Truck,
+    title: 'Pengiriman Cepat',
+    desc: 'Processing 1-2 hari kerja, pengiriman ke seluruh Indonesia',
+    color: 'text-sky-600 bg-sky-50',
   },
   {
-    name: 'Linda Permata',
-    role: 'Owner Kids Boutique',
-    location: 'Medan',
-    rating: 5,
-    text: 'Saya sangat puas dengan kualitas produk GrosirPJ. Bahan bajunya adem dan nyaman untuk anak-anak. Harga grosirnya memang paling murah dibanding supplier lain.',
-    avatar: 'LP',
+    icon: RefreshCw,
+    title: 'Koleksi Update',
+    desc: 'Model baju anak selalu mengikuti trend terbaru setiap minggu',
+    color: 'text-purple-600 bg-purple-50',
+  },
+  {
+    icon: BadgeCheck,
+    title: 'Min. Order Terjangkau',
+    desc: 'Mulai dari 10-12 pcs per model, cocok untuk pemula dan reseller kecil',
+    color: 'text-teal-600 bg-teal-50',
+  },
+  {
+    icon: Headphones,
+    title: 'CS Responsif',
+    desc: 'Customer service via WhatsApp siap membantu di jam kerja',
+    color: 'text-rose-600 bg-rose-50',
   },
 ];
 
@@ -43,32 +47,21 @@ export default function Testimonials() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
-            <span className="text-sm font-semibold text-emerald-900 uppercase">Testimoni</span>
+            <BadgeCheck className="h-5 w-5 text-emerald-600" />
+            <span className="text-sm font-semibold text-emerald-900 uppercase">Kenapa Kami</span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Dipercaya Ribuan Reseller</h2>
-          <p className="text-muted-foreground">Apa kata mereka tentang GrosirPJ</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Kenapa Pilih GrosirPJ?</h2>
+          <p className="text-muted-foreground">Keunggulan yang membuat ribuan reseller mempercayai kami</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {testimonials.map((t) => (
-            <div key={t.name} className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg transition-shadow">
-              <Quote className="h-6 w-6 text-emerald-200 mb-3" />
-              <p className="text-sm text-gray-600 mb-4 line-clamp-4">&ldquo;{t.text}&rdquo;</p>
-              <div className="flex items-center gap-1 mb-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`h-3.5 w-3.5 ${i < t.rating ? 'text-amber-500 fill-amber-500' : 'text-gray-200'}`} />
-                ))}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {reasons.map((r) => (
+            <div key={r.title} className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg transition-shadow">
+              <div className={`w-11 h-11 rounded-xl ${r.color} flex items-center justify-center mb-3`}>
+                <r.icon className="h-5 w-5" />
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-700 to-emerald-900 text-white flex items-center justify-center text-sm font-bold">
-                  {t.avatar}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role} • {t.location}</p>
-                </div>
-              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1">{r.title}</h3>
+              <p className="text-sm text-muted-foreground">{r.desc}</p>
             </div>
           ))}
         </div>

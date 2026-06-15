@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       include: { category: true },
     });
 
-    if (!product) {
+    if (!product || product.deletedAt) {
       return { title: 'Produk Tidak Ditemukan - GrosirPJ' };
     }
 
@@ -52,7 +52,7 @@ export default async function ProductPage({ params }: Props) {
     include: { category: true },
   });
 
-  if (!product) {
+  if (!product || product.deletedAt) {
     notFound();
   }
 
@@ -62,6 +62,7 @@ export default async function ProductPage({ params }: Props) {
       where: {
         categoryId: product.categoryId,
         id: { not: product.id },
+        deletedAt: null,
       },
       take: 4,
       orderBy: { sold: 'desc' },

@@ -17,7 +17,7 @@ export interface UploadedImage {
 
 interface ImageUploaderProps {
   images: UploadedImage[]
-  onImagesChange: (images: UploadedImage[]) => void
+  onImagesChange: (images: UploadedImage[] | ((prev: UploadedImage[]) => UploadedImage[])) => void
   uploading: boolean
   setUploading: (uploading: boolean) => void
   maxImages?: number

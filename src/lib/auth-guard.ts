@@ -25,8 +25,8 @@ export async function requireAuth() {
 }
 
 /**
- * Type guard to check if requireAuth() returned a session (not an error response)
+ * Type guard to check if requireAuth() returned an error response (not a session)
  */
-export function isAuthError(result: Awaited<ReturnType<typeof requireAuth>>): result is NextResponse {
+export function isAuthError(result: Awaited<ReturnType<typeof requireAuth>>): result is NextResponse<{ error: string }> {
   return result instanceof NextResponse
 }

@@ -25,9 +25,9 @@ export interface Product {
   reviewCount: number;
   sold: number;
   featured: boolean;
-  tags?: string;
-  weight?: string;
-  sizes?: string;
+  tags: string | null;
+  weight: string | null;
+  sizes: string | null;
 }
 
 /**

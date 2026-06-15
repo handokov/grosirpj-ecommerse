@@ -13,25 +13,26 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import dynamic from 'next/dynamic'
+import type { ComponentType } from 'react'
 
 const AreaChart = dynamic(
-  () => import('recharts').then(mod => mod.AreaChart),
+  () => import('recharts').then(mod => mod.AreaChart as unknown as ComponentType<Record<string, unknown>>),
   { ssr: false }
 )
 const Area = dynamic(
-  () => import('recharts').then(mod => mod.Area),
+  () => import('recharts').then(mod => mod.Area as unknown as ComponentType<Record<string, unknown>>),
   { ssr: false }
 )
 const XAxis = dynamic(
-  () => import('recharts').then(mod => mod.XAxis),
+  () => import('recharts').then(mod => mod.XAxis as unknown as ComponentType<Record<string, unknown>>),
   { ssr: false }
 )
 const YAxis = dynamic(
-  () => import('recharts').then(mod => mod.YAxis),
+  () => import('recharts').then(mod => mod.YAxis as unknown as ComponentType<Record<string, unknown>>),
   { ssr: false }
 )
 const CartesianGrid = dynamic(
-  () => import('recharts').then(mod => mod.CartesianGrid),
+  () => import('recharts').then(mod => mod.CartesianGrid as unknown as ComponentType<Record<string, unknown>>),
   { ssr: false }
 )
 
@@ -46,11 +47,13 @@ const chartConfig: ChartConfig = {
   },
 }
 
-function chartTooltipFormatter(value: number, name: string) {
-  if (name === 'revenue') {
-    return [formatRupiah(value), 'Pendapatan']
+function chartTooltipFormatter(value: any, name: any) {
+  const numVal = typeof value === 'number' ? value : Number(value) || 0
+  const nameStr = String(name)
+  if (nameStr === 'revenue') {
+    return [formatRupiah(numVal), 'Pendapatan']
   }
-  return [value.toLocaleString('id-ID'), 'Pesanan']
+  return [numVal.toLocaleString('id-ID'), 'Pesanan']
 }
 
 interface RevenueChartProps {

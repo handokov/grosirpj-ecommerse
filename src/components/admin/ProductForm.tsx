@@ -46,13 +46,13 @@ const productSchema = z.object({
   wholesalePrice: z.string().min(1, 'Harga grosir wajib diisi'),
   minOrder: z.string().min(1, 'Min. order wajib diisi'),
   stock: z.string().min(1, 'Stok wajib diisi'),
-  sizes: z.string().optional().default(''),
-  weight: z.string().optional().default(''),
-  tags: z.string().optional().default(''),
-  featured: z.boolean().optional().default(false),
-  supplierName: z.string().optional().default(''),
-  supplierLink: z.string().optional().default(''),
-  supplierPhone: z.string().optional().default(''),
+  sizes: z.string(),
+  weight: z.string(),
+  tags: z.string(),
+  featured: z.boolean(),
+  supplierName: z.string(),
+  supplierLink: z.string(),
+  supplierPhone: z.string(),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -88,7 +88,7 @@ interface ProductFormProps {
   categories: Category[]
   loadingCategories: boolean
   images: UploadedImage[]
-  onImagesChange: (images: UploadedImage[]) => void
+  onImagesChange: (images: UploadedImage[] | ((prev: UploadedImage[]) => UploadedImage[])) => void
   uploading: boolean
   setUploading: (uploading: boolean) => void
   onSuccess: () => void

@@ -25,6 +25,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export default function SettingsPage() {
   return (
@@ -165,6 +166,3 @@ export default function SettingsPage() {
   )
 }
 
-function cn(...inputs: (string | undefined | false | null)[]) {
-  return inputs.filter(Boolean).join(' ')
-}

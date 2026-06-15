@@ -87,6 +87,10 @@ export interface AdminCategory {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
+  icon: string | null;
+  image: string | null;
+  order: number;
   _count: { products: number };
 }
 
@@ -139,8 +143,29 @@ export interface Order {
   paymentMethod: string;
   paymentStatus: PaymentStatus;
   totalAmount: number;
+  shippingCost: number;
+  courier: string | null;
+  courierService: string | null;
+  destinationCity: string | null;
   note: string | null;
   items: OrderItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---------- Banner Types ----------
+
+/**
+ * Banner as seen in the admin dashboard.
+ * Used for homepage carousel management.
+ */
+export interface Banner {
+  id: string;
+  title: string;
+  image: string;
+  link: string | null;
+  order: number;
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 }

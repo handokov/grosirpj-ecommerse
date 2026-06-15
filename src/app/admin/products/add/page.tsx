@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ProductForm, { type Category } from '@/components/admin/ProductForm'
+import ProductForm from '@/components/admin/ProductForm'
+import { type AdminCategory } from '@/types'
 import { type UploadedImage } from '@/components/admin/ImageUploader'
 import { useCategories } from '@/hooks/use-categories'
 
@@ -15,7 +16,7 @@ export default function AddProductPage() {
   return (
     <ProductForm
       mode="add"
-      categories={categories as Category[]}
+      categories={categories as AdminCategory[]}
       loadingCategories={loadingCategories}
       images={images}
       onImagesChange={setImages}

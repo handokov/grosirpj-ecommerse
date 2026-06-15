@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES, CLOUDINARY_FOLDER_BANNERS } from '@/lib/store-config'
 import {
   Card,
   CardContent,
@@ -74,12 +75,12 @@ export default function BannersPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      toast.error('Format file tidak didukung. Gunakan JPG, PNG, atau WebP.')
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
+      toast.error('Format file tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.')
       return
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE) {
       toast.error('Ukuran file maksimal 10MB')
       return
     }
@@ -88,7 +89,7 @@ export default function BannersPage() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('folder', 'grosirpj/banners')
+      formData.append('folder', CLOUDINARY_FOLDER_BANNERS)
       const res = await fetch('/api/admin/upload', {
         method: 'POST',
         body: formData,
@@ -292,7 +293,7 @@ export default function BannersPage() {
                     </div>
                     <input
                       type="file"
-                      accept="image/jpeg,image/png,image/webp"
+                      accept={ALLOWED_IMAGE_TYPES.join(',')}
                       className="hidden"
                       onChange={handleImageUpload}
                       disabled={uploading}

@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import ImageUploader, { type UploadedImage } from '@/components/admin/ImageUploader'
+import { type AdminCategory } from '@/types'
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi'),
@@ -56,13 +57,6 @@ const productSchema = z.object({
 })
 
 type ProductFormData = z.infer<typeof productSchema>
-
-export interface Category {
-  id: string
-  name: string
-  slug: string
-  _count: { products: number }
-}
 
 export interface ProductInitialData {
   name: string
@@ -85,7 +79,7 @@ interface ProductFormProps {
   mode: 'add' | 'edit'
   productId?: string
   initialData?: ProductInitialData | null
-  categories: Category[]
+  categories: AdminCategory[]
   loadingCategories: boolean
   images: UploadedImage[]
   onImagesChange: (images: UploadedImage[] | ((prev: UploadedImage[]) => UploadedImage[])) => void

@@ -5,7 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import ProductForm, { type Category, type ProductInitialData } from '@/components/admin/ProductForm'
+import ProductForm, { type ProductInitialData } from '@/components/admin/ProductForm'
+import { type AdminCategory } from '@/types'
 import { type UploadedImage } from '@/components/admin/ImageUploader'
 import { useCategories } from '@/hooks/use-categories'
 
@@ -104,7 +105,7 @@ export default function EditProductPage() {
       mode="edit"
       productId={productId}
       initialData={initialData}
-      categories={categories as Category[]}
+      categories={categories as AdminCategory[]}
       loadingCategories={loadingCategories}
       images={images}
       onImagesChange={setImages}

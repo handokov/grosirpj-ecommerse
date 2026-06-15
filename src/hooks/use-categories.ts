@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-
-export interface AdminCategory {
-  id: string
-  name: string
-  slug: string
-  _count: { products: number }
-}
+import { type AdminCategory } from '@/types'
 
 /**
  * Shared hook for fetching admin categories.

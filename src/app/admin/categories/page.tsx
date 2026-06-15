@@ -51,17 +51,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
-
-interface Category {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  icon: string | null
-  order: number
-  _count: { products: number }
-}
+import { cn, generateSlug } from '@/lib/utils'
+import { type AdminCategory } from '@/types'
 
 interface CategoryForm {
   name: string
@@ -70,23 +61,15 @@ interface CategoryForm {
   order: number
 }
 
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-}
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<AdminCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null)
+  const [editingCategory, setEditingCategory] = useState<AdminCategory | null>(null)
+  const [deletingCategory, setDeletingCategory] = useState<AdminCategory | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [form, setForm] = useState<CategoryForm>({
@@ -120,7 +103,7 @@ export default function CategoriesPage() {
     setDialogOpen(true)
   }
 
-  const openEditDialog = (category: Category) => {
+  const openEditDialog = (category: AdminCategory) => {
     setEditingCategory(category)
     setForm({
       name: category.name,
@@ -131,7 +114,7 @@ export default function CategoriesPage() {
     setDialogOpen(true)
   }
 
-  const openDeleteDialog = (category: Category) => {
+  const openDeleteDialog = (category: AdminCategory) => {
     setDeletingCategory(category)
     setDeleteDialogOpen(true)
   }

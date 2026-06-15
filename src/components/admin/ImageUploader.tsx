@@ -7,13 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { type UploadedImage } from '@/types'
+import { ALLOWED_IMAGE_TYPES, CLOUDINARY_FOLDER_PRODUCTS } from '@/lib/store-config'
 
-export interface UploadedImage {
-  url: string
-  publicId: string
-  file?: File
-  preview?: string
-}
+// Re-export for backward compatibility
+export { type UploadedImage }
 
 interface ImageUploaderProps {
   images: UploadedImage[]
@@ -48,7 +46,7 @@ export default function ImageUploader({
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('folder', 'grosirpj/products')
+      formData.append('folder', CLOUDINARY_FOLDER_PRODUCTS)
       const res = await fetch('/api/admin/upload', {
         method: 'POST',
         body: formData,
@@ -68,7 +66,7 @@ export default function ImageUploader({
       const res = await fetch('/api/admin/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, folder: 'grosirpj/products' }),
+        body: JSON.stringify({ url, folder: CLOUDINARY_FOLDER_PRODUCTS }),
       })
       if (!res.ok) {
         const err = await res.json()
@@ -85,7 +83,7 @@ export default function ImageUploader({
   // Handle file uploads
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files).filter((f) =>
-      ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(f.type)
+      (ALLOWED_IMAGE_TYPES as readonly string[]).includes(f.type)
     )
 
     if (fileArray.length === 0) {
@@ -320,7 +318,7 @@ export default function ImageUploader({
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/jpeg,image/png,image/webp,image/gif"
+          accept={(ALLOWED_IMAGE_TYPES as readonly string[]).join(',')}
           className="hidden"
           onChange={handleFileInput}
         />

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { STORE_NAME } from '@/lib/store-config';
 import CategoryPageClient from './CategoryPageClient';
 
 // Force dynamic rendering - don't try to statically generate
@@ -18,17 +19,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const category = await db.category.findUnique({ where: { slug: categorySlug } });
 
     if (!category) {
-      return { title: 'Kategori Tidak Ditemukan - GrosirPJ' };
+      return { title: `Kategori Tidak Ditemukan - ${STORE_NAME}` };
     }
 
     return {
-      title: `${category.name} - GrosirPJ | Grosir Baju Anak & Baby Kids`,
-      description: category.description || `Beli grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah di GrosirPJ. Fashion bayi, balita, dan anak-anak. COD Jakarta & garansi 100%.`,
+      title: `${category.name} - ${STORE_NAME} | Grosir Baju Anak & Baby Kids`,
+      description: category.description || `Beli grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah di ${STORE_NAME}. Fashion bayi, balita, dan anak-anak. COD Jakarta & garansi 100%.`,
       openGraph: {
-        title: `${category.name} - GrosirPJ`,
+        title: `${category.name} - ${STORE_NAME}`,
         description: category.description || `Grosir ${category.name.toLowerCase()} berkualitas dengan harga termurah. Belanja sekarang!`,
         url: `https://grosirpj.com/${categorySlug}`,
-        siteName: 'GrosirPJ',
+        siteName: STORE_NAME,
         type: 'website',
         locale: 'id_ID',
         images: category.image ? [{ url: category.image, alt: category.name }] : undefined,
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
-    return { title: 'GrosirPJ - Grosir Baju Anak & Baby Kids' };
+    return { title: `${STORE_NAME} - Grosir Baju Anak & Baby Kids` };
   }
 }
 

@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Mail, MapPin, Clock, Phone } from 'lucide-react';
 import { WA_NUMBER, getWhatsAppLink } from '@/lib/store-config';
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+import { type Category } from '@/types';
 
 export default function Footer() {
   const [categories, setCategories] = useState<Category[]>([]);

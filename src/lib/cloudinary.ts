@@ -11,46 +11,6 @@ cloudinary.config({
 export default cloudinary
 
 /**
- * Get optimized image URL from Cloudinary
- * Falls back to local path if Cloudinary is not configured
- */
-export function getImageUrl(
-  path: string,
-  options?: {
-    width?: number
-    height?: number
-    quality?: number
-    format?: 'auto' | 'webp' | 'jpg' | 'png'
-  }
-): string {
-  // If the path is already a full URL (Cloudinary or external), return as-is
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path
-  }
-
-  // If Cloudinary is configured, use Cloudinary URL
-  if (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-    const publicId = path.replace(/^\/images\//, 'grosirpj/')
-    const transforms: string[] = []
-
-    if (options?.width) transforms.push(`w_${options.width}`)
-    if (options?.height) transforms.push(`h_${options.height}`)
-    if (options?.quality) transforms.push(`q_${options.quality}`)
-    if (options?.format) transforms.push(`f_${options.format}`)
-    else transforms.push('f_auto')
-
-    transforms.push('c_limit') // Don't upscale
-
-    const transformStr = transforms.join(',')
-    return `https://res.cloudinary.com/${cloudName}/image/upload/${transformStr}/${publicId}`
-  }
-
-  // Fallback to local path
-  return path
-}
-
-/**
  * Upload an image to Cloudinary
  */
 export async function uploadImage(
@@ -59,7 +19,7 @@ export async function uploadImage(
 ): Promise<{ url: string; publicId: string }> {
   const result = await cloudinary.uploader.upload(file as string, {
     folder,
-    resource_type: 'auto',
+    resource_type: 'image',
     transformation: [
       { quality: 'auto:good' },
       { fetch_format: 'auto' },

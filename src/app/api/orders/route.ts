@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
         minOrder: true,
         stock: true,
         name: true,
+        images: true,
       },
     })
 
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     const productMap = new Map(products.map(p => [p.id, p]))
 
     // Validate each item and calculate prices server-side
-    const orderItems: { productId: string; quantity: number; size: string; price: number }[] = []
+    const orderItems: { productId: string; quantity: number; size: string; price: number; productName: string; productImage: string }[] = []
     let totalAmount = 0
     const errors: string[] = []
 
@@ -69,11 +70,16 @@ export async function POST(request: NextRequest) {
       const unitPrice = item.quantity >= product.minOrder ? product.wholesalePrice : product.price
       totalAmount += unitPrice * item.quantity
 
+      // Extract first image from product's images field (comma-separated or single URL)
+      const firstImage = product.images ? product.images.split(',')[0].trim() : ''
+
       orderItems.push({
         productId: item.productId,
         quantity: item.quantity,
         size: item.size,
         price: unitPrice,
+        productName: product.name,
+        productImage: firstImage,
       })
     }
 
@@ -88,19 +94,25 @@ export async function POST(request: NextRequest) {
     // Add shipping cost
     totalAmount += data.shippingCost
 
-    // Generate order number: GPJ-YYYYMMDD-XXXX
-    // Use timestamp + random suffix to avoid race conditions
+    // Generate order number INSIDE transaction for atomicity
     const now = new Date()
     const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-    // Count today's orders + use random suffix for uniqueness
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const todayCount = await db.order.count({ where: { createdAt: { gte: todayStart } } })
-    const seq = String(todayCount + 1).padStart(4, '0')
-    // Add random 2-digit suffix to prevent collision from race conditions
-    const randSuffix = String(Math.floor(Math.random() * 100)).padStart(2, '0')
-    const orderNumber = `GPJ-${dateStr}-${seq}${randSuffix}`
 
     const order = await db.$transaction(async (tx) => {
+      // Count today's orders INSIDE the transaction to prevent race conditions
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const todayCount = await tx.order.count({ where: { createdAt: { gte: todayStart } } })
+
+      // Generate unique order number with retry on collision
+      let orderNumber = ''
+      let attempts = 0
+      do {
+        const seq = String(todayCount + 1 + attempts).padStart(4, '0')
+        const rand = String(Math.floor(Math.random() * 1000)).padStart(3, '0')
+        orderNumber = `GPJ-${dateStr}-${seq}${rand}`
+        attempts++
+      } while (await tx.order.findUnique({ where: { orderNumber } }))
+
       const newOrder = await tx.order.create({
         data: {
           orderNumber,
@@ -130,15 +142,18 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // ===== DEDUCT STOCK (atomic within transaction) =====
-      // Use updateMany with stock >= quantity condition to prevent negative stock
+      // ===== DEDUCT STOCK & INCREMENT SOLD (atomic within transaction) =====
       for (const item of orderItems) {
         const updated = await tx.product.updateMany({
           where: { id: item.productId, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
+          data: {
+            stock: { decrement: item.quantity },
+            sold: { increment: item.quantity },
+          },
         })
         if (updated.count === 0) {
-          throw new Error(`Stok tidak cukup untuk produk ${item.productId}`)
+          const prod = productMap.get(item.productId)
+          throw new Error(`Stok tidak cukup untuk produk ${prod?.name || item.productId}`)
         }
       }
 
@@ -148,15 +163,15 @@ export async function POST(request: NextRequest) {
     // Strip supplier info from response (buyer-facing)
     const safeOrder = {
       ...order,
-      items: order.items.map(({ product, ...item }) => ({
+      items: order.items.map((item) => ({
         ...item,
-        product: { name: product.name, images: product.images },
+        product: item.product ? { name: item.product.name, images: item.product.images } : { name: item.productName, images: item.productImage },
       })),
     }
 
     return NextResponse.json({ order: safeOrder }, { status: 201 })
   } catch (error) {
-    console.error('Create order error:')
+    console.error('Create order error:', error)
     const message = error instanceof Error ? error.message : 'Failed to create order'
     return NextResponse.json({ error: message }, { status: 500 })
   }

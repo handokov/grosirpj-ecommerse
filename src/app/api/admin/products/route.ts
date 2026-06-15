@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, createProductSchema } from '@/lib/validations'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 // GET - List products with filters
 export async function GET(request: NextRequest) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const search = searchParams.get('search') || ''
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20') || 20))
+    const search = (searchParams.get('search') || '').slice(0, 200)
     const categoryId = searchParams.get('categoryId') || ''
     const featured = searchParams.get('featured')
     const showDeleted = searchParams.get('showDeleted') === 'true'
@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
 
 // POST - Create product
 export async function POST(request: NextRequest) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const data = await validateBody(request, createProductSchema)

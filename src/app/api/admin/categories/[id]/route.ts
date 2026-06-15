@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, updateCategorySchema } from '@/lib/validations'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 // GET - Single category
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const { id } = await params
@@ -25,7 +25,7 @@ export async function GET(
 
     return NextResponse.json({ category })
   } catch (error) {
-    console.error('Get category error:')
+    console.error('Get category error:', error)
     return NextResponse.json({ error: 'Failed to fetch category' }, { status: 500 })
   }
 }
@@ -35,8 +35,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const { id } = await params
@@ -73,7 +73,7 @@ export async function PUT(
 
     return NextResponse.json({ category })
   } catch (error) {
-    console.error('Update category error:')
+    console.error('Update category error:', error)
     return NextResponse.json({ error: 'Failed to update category' }, { status: 500 })
   }
 }
@@ -83,26 +83,29 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const { id } = await params
 
-    // Check if category has products
-    const productCount = await db.product.count({ where: { categoryId: id } })
-    if (productCount > 0) {
-      return NextResponse.json(
-        { error: `Kategori ini masih memiliki ${productCount} produk. Pindahkan atau hapus produk terlebih dahulu.` },
-        { status: 400 }
-      )
-    }
+    // Wrap count check + delete in a transaction for atomicity
+    await db.$transaction(async (tx) => {
+      // Check if category has products
+      const productCount = await tx.product.count({ where: { categoryId: id, deletedAt: null } })
+      if (productCount > 0) {
+        throw new Error(`Kategori ini masih memiliki ${productCount} produk. Pindahkan atau hapus produk terlebih dahulu.`)
+      }
 
-    await db.category.delete({ where: { id } })
+      await tx.category.delete({ where: { id } })
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete category error:')
+    console.error('Delete category error:', error)
+    if (error instanceof Error && error.message.includes('Kategori ini masih memiliki')) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Failed to delete category' }, { status: 500 })
   }
 }

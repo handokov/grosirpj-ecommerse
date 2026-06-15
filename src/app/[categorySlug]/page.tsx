@@ -3,9 +3,15 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { STORE_NAME } from '@/lib/store-config';
 import CategoryPageClient from './CategoryPageClient';
+import { cache } from 'react';
 
-// Force dynamic rendering - don't try to statically generate
-export const dynamic = 'force-dynamic';
+// Revalidate every 5 minutes instead of force-dynamic
+export const revalidate = 300;
+
+// Deduplicate category queries between generateMetadata and page component
+const getCategory = cache(async (slug: string) => {
+  return db.category.findUnique({ where: { slug: slug } });
+});
 
 interface Props {
   params: Promise<{ categorySlug: string }>;
@@ -16,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categorySlug } = await params;
 
   try {
-    const category = await db.category.findUnique({ where: { slug: categorySlug } });
+    const category = await getCategory(categorySlug);
 
     if (!category) {
       return { title: `Kategori Tidak Ditemukan - ${STORE_NAME}` };
@@ -46,12 +52,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorySlug } = await params;
   const { q, page: pageParam, sort } = await searchParams;
-  const page = parseInt(pageParam || '1');
+  const page = Math.max(1, parseInt(pageParam || '1') || 1);
   const sortField = sort || 'popular';
 
-  const category = await db.category.findUnique({
-    where: { slug: categorySlug },
-  });
+  const category = await getCategory(categorySlug);
 
   if (!category) {
     notFound();

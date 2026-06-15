@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, createBannerSchema, bulkUpdateBannerSchema } from '@/lib/validations'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
 // GET all banners (admin)
 export async function GET() {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const banners = await db.banner.findMany({
@@ -16,15 +16,15 @@ export async function GET() {
     })
     return NextResponse.json(banners)
   } catch (error) {
-    console.error('Error fetching banners:')
+    console.error('Error fetching banners:', error)
     return NextResponse.json({ error: 'Gagal mengambil data banner' }, { status: 500 })
   }
 }
 
 // POST create banner
 export async function POST(request: NextRequest) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const data = await validateBody(request, createBannerSchema)
@@ -42,30 +42,33 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(banner, { status: 201 })
   } catch (error) {
-    console.error('Error creating banner:')
+    console.error('Error creating banner:', error)
     return NextResponse.json({ error: 'Gagal membuat banner' }, { status: 500 })
   }
 }
 
 // PUT update banner order (bulk)
 export async function PUT(request: NextRequest) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const data = await validateBody(request, bulkUpdateBannerSchema)
     if (data instanceof NextResponse) return data
 
-    for (const b of data.banners) {
-      await db.banner.update({
-        where: { id: b.id },
-        data: { order: b.order, active: b.active },
-      })
-    }
+    // Use $transaction with batch operations instead of sequential for-loop
+    await db.$transaction(
+      data.banners.map(b =>
+        db.banner.update({
+          where: { id: b.id },
+          data: { order: b.order, active: b.active },
+        })
+      )
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error updating banners:')
+    console.error('Error updating banners:', error)
     return NextResponse.json({ error: 'Gagal mengupdate banner' }, { status: 500 })
   }
 }

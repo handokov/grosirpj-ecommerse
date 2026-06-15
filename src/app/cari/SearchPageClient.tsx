@@ -30,7 +30,14 @@ function SearchPageContent({ initialQuery }: Props) {
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
   const [filterCategory, setFilterCategory] = useState(searchParams.get('cat') || 'all');
   const [localSearch, setLocalSearch] = useState(searchParams.get('q') || initialQuery);
+  const [debouncedSearch, setDebouncedSearch] = useState(localSearch);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Debounce search input — update debouncedSearch 300ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(localSearch), 300);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   useEffect(() => {
     fetch('/api/categories').then((r) => r.json()).then(setCategories).catch(() => {});
@@ -40,14 +47,14 @@ function SearchPageContent({ initialQuery }: Props) {
     setLoading(true);
     try {
       const params = new URLSearchParams({ sort, page: page.toString(), limit: '20' });
-      if (localSearch) params.set('q', localSearch);
+      if (debouncedSearch) params.set('q', debouncedSearch);
       if (filterCategory && filterCategory !== 'all') params.set('category', filterCategory);
       const res = await fetch(`/api/products?${params}`);
       const data = await res.json();
       setProducts(data.products || []);
       setTotalProducts(data.total || 0);
     } catch { setProducts([]); } finally { setLoading(false); }
-  }, [localSearch, filterCategory, sort, page]);
+  }, [debouncedSearch, filterCategory, sort, page]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 

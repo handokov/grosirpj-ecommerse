@@ -1,20 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin, isAdminError } from '@/lib/auth-guard';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  // Protect this endpoint - only authenticated admins
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  } catch {
-    // If auth check fails, deny access
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Protect this endpoint - admin only
+  const session = await requireAdmin();
+  if (isAdminError(session)) return session;
 
   const diagnostics: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
@@ -23,7 +15,7 @@ export async function GET() {
       TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN ? 'SET' : 'NOT SET',
       DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? 'SET' : 'NOT SET',
-      CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || 'NOT SET',
+      CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'NOT SET',
       NODE_ENV: process.env.NODE_ENV,
     },
   };
@@ -37,10 +29,9 @@ export async function GET() {
       categoryCount,
       productCount,
     };
-  } catch (err) {
+  } catch {
     diagnostics.database = {
       connected: false,
-      error: (err as Error).message,
     };
   }
 

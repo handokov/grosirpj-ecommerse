@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
-const CEKONGKIR_API_URL = process.env.CEKONGKIR_API_URL || 'http://localhost:3000'
+const CEKONGKIR_API_URL = process.env.CEKONGKIR_API_URL || ''
 const ORIGIN_CITY_ID = process.env.CEKONGKIR_ORIGIN_CITY_ID || ''
 
 // Supported couriers - now with 11 couriers instead of just 3!
@@ -19,20 +20,39 @@ interface CostResult {
   services: CostService[]
 }
 
+// Zod validation schema for ongkir cost request body
+const ongkirCostSchema = z.object({
+  destination: z.string().min(1).max(50),
+  weight: z.number().min(1).max(100000).optional(),
+  courier: z.string().max(20).optional(),
+})
+
 // POST /api/ongkir/cost
 // Body: { destination: string, weight: number, courier?: string }
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { destination, weight, courier } = body
 
-    if (!destination) {
-      return NextResponse.json({ error: 'Destination city is required', results: [] }, { status: 400 })
+    // Validate request body with Zod
+    const result = ongkirCostSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`), results: [] },
+        { status: 400 }
+      )
     }
+    const { destination, weight, courier } = result.data
 
     if (!ORIGIN_CITY_ID) {
       return NextResponse.json(
         { error: 'CEKONGKIR_ORIGIN_CITY_ID not configured. Please set it in .env', results: [] },
+        { status: 200 }
+      )
+    }
+
+    if (!CEKONGKIR_API_URL) {
+      return NextResponse.json(
+        { error: 'CEKONGKIR_API_URL not configured. Please set it in .env', results: [] },
         { status: 200 }
       )
     }
@@ -75,14 +95,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ results: [], error: data.message || 'Failed to get shipping costs' })
     } catch (fetchError) {
-      console.error('CekOngkir cost fetch error:')
+      console.error('CekOngkir cost fetch error:', fetchError)
       return NextResponse.json(
         { error: 'CekOngkir API is not reachable. Make sure the CekOngkir app is running.', results: [] },
         { status: 200 }
       )
     }
   } catch (error) {
-    console.error('Ongkir cost error:')
+    console.error('Ongkir cost error:', error)
     return NextResponse.json({ error: 'Failed to calculate shipping cost', results: [] }, { status: 500 })
   }
 }

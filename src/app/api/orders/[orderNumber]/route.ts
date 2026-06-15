@@ -16,8 +16,8 @@ export async function GET(
       return NextResponse.json({ error: 'Nomor order tidak valid' }, { status: 400 })
     }
 
-    const order = await db.order.findUnique({
-      where: { orderNumber },
+    const order = await db.order.findFirst({
+      where: { orderNumber, deletedAt: null },
       include: {
         items: {
           include: {
@@ -47,11 +47,13 @@ export async function GET(
       destinationCity: order.destinationCity,
       note: order.note,
       createdAt: order.createdAt,
-      items: order.items.map(({ product, ...item }) => ({
+      items: order.items.map((item) => ({
         quantity: item.quantity,
         size: item.size,
         price: item.price,
-        product: { name: product.name, images: product.images },
+        productName: item.productName,
+        productImage: item.productImage,
+        product: item.product ? { name: item.product.name, images: item.product.images } : { name: item.productName, images: item.productImage },
       })),
     }
 

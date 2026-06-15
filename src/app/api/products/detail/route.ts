@@ -1,23 +1,24 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
 
-    if (!slug) {
-      return NextResponse.json({ error: 'Slug is required' }, { status: 400 });
+    if (!slug || slug.length > 200 || !/^[a-z0-9-]+$/.test(slug)) {
+      return NextResponse.json({ error: 'Slug is required and must be valid' }, { status: 400 });
     }
 
-    const product = await db.product.findUnique({
-      where: { slug },
+    // Use findFirst with deletedAt: null instead of findUnique + JS check
+    const product = await db.product.findFirst({
+      where: { slug, deletedAt: null },
       include: { category: { select: { name: true, slug: true } } },
     });
 
-    if (!product || product.deletedAt) {
+    if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
       categorySlug: category.slug,
     });
   } catch (error) {
-    console.error('Error fetching product detail:');
+    console.error('Error fetching product detail:', error);
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
   }
 }

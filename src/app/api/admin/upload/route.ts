@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
-import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES, CLOUDINARY_FOLDER_PRODUCTS } from '@/lib/store-config'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES, CLOUDINARY_FOLDER_PRODUCTS, CLOUDINARY_FOLDER_BANNERS } from '@/lib/store-config'
+import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
+
+// Allowed folders for upload
+const ALLOWED_FOLDERS = [CLOUDINARY_FOLDER_PRODUCTS, CLOUDINARY_FOLDER_BANNERS]
 
 /**
  * Upload an image file to Cloudinary.
  * Used for uploading images from the admin product form.
  */
 export async function POST(request: NextRequest) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const formData = await request.formData()
@@ -20,6 +23,14 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 })
+    }
+
+    // Validate folder — must be one of the allowed Cloudinary folders
+    if (!ALLOWED_FOLDERS.includes(folder)) {
+      return NextResponse.json(
+        { error: 'Folder tidak valid. Gunakan folder yang diizinkan.' },
+        { status: 400 }
+      )
     }
 
     // Validate file type
@@ -50,7 +61,7 @@ export async function POST(request: NextRequest) {
       publicId: result.publicId,
     })
   } catch (error) {
-    console.error('Upload error:')
+    console.error('Upload error:', error)
     return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
   }
 }

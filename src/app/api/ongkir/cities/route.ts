@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const CEKONGKIR_API_URL = process.env.CEKONGKIR_API_URL || 'http://localhost:3000'
+const CEKONGKIR_API_URL = process.env.CEKONGKIR_API_URL || ''
 
 // Cache cities for 24 hours
 let citiesCache: { data: unknown; timestamp: number } | null = null
@@ -18,6 +18,10 @@ async function getCities(): Promise<City[]> {
   // Return from cache if valid
   if (citiesCache && Date.now() - citiesCache.timestamp < CACHE_DURATION) {
     return citiesCache.data as City[]
+  }
+
+  if (!CEKONGKIR_API_URL) {
+    return []
   }
 
   try {

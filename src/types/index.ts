@@ -123,7 +123,9 @@ export interface OrderItem {
   quantity: number;
   size: string | null;
   price: number;
-  product: {
+  productName: string;
+  productImage: string;
+  product?: {
     name: string;
     images: string;
     supplierName: string | null;

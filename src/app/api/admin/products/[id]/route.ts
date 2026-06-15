@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, updateProductSchema } from '@/lib/validations'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 // GET - Single product
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const { id } = await params
@@ -25,7 +25,7 @@ export async function GET(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Get product error:')
+    console.error('Get product error:', error)
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
   }
 }
@@ -35,8 +35,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const { id } = await params
@@ -84,34 +84,38 @@ export async function PUT(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Update product error:')
+    console.error('Update product error:', error)
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
 }
 
-// DELETE - Delete product
+// DELETE - Soft delete product
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const { id } = await params
 
-    // Soft delete: set deletedAt timestamp instead of hard deleting
-    // This preserves order history (OrderItems stay intact)
-    await db.cartItem.deleteMany({ where: { productId: id } })
+    // Wrap cart item delete + product soft-delete in a transaction
+    await db.$transaction(async (tx) => {
+      // Remove cart items referencing this product
+      await tx.cartItem.deleteMany({ where: { productId: id } })
 
-    await db.product.update({
-      where: { id },
-      data: { deletedAt: new Date(), stock: 0, featured: false },
+      // Soft delete: set deletedAt timestamp instead of hard deleting
+      // This preserves order history (OrderItems stay intact)
+      await tx.product.update({
+        where: { id },
+        data: { deletedAt: new Date(), stock: 0, featured: false },
+      })
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete product error:')
+    console.error('Delete product error:', error)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export async function GET(request: Request) {
   try {
@@ -9,10 +9,10 @@ export async function GET(request: Request) {
     const category = searchParams.get('category');
     const categorySlug = searchParams.get('categorySlug');
     const featured = searchParams.get('featured');
-    const search = searchParams.get('q');
+    const search = (searchParams.get('q') || '').slice(0, 200);
     const sort = searchParams.get('sort') || 'popular';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20') || 20));
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
 
@@ -38,8 +38,10 @@ export async function GET(request: Request) {
 
     if (minPrice || maxPrice) {
       where.wholesalePrice = {};
-      if (minPrice) (where.wholesalePrice as Record<string, number>).gte = parseFloat(minPrice);
-      if (maxPrice) (where.wholesalePrice as Record<string, number>).lte = parseFloat(maxPrice);
+      const minPriceVal = minPrice ? parseInt(minPrice) : NaN;
+      const maxPriceVal = maxPrice ? parseInt(maxPrice) : NaN;
+      if (minPrice && !isNaN(minPriceVal)) (where.wholesalePrice as Record<string, number>).gte = minPriceVal;
+      if (maxPrice && !isNaN(maxPriceVal)) (where.wholesalePrice as Record<string, number>).lte = maxPriceVal;
     }
 
     let orderBy: Record<string, string> = {};
@@ -90,7 +92,7 @@ export async function GET(request: Request) {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error('Error fetching products:');
+    console.error('Error fetching products:', error);
     // Return empty data instead of 500 to prevent frontend crash
     return NextResponse.json({
       products: [],

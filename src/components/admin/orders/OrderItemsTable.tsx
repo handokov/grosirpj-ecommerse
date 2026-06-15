@@ -46,14 +46,20 @@ export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map(item => (
+              {items.map(item => {
+                const productName = item.product?.name || item.productName
+                const productImage = item.product?.images || item.productImage
+                const supplierName = item.product?.supplierName ?? null
+                const supplierLink = item.product?.supplierLink ?? null
+                const supplierPhone = item.product?.supplierPhone ?? null
+                return (
                 <TableRow key={item.id}>
                   <TableCell>
                     <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden">
-                      {item.product.images ? (
+                      {productImage ? (
                         <img
-                          src={getFirstImageUrl(item.product.images)}
-                          alt={item.product.name}
+                          src={getFirstImageUrl(productImage)}
+                          alt={productName}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -65,13 +71,13 @@ export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
                   </TableCell>
                   <TableCell>
                     <span className="font-medium text-gray-900 text-xs">
-                      {item.product.name}
+                      {productName}
                     </span>
                     {/* Supplier Info - only visible in seller dashboard */}
                     <SupplierInfoBadges
-                      supplierName={item.product.supplierName}
-                      supplierLink={item.product.supplierLink}
-                      supplierPhone={item.product.supplierPhone}
+                      supplierName={supplierName}
+                      supplierLink={supplierLink}
+                      supplierPhone={supplierPhone}
                     />
                   </TableCell>
                   <TableCell className="text-center">
@@ -93,7 +99,9 @@ export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
                     {formatRupiah(item.price * item.quantity)}
                   </TableCell>
                 </TableRow>
-              ))}
+              )
+              })}
+
             </TableBody>
           </Table>
         </div>

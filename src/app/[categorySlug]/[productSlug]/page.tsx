@@ -3,9 +3,18 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { STORE_NAME } from '@/lib/store-config';
 import ProductDetailClient from './ProductDetailClient';
+import { cache } from 'react';
 
-// Force dynamic rendering - don't try to statically generate
-export const dynamic = 'force-dynamic';
+// Revalidate every 5 minutes instead of force-dynamic
+export const revalidate = 300;
+
+// Deduplicate product queries between generateMetadata and page component
+const getProduct = cache(async (slug: string) => {
+  return db.product.findUnique({
+    where: { slug },
+    include: { category: true },
+  });
+});
 
 interface Props {
   params: Promise<{ categorySlug: string; productSlug: string }>;
@@ -15,10 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { productSlug } = await params;
 
   try {
-    const product = await db.product.findUnique({
-      where: { slug: productSlug },
-      include: { category: true },
-    });
+    const product = await getProduct(productSlug);
 
     if (!product || product.deletedAt) {
       return { title: `Produk Tidak Ditemukan - ${STORE_NAME}` };
@@ -48,10 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const { productSlug } = await params;
 
-  const product = await db.product.findUnique({
-    where: { slug: productSlug },
-    include: { category: true },
-  });
+  const product = await getProduct(productSlug);
 
   if (!product || product.deletedAt) {
     notFound();

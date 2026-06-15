@@ -31,19 +31,26 @@ function CategoryPageContent({ category, initialProducts, initialTotal, searchQu
   const [totalProducts, setTotalProducts] = useState(initialTotal);
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
   const [localSearch, setLocalSearch] = useState(searchParams.get('q') || initialSearchQuery);
+  const [debouncedSearch, setDebouncedSearch] = useState(localSearch);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Debounce search input — update debouncedSearch 300ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(localSearch), 300);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ sort, page: page.toString(), limit: '20', categorySlug: category.slug });
-      if (localSearch) params.set('q', localSearch);
+      if (debouncedSearch) params.set('q', debouncedSearch);
       const res = await fetch(`/api/products?${params}`);
       const data = await res.json();
       setProducts(data.products || []);
       setTotalProducts(data.total || 0);
     } catch { setProducts([]); } finally { setLoading(false); }
-  }, [category.slug, sort, page, localSearch]);
+  }, [category.slug, sort, page, debouncedSearch]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 

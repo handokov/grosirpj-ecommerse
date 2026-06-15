@@ -21,88 +21,117 @@ model Category {
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  description String
-  price       Float
-  wholesalePrice Float
-  minOrder    Int       @default(1)
-  stock       Int
-  images      String
-  categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id])
-  rating      Float     @default(0)
-  reviewCount Int       @default(0)
-  sold        Int       @default(0)
-  featured    Boolean   @default(false)
-  tags        String?
-  weight      String?
-  sizes       String?
-  supplierName  String?   // Nama supplier/toko supplier
-  supplierLink  String?   // Link alamat toko supplier (Shopee, Tokopedia, dll)
-  supplierPhone String?  // No telp/WhatsApp supplier
-  deletedAt   DateTime?   // Soft delete: null = active, set date = deleted
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String     @id @default(cuid())
+  name           String
+  slug           String     @unique
+  description    String
+  price          Int        // Rupiah — stored as integer to avoid floating-point errors
+  wholesalePrice Int        // Rupiah — stored as integer to avoid floating-point errors
+  minOrder       Int        @default(1)
+  stock          Int
+  images         String
+  categoryId     String
+  category       Category   @relation(fields: [categoryId], references: [id])
+  rating         Float      @default(0)
+  reviewCount    Int        @default(0)
+  sold           Int        @default(0)
+  featured       Boolean    @default(false)
+  tags           String?
+  weight         String?
+  sizes          String?
+  supplierName   String?    // Nama supplier/toko supplier
+  supplierLink   String?    // Link alamat toko supplier (Shopee, Tokopedia, dll)
+  supplierPhone  String?    // No telp/WhatsApp supplier
+  deletedAt      DateTime?  // Soft delete: null = active, set date = deleted
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([categoryId])
+  @@index([deletedAt])
+  @@index([deletedAt, categoryId])
+  @@index([featured, deletedAt])
+  @@index([sold])
+  @@index([wholesalePrice])
+  @@index([createdAt])
+  @@index([rating])
+  @@index([stock])
+  @@index([deletedAt, sold])
+  @@index([deletedAt, wholesalePrice])
 }
 
 model CartItem {
   id        String   @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity  Int      @default(1)
   size      String?
   sessionId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([productId])
+  @@unique([sessionId, productId, size])
 }
 
 model User {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String
-  email         String   @unique
+  email         String    @unique
   password      String
-  role          String   @default("admin") // admin, staff
-  isActive      Boolean  @default(true)
+  role          String    @default("admin") // admin, staff
+  isActive      Boolean   @default(true)
   lastLoginAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  orderNumber   String      @unique
-  customerName  String
-  customerPhone String
-  customerEmail String?
-  customerAddr  String?
-  status        String      @default("pending") // pending, confirmed, processing, shipped, completed, cancelled
-  paymentMethod String      @default("whatsapp") // whatsapp, transfer, cod
-  paymentStatus String      @default("unpaid") // unpaid, paid, refunded
-  totalAmount   Float
-  shippingCost  Float       @default(0)
-  courier       String?
-  courierService String?
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  customerAddr    String?
+  status          String      @default("pending") // pending, confirmed, processing, shipped, completed, cancelled
+  paymentMethod   String      @default("whatsapp") // whatsapp, transfer, cod
+  paymentStatus   String      @default("unpaid") // unpaid, paid, refunded
+  totalAmount     Int         @default(0) // Rupiah — integer to avoid floating-point errors
+  shippingCost    Int         @default(0) // Rupiah — integer
+  courier         String?
+  courierService  String?
   destinationCity String?
-  note          String?
-  items         OrderItem[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  note            String?
+  deletedAt       DateTime?   // Soft delete — orders should NEVER be hard-deleted for audit
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([status, createdAt])
+  @@index([paymentStatus, deletedAt])
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  size      String?
-  price     Float    // price at time of order
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product? @relation(fields: [productId], references: [id]) // Optional — product may be soft-deleted
+  quantity     Int
+  size         String?
+  price        Int      // Price at time of order (Rupiah — integer)
+  productName  String   // Snapshot: product name at time of order (prevents data loss if product changes)
+  productImage String   // Snapshot: first image at time of order
+  createdAt    DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Banner {

@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, createCategorySchema } from '@/lib/validations'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
+import { requireAdmin, isAdminError } from '@/lib/auth-guard'
 
 // GET - List categories
 export async function GET() {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const categories = await db.category.findMany({
       include: {
-        _count: { select: { products: true } },
+        _count: { select: { products: { where: { deletedAt: null } } } },
       },
       orderBy: { order: 'asc' },
     })
@@ -26,8 +26,8 @@ export async function GET() {
 
 // POST - Create category
 export async function POST(request: NextRequest) {
-  const session = await requireAuth()
-  if (isAuthError(session)) return session
+  const session = await requireAdmin()
+  if (isAdminError(session)) return session
 
   try {
     const data = await validateBody(request, createCategorySchema)

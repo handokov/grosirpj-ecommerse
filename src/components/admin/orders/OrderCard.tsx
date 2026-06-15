@@ -72,13 +72,19 @@ export function OrderCard({ order, onStatusUpdate, onViewDetail }: OrderCardProp
 
           {/* Items */}
           <div className="space-y-2">
-            {order.items.map(item => (
+            {order.items.map(item => {
+              const productName = item.product?.name || item.productName
+              const productImage = item.product?.images || item.productImage
+              const supplierName = item.product?.supplierName ?? null
+              const supplierLink = item.product?.supplierLink ?? null
+              const supplierPhone = item.product?.supplierPhone ?? null
+              return (
               <div key={item.id} className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-lg bg-gray-100 border border-gray-100 flex-shrink-0 overflow-hidden">
-                  {item.product.images ? (
+                  {productImage ? (
                     <img
-                      src={getFirstImageUrl(item.product.images)}
-                      alt={item.product.name}
+                      src={getFirstImageUrl(productImage)}
+                      alt={productName}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -89,7 +95,7 @@ export function OrderCard({ order, onStatusUpdate, onViewDetail }: OrderCardProp
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-gray-900 truncate">
-                    {item.product.name}
+                    {productName}
                   </p>
                   <div className="flex items-center gap-2 text-[10px] text-gray-500">
                     {item.size && <span>Ukuran: {item.size}</span>}
@@ -97,16 +103,17 @@ export function OrderCard({ order, onStatusUpdate, onViewDetail }: OrderCardProp
                   </div>
                   {/* Supplier Info */}
                   <SupplierInfoBadges
-                    supplierName={item.product.supplierName}
-                    supplierLink={item.product.supplierLink}
-                    supplierPhone={item.product.supplierPhone}
+                    supplierName={supplierName}
+                    supplierLink={supplierLink}
+                    supplierPhone={supplierPhone}
                   />
                 </div>
                 <p className="text-xs font-semibold text-gray-700 mt-0.5">
                   {formatRupiah(item.price * item.quantity)}
                 </p>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 

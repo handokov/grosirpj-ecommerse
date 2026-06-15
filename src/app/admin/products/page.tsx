@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { getFirstImageUrl } from '@/lib/image-utils'
@@ -102,6 +102,8 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [categoryId, setCategoryId] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -117,7 +119,7 @@ export default function ProductsPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
-        search,
+        search: debouncedSearch,
         categoryId,
       })
       const res = await fetch(`/api/admin/products?${params}`)
@@ -131,7 +133,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, search, categoryId])
+  }, [page, debouncedSearch, categoryId])
 
   useEffect(() => {
     fetchProducts()
@@ -164,7 +166,19 @@ export default function ProductsPage() {
   const handleSearch = (value: string) => {
     setSearch(value)
     setPage(1)
+    // Debounce: wait 300ms before triggering API call
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(value)
+    }, 300)
   }
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    }
+  }, [])
 
   const handleCategoryChange = (value: string) => {
     setCategoryId(value === 'all' ? '' : value)

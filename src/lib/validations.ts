@@ -40,8 +40,8 @@ export function formatZodError(error: z.ZodError): string[] {
 export const createProductSchema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi').max(200),
   description: z.string().max(5000).optional().default(''),
-  price: z.coerce.number().positive('Harga harus lebih dari 0'),
-  wholesalePrice: z.coerce.number().positive('Harga grosir harus lebih dari 0'),
+  price: z.coerce.number().int().positive('Harga harus lebih dari 0'),
+  wholesalePrice: z.coerce.number().int().positive('Harga grosir harus lebih dari 0'),
   minOrder: z.coerce.number().int().min(1, 'Minimal order 1').optional().default(1),
   stock: z.coerce.number().int().min(0, 'Stok tidak boleh negatif'),
   images: z.string().min(1, 'Minimal 1 gambar produk').optional().default(''),
@@ -58,8 +58,8 @@ export const createProductSchema = z.object({
 export const updateProductSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(5000).optional(),
-  price: z.coerce.number().positive().optional(),
-  wholesalePrice: z.coerce.number().positive().optional(),
+  price: z.coerce.number().int().positive().optional(),
+  wholesalePrice: z.coerce.number().int().positive().optional(),
   minOrder: z.coerce.number().int().min(1).optional(),
   stock: z.coerce.number().int().min(0).optional(),
   images: z.string().optional(),
@@ -108,19 +108,18 @@ export const updateOrderSchema = z.object({
 })
 
 export const createOrderSchema = z.object({
-  customerName: z.string().min(1, 'Nama pelanggan wajib diisi'),
-  customerPhone: z.string().min(1, 'No. telepon wajib diisi').regex(/^(\+62|62|0)[0-9]{8,13}$/, 'Format nomor telepon tidak valid'),
+  customerName: z.string().min(1, 'Nama pelanggan wajib diisi').max(200),
+  customerPhone: z.string().min(1, 'No. telepon wajib diisi').max(50).regex(/^(\+62|62|0)[0-9]{8,13}$/, 'Format nomor telepon tidak valid'),
   customerEmail: z.string().email().optional().default(''),
-  customerAddr: z.string().optional().default(''),
+  customerAddr: z.string().max(500).optional().default(''),
   paymentMethod: paymentMethodEnum.optional().default('whatsapp'),
-  note: z.string().optional().default(''),
-  totalAmount: z.coerce.number().positive('Total harus lebih dari 0'),
+  note: z.string().max(1000).optional().default(''),
+  shippingCost: z.coerce.number().int().min(0).max(500000).optional().default(0),
   items: z.array(z.object({
     productId: z.string().min(1),
-    quantity: z.coerce.number().int().min(1),
-    size: z.string().optional().default(''),
-    price: z.coerce.number().positive(),
-  })).min(1, 'Minimal 1 item'),
+    quantity: z.coerce.number().int().min(1).max(9999),
+    size: z.string().max(50).optional().default(''),
+  })).min(1, 'Minimal 1 item').max(100, 'Maksimal 100 item per order'),
 })
 
 // Public order creation (from buyer checkout) — NO price from client!
@@ -131,7 +130,7 @@ export const publicCreateOrderSchema = z.object({
   customerEmail: z.string().email().optional().default(''),
   customerAddr: z.string().max(500).optional().default(''),
   note: z.string().max(1000).optional().default(''),
-  shippingCost: z.coerce.number().min(0).optional().default(0),
+  shippingCost: z.coerce.number().int().min(0).max(500000).optional().default(0),
   courier: z.string().max(100).optional().default(''),
   courierService: z.string().max(200).optional().default(''),
   destinationCity: z.string().max(200).optional().default(''),
@@ -147,7 +146,10 @@ export const publicCreateOrderSchema = z.object({
 export const createBannerSchema = z.object({
   title: z.string().min(1, 'Judul banner wajib diisi').max(200),
   image: z.string().min(1, 'Gambar banner wajib diisi'),
-  link: z.string().nullable().optional(),
+  link: z.string().nullable().optional().refine(
+    (val) => !val || /^https?:\/\//.test(val),
+    'Link harus menggunakan HTTP atau HTTPS'
+  ),
   order: z.number().int().min(0).optional().default(0),
   active: z.boolean().optional().default(true),
 })
@@ -155,7 +157,10 @@ export const createBannerSchema = z.object({
 export const updateBannerSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   image: z.string().optional(),
-  link: z.string().nullable().optional(),
+  link: z.string().nullable().optional().refine(
+    (val) => !val || /^https?:\/\//.test(val),
+    'Link harus menggunakan HTTP atau HTTPS'
+  ),
   order: z.number().int().min(0).optional(),
   active: z.boolean().optional(),
 })

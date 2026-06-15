@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export async function GET(request: Request) {
   try {
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
         where: { slug },
         include: {
           _count: {
-            select: { products: true },
+            select: { products: { where: { deletedAt: null } } },
           },
         },
       });
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       orderBy: { order: 'asc' },
       include: {
         _count: {
-          select: { products: true },
+          select: { products: { where: { deletedAt: null } } },
         },
       },
     });

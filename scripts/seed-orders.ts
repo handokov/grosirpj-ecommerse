@@ -90,8 +90,8 @@ async function main() {
         ...order,
         items: {
           create: [
-            { productId: item1.id, quantity: qty1, price: item1.wholesalePrice },
-            { productId: item2.id, quantity: qty2, price: item2.wholesalePrice },
+            { productId: item1.id, quantity: qty1, price: item1.wholesalePrice, productName: item1.name, productImage: item1.images ? item1.images.split(',')[0].trim() : '' },
+            { productId: item2.id, quantity: qty2, price: item2.wholesalePrice, productName: item2.name, productImage: item2.images ? item2.images.split(',')[0].trim() : '' },
           ],
         },
       },

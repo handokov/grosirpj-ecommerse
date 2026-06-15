@@ -26,7 +26,7 @@ function createPrismaClient(): PrismaClient {
       const PrismaLibSql = libsqlModule.PrismaLibSql || libsqlModule.PrismaLibSQL
 
       if (!PrismaLibSql) {
-        console.error('[db] ERROR: PrismaLibSql not found in @prisma/adapter-libsql. Available exports:', Object.keys(libsqlModule))
+        console.error('[db] ERROR: PrismaLibSql not found in @prisma/adapter-libsql.')
         // Fall through to local SQLite
       } else {
         const adapter = new PrismaLibSql({
@@ -37,7 +37,7 @@ function createPrismaClient(): PrismaClient {
         return new PrismaClient({ adapter })
       }
     } catch (err) {
-      console.error('[db] ERROR: Failed to create Turso adapter:', err)
+      console.error('[db] ERROR: Failed to create Turso adapter.')
       // Fall through to local SQLite
     }
   }

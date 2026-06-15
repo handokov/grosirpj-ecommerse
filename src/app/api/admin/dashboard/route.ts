@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 export async function GET() {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     // Get total products
     const totalProducts = await db.product.count({ where: { deletedAt: null } })
@@ -113,7 +117,7 @@ export async function GET() {
       monthlyData,
     })
   } catch (error) {
-    console.error('Dashboard API error:', error)
+    console.error('Dashboard API error:')
     // Return safe default data instead of 500
     return NextResponse.json({
       totalProducts: 0,

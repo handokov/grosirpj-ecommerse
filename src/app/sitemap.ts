@@ -51,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...productEntries,
     ];
   } catch (error) {
-    console.error('Error generating sitemap:', error);
+    console.error('Error generating sitemap:');
     return [
       {
         url: BASE_URL,

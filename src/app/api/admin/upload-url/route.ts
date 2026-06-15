@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
 import { validateBody, uploadUrlSchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,9 @@ export const dynamic = 'force-dynamic'
  * Used for importing images from external sources (e.g., Shopee).
  */
 export async function POST(request: NextRequest) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const data = await validateBody(request, uploadUrlSchema)
     if (data instanceof NextResponse) return data
@@ -16,7 +20,23 @@ export async function POST(request: NextRequest) {
     // Only allow http/https
     const parsedUrl = new URL(data.url)
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      return NextResponse.json({ error: 'Only HTTP/HTTPS URLs are allowed' }, { status: 400 })
+      return NextResponse.json({ error: 'Only HTTP/HTTPS URLs allowed' }, { status: 400 })
+    }
+
+    // Block SSRF: prevent access to internal/private IPs and metadata endpoints
+    const hostname = parsedUrl.hostname
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('172.') ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('169.254.') ||
+      hostname === '0.0.0.0' ||
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local')
+    ) {
+      return NextResponse.json({ error: 'URL not allowed' }, { status: 400 })
     }
 
     // Download the image
@@ -49,7 +69,7 @@ export async function POST(request: NextRequest) {
       publicId: uploadResult.publicId,
     })
   } catch (error) {
-    console.error('Upload URL error:', error)
+    console.error('Upload URL error:')
     if (error instanceof Error && error.name === 'TimeoutError') {
       return NextResponse.json({ error: 'Download timed out' }, { status: 408 })
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
 import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES, CLOUDINARY_FOLDER_PRODUCTS } from '@/lib/store-config'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,9 @@ export const dynamic = 'force-dynamic'
  * Used for uploading images from the admin product form.
  */
 export async function POST(request: NextRequest) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
       publicId: result.publicId,
     })
   } catch (error) {
-    console.error('Upload error:', error)
+    console.error('Upload error:')
     return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
   }
 }

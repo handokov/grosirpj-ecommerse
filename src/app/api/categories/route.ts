@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       }))
     );
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error fetching categories:');
     // Return empty array instead of 500 to prevent frontend crash
     return NextResponse.json([]);
   }

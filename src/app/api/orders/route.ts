@@ -100,43 +100,50 @@ export async function POST(request: NextRequest) {
     const randSuffix = String(Math.floor(Math.random() * 100)).padStart(2, '0')
     const orderNumber = `GPJ-${dateStr}-${seq}${randSuffix}`
 
-    const order = await db.order.create({
-      data: {
-        orderNumber,
-        customerName: data.customerName,
-        customerPhone: data.customerPhone,
-        customerEmail: data.customerEmail,
-        customerAddr: data.customerAddr,
-        status: 'pending',
-        paymentMethod: 'transfer',
-        paymentStatus: 'unpaid',
-        totalAmount,
-        shippingCost: data.shippingCost,
-        courier: data.courier,
-        courierService: data.courierService,
-        destinationCity: data.destinationCity,
-        note: data.note,
-        items: {
-          create: orderItems,
-        },
-      },
-      include: {
-        items: {
-          include: {
-            product: { select: { name: true, images: true } },
+    const order = await db.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber,
+          customerName: data.customerName,
+          customerPhone: data.customerPhone,
+          customerEmail: data.customerEmail,
+          customerAddr: data.customerAddr,
+          status: 'pending',
+          paymentMethod: 'transfer',
+          paymentStatus: 'unpaid',
+          totalAmount,
+          shippingCost: data.shippingCost,
+          courier: data.courier,
+          courierService: data.courierService,
+          destinationCity: data.destinationCity,
+          note: data.note,
+          items: {
+            create: orderItems,
           },
         },
-      },
-    })
-
-    // ===== DEDUCT STOCK =====
-    // Decrement stock for each ordered item
-    for (const item of orderItems) {
-      await db.product.update({
-        where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } },
+        include: {
+          items: {
+            include: {
+              product: { select: { name: true, images: true } },
+            },
+          },
+        },
       })
-    }
+
+      // ===== DEDUCT STOCK (atomic within transaction) =====
+      // Use updateMany with stock >= quantity condition to prevent negative stock
+      for (const item of orderItems) {
+        const updated = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        })
+        if (updated.count === 0) {
+          throw new Error(`Stok tidak cukup untuk produk ${item.productId}`)
+        }
+      }
+
+      return newOrder
+    })
 
     // Strip supplier info from response (buyer-facing)
     const safeOrder = {
@@ -149,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ order: safeOrder }, { status: 201 })
   } catch (error) {
-    console.error('Create order error:', error)
+    console.error('Create order error:')
     const message = error instanceof Error ? error.message : 'Failed to create order'
     return NextResponse.json({ error: message }, { status: 500 })
   }

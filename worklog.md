@@ -25,6 +25,38 @@ Stage Summary:
 - Updated 3 admin pages (add product, edit product, products list) to use useCategories hook
 - Estimated ~900+ lines of duplicate code eliminated
 ---
+Task ID: S1-S2
+Agent: security-agent
+Task: Add requireAuth() to ALL admin API routes + Fix order number validation regex
+
+Work Log:
+- Read auth-guard.ts to understand requireAuth() and isAuthError() utilities
+- Added `import { requireAuth, isAuthError } from '@/lib/auth-guard'` to all 11 admin API route files
+- Added `const session = await requireAuth(); if (isAuthError(session)) return session` to every handler function across all admin routes:
+  - admin/products/route.ts: GET, POST (2 handlers)
+  - admin/products/[id]/route.ts: GET, PUT, DELETE (3 handlers)
+  - admin/categories/route.ts: GET, POST (2 handlers)
+  - admin/categories/[id]/route.ts: GET, PUT, DELETE (3 handlers)
+  - admin/orders/route.ts: GET (1 handler)
+  - admin/orders/[id]/route.ts: GET, PUT, DELETE (3 handlers)
+  - admin/banners/route.ts: GET, POST, PUT (3 handlers)
+  - admin/banners/[id]/route.ts: GET, PUT, DELETE (3 handlers)
+  - admin/dashboard/route.ts: GET (1 handler)
+  - admin/upload/route.ts: POST (1 handler)
+  - admin/upload-url/route.ts: POST (1 handler)
+  Total: 23 handler functions secured with requireAuth()
+- Fixed order number validation regex in orders/[orderNumber]/route.ts:
+  - Changed `^GPJ-\d{8}-\d{4}$` → `^GPJ-\d{8}-\d{4,6}[A-Z]?$`
+  - Now supports admin format (4 digits), public format (6 digits), and optional letter suffix
+- Ran `bun run lint` → 0 errors
+- Dev server running normally
+
+Stage Summary:
+- All 11 admin API route files now have requireAuth() as second line of defense (middleware validates JWT existence, requireAuth validates JWT authenticity)
+- 23 handler functions total secured
+- Order number regex now correctly matches both admin (GPJ-YYYYMMDD-XXXX) and public (GPJ-YYYYMMDD-XXXXXX[A-Z]?) formats
+- Zero lint errors, dev server healthy
+---
 Task ID: build-verification
 Agent: main
 Task: Verify if pushing to git/Vercel would cause build errors, fix all TypeScript and prerendering issues
@@ -268,3 +300,164 @@ Stage Summary:
 - Build: ✅ SUCCESS
 - Lint: ✅ 0 errors, 0 warnings
 - All shared utilities created and integrated
+---
+Task ID: S3-S4-S10
+Agent: fix-agent
+Task: Fix robots.ts, admin noindex, alert→toast, and JSON-LD issues
+
+Work Log:
+- Fixed `src/app/robots.ts`: Added `Disallow: /admin` and `Disallow: /api/` to robots.txt rules (changed rules from single object to array with allow + disallow)
+- Fixed `src/app/admin/layout.tsx`: Added `import type { Metadata } from 'next'` and `export const metadata: Metadata = { robots: { index: false, follow: false } }` to prevent search engine indexing of admin pages
+- Fixed `src/components/layout/Header.tsx`: Replaced `alert(errorMsg)` in cart checkout catch block with `toast.error('Gagal membuat pesanan', { description: 'Silakan coba lagi atau hubungi kami via WhatsApp.' })`. Added `import { toast } from 'sonner'`.
+- Fixed `src/app/[categorySlug]/[productSlug]/page.tsx`: Changed JSON-LD `image` field from raw `product.images` (comma-separated string) to `product.images.split(',').map(url => url.trim()).filter(Boolean)` (proper array). Changed `AggregateOffer` to `Offer` with single `price` field and added `seller` object, since there's only one seller.
+- Ran `bun run lint` → 0 errors
+
+Stage Summary:
+- 4 files modified: robots.ts, admin/layout.tsx, Header.tsx, [productSlug]/page.tsx
+- robots.txt now blocks /admin and /api/ from crawling
+- Admin pages have noindex/nofollow meta tags
+- Cart checkout errors show toast notifications instead of browser alerts
+- Product JSON-LD structured data is now valid (image as array, Offer instead of AggregateOffer)
+---
+Task ID: S5-S9
+Agent: security-agent
+Task: Add security hardening — phone validation, SSRF protection, folder allowlist, transaction safety, security headers
+
+Work Log:
+1. **Phone validation regex** (`src/lib/validations.ts`):
+   - Added `.regex(/^(\+62|62|0)[0-9]{8,13}$/, 'Format nomor telepon tidak valid')` to `customerPhone` in both `createOrderSchema` and `publicCreateOrderSchema`
+   - Validates Indonesian phone number format (starts with +62, 62, or 0, followed by 8-13 digits)
+
+2. **SSRF protection** (`src/app/api/admin/upload-url/route.ts`):
+   - Added hostname check before `fetch(data.url)` call
+   - Blocks: localhost, 127.0.0.1, 10.x, 172.x, 192.168.x, 169.254.x, 0.0.0.0, *.internal, *.local
+   - Prevents access to internal/private IPs and cloud metadata endpoints
+
+3. **Cloudinary folder allowlist** (`src/lib/validations.ts`):
+   - Changed `uploadUrlSchema.folder` from `z.string().optional().default(...)` to `z.enum(['grosirpj/products', 'grosirpj/banners']).optional().default('grosirpj/products')`
+   - Prevents arbitrary folder paths in Cloudinary uploads
+
+4. **Transaction safety** (`src/app/api/orders/route.ts`):
+   - Wrapped order creation + stock deduction in `db.$transaction()`
+   - Changed `db.product.update()` to `tx.product.updateMany()` with `where: { id, stock: { gte: quantity } }` condition
+   - Throws error if stock is insufficient (count === 0), causing transaction rollback
+   - Prevents race conditions and negative stock
+
+5. **Security headers** (`src/middleware.ts`):
+   - Added `addSecurityHeaders()` helper function that sets: X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin, X-XSS-Protection: 1; mode=block
+   - Applied to all middleware response paths: NextResponse.next(), rate-limited 429 responses, 401 responses, and redirects
+   - Every response passing through middleware now includes security headers
+
+- Ran `bun run lint` → 0 errors
+- Dev server running normally
+
+Stage Summary:
+- 4 files modified: validations.ts, upload-url/route.ts, orders/route.ts, middleware.ts
+- Phone numbers validated against Indonesian format regex
+- SSRF attacks blocked at upload-url endpoint
+- Cloudinary folder restricted to allowlist
+- Order creation is now atomic (transaction) with stock overflow protection
+- Security headers applied to all responses via middleware
+---
+Task ID: S13-S14
+Agent: accessibility-agent
+Task: Fix <img> tags → Next.js Image component + Add aria-labels and form accessibility
+
+Work Log:
+1. **Header logo** (`src/components/layout/Header.tsx`):
+   - Added `import Image from 'next/image'`
+   - Replaced `<img>` (desktop logo, ~line 125) with `<Image src="/logo.png" alt="GrosirPJ" width={40} height={40} priority />`
+   - Replaced `<img>` (mobile menu logo, ~line 275) with `<Image src="/logo.png" alt="GrosirPJ" width={40} height={40} priority />`
+
+2. **Footer logo** (`src/components/layout/Footer.tsx`):
+   - Added `import Image from 'next/image'`
+   - Replaced `<img>` (~line 26) with `<Image src="/logo.png" alt="GrosirPJ" width={40} height={40} priority />`
+
+3. **HeroSection banners** (`src/components/home/HeroSection.tsx`):
+   - Added `import Image from 'next/image'`
+   - Replaced `<img>` tags (~line 167-170) with `<Image>` using `fill` prop + `object-cover` className
+   - Added `sizes="(max-width: 768px) 100vw, 50vw"` for responsive loading
+   - Added `priority={idx === currentSlide}` for active banner
+   - Added `unoptimized={img.src.startsWith('http')}` for Cloudinary URLs
+
+4. **Hero search aria-label** (`src/components/home/HeroSection.tsx`):
+   - Added `aria-label="Cari produk"` to the search input (~line 123)
+
+5. **Category page search aria-label** (`src/app/[categorySlug]/CategoryPageClient.tsx`):
+   - Added `aria-label="Cari di kategori ini"` to the search input (~line 103)
+
+6. **Search page aria-label** (`src/app/cari/SearchPageClient.tsx`):
+   - Added `aria-label="Cari produk"` to the search input (~line 112)
+
+7. **Cart checkout form labels** (`src/components/layout/Header.tsx`):
+   - Added `htmlFor` + `id` pairs to all 4 form labels/inputs:
+     - `htmlFor="cust-name"` / `id="cust-name"` (Nama Lengkap)
+     - `htmlFor="cust-phone"` / `id="cust-phone"` (No. WhatsApp)
+     - `htmlFor="cust-addr"` / `id="cust-addr"` (Alamat Pengiriman)
+     - `htmlFor="cust-note"` / `id="cust-note"` (Catatan)
+
+- Ran `bun run lint` → 0 errors
+- Dev server running normally
+
+Stage Summary:
+- 5 files modified: Header.tsx, Footer.tsx, HeroSection.tsx, CategoryPageClient.tsx, SearchPageClient.tsx
+- All raw `<img>` tags replaced with Next.js `<Image>` component (3 components, 4 img tags total)
+- Banner images use `fill` + `unoptimized` for Cloudinary URLs
+- 3 search inputs now have `aria-label` attributes for screen readers
+- 4 checkout form labels now properly linked to inputs via `htmlFor`/`id`
+- Zero lint errors, dev server healthy
+---
+Task ID: S11-S12
+Agent: loading-and-console-agent
+Task: Add loading.tsx for key storefront routes + Guard console.log statements for production
+
+Work Log:
+
+### Task 1: Loading skeletons for storefront routes
+- Created `src/app/loading.tsx` — Home page loading skeleton with hero banner, category grid (6 items), and product grid (8 items)
+- Created `src/app/[categorySlug]/loading.tsx` — Category page loading skeleton with breadcrumb, title, and product grid (8 items)
+- Created `src/app/[categorySlug]/[productSlug]/loading.tsx` — Product detail loading skeleton with breadcrumb, image + info grid layout
+- Created `src/app/cari/loading.tsx` — Search page loading skeleton with title, search bar, and product grid (8 items)
+
+### Task 2: Guard console statements for production
+- **PWARegistrar.tsx**: Wrapped 3 debug console statements with `if (process.env.NODE_ENV === 'development')`:
+  - `console.log('SW registered:', ...)` (line 38)
+  - `console.warn('SW registration failed (non-critical):', ...)` (line 48)
+  - `console.log('Install prompt outcome:', ...)` (line 73)
+- **Header.tsx**: Wrapped client-side `console.error('Order error:', err)` with `if (process.env.NODE_ENV === 'development')`
+- **API routes** (17 files): Removed error objects from all `console.error()` statements in catch blocks, keeping only the message string:
+  - `src/app/api/ongkir/cost/route.ts` (2 statements)
+  - `src/app/api/ongkir/cities/route.ts` (2 statements)
+  - `src/app/api/categories/route.ts` (1 statement)
+  - `src/app/api/products/route.ts` (1 statement)
+  - `src/app/api/products/detail/route.ts` (1 statement)
+  - `src/app/api/banners/route.ts` (1 statement)
+  - `src/app/api/search/route.ts` (1 statement)
+  - `src/app/api/orders/route.ts` (1 statement)
+  - `src/app/api/orders/[orderNumber]/route.ts` (1 statement)
+  - `src/app/api/sitemap.ts` (1 statement)
+  - `src/app/api/admin/upload/route.ts` (1 statement)
+  - `src/app/api/admin/upload-url/route.ts` (1 statement)
+  - `src/app/api/admin/banners/route.ts` (3 statements)
+  - `src/app/api/admin/banners/[id]/route.ts` (3 statements)
+  - `src/app/api/admin/categories/route.ts` (2 statements)
+  - `src/app/api/admin/categories/[id]/route.ts` (3 statements)
+  - `src/app/api/admin/products/route.ts` (2 statements)
+  - `src/app/api/admin/products/[id]/route.ts` (3 statements)
+  - `src/app/api/admin/orders/route.ts` (2 statements)
+  - `src/app/api/admin/orders/[id]/route.ts` (3 statements)
+  - `src/app/api/admin/dashboard/route.ts` (1 statement)
+- **db.ts**: Removed error objects from 2 critical startup console.error statements
+- **auth.ts**: NEXTAUTH_SECRET warning left as-is (already conditional on production)
+- Ran `bun run lint` → 0 errors
+- Dev server running normally
+
+Stage Summary:
+- 4 new loading.tsx files created for storefront routes (home, category, product detail, search)
+- 3 PWA debug console statements guarded with NODE_ENV check
+- 1 client-side console.error guarded with NODE_ENV check
+- 38 API route console.error statements cleaned (error objects removed, messages retained)
+- 2 db.ts console.error statements cleaned (error objects removed)
+- NEXTAUTH_SECRET warning preserved (already production-conditional)
+- Total: 44 console statements handled across 22 files
+- Zero lint errors, dev server healthy

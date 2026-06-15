@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, updateCategorySchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 // GET - Single category
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const category = await db.category.findUnique({
@@ -21,7 +25,7 @@ export async function GET(
 
     return NextResponse.json({ category })
   } catch (error) {
-    console.error('Get category error:', error)
+    console.error('Get category error:')
     return NextResponse.json({ error: 'Failed to fetch category' }, { status: 500 })
   }
 }
@@ -31,6 +35,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const data = await validateBody(request, updateCategorySchema)
@@ -66,7 +73,7 @@ export async function PUT(
 
     return NextResponse.json({ category })
   } catch (error) {
-    console.error('Update category error:', error)
+    console.error('Update category error:')
     return NextResponse.json({ error: 'Failed to update category' }, { status: 500 })
   }
 }
@@ -76,6 +83,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
 
@@ -92,7 +102,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete category error:', error)
+    console.error('Delete category error:')
     return NextResponse.json({ error: 'Failed to delete category' }, { status: 500 })
   }
 }

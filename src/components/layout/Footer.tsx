@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, MapPin, Clock, Phone } from 'lucide-react';
 import { WA_NUMBER, getWhatsAppLink } from '@/lib/store-config';
 import { type Category } from '@/types';
@@ -23,7 +24,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2.5 mb-4">
-              <img src="/logo.png" alt="GrosirPJ Logo" className="h-10 w-10 rounded-lg object-contain" />
+              <Image src="/logo.png" alt="GrosirPJ" width={40} height={40} className="h-10 w-10 rounded-lg object-contain" priority />
               <div>
                 <h3 className="text-lg font-bold text-white">GrosirPJ</h3>
                 <p className="text-[11px] text-emerald-400 font-medium">Harga OK Kualitas OK</p>

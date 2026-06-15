@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    console.error('Error searching:', error);
+    console.error('Error searching:');
     return NextResponse.json({ suggestions: [] });
   }
 }

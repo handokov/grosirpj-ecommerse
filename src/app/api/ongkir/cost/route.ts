@@ -75,14 +75,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ results: [], error: data.message || 'Failed to get shipping costs' })
     } catch (fetchError) {
-      console.error('CekOngkir cost fetch error:', fetchError)
+      console.error('CekOngkir cost fetch error:')
       return NextResponse.json(
         { error: 'CekOngkir API is not reachable. Make sure the CekOngkir app is running.', results: [] },
         { status: 200 }
       )
     }
   } catch (error) {
-    console.error('Ongkir cost error:', error)
+    console.error('Ongkir cost error:')
     return NextResponse.json({ error: 'Failed to calculate shipping cost', results: [] }, { status: 500 })
   }
 }

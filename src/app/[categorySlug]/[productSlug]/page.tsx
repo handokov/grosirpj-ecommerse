@@ -91,19 +91,21 @@ export default async function ProductPage({ params }: Props) {
     '@type': 'Product',
     name: product.name,
     description: product.description,
-    image: product.images,
+    image: product.images ? product.images.split(',').map((url: string) => url.trim()).filter(Boolean) : [],
     sku: product.id,
     brand: {
       '@type': 'Brand',
       name: STORE_NAME,
     },
     offers: {
-      '@type': 'AggregateOffer',
+      '@type': 'Offer',
       priceCurrency: 'IDR',
-      lowPrice: product.wholesalePrice,
-      highPrice: product.price,
-      offerCount: 1,
+      price: product.wholesalePrice,
       availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: {
+        '@type': 'Organization',
+        name: STORE_NAME,
+      },
     },
     aggregateRating: {
       '@type': 'AggregateRating',

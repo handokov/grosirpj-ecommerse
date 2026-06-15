@@ -35,7 +35,7 @@ export default function PWARegistrar() {
     navigator.serviceWorker
       .register('/sw.js', { scope: '/' })
       .then((registration) => {
-        console.log('SW registered:', registration.scope);
+        if (process.env.NODE_ENV === 'development') console.log('SW registered:', registration.scope);
 
         // Check for updates periodically (every 30 minutes)
         const interval = setInterval(() => {
@@ -45,7 +45,7 @@ export default function PWARegistrar() {
         return () => clearInterval(interval);
       })
       .catch((error) => {
-        console.warn('SW registration failed (non-critical):', error);
+        if (process.env.NODE_ENV === 'development') console.warn('SW registration failed (non-critical):', error);
       });
 
     // Listen for the beforeinstallprompt event
@@ -70,7 +70,7 @@ export default function PWARegistrar() {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log('Install prompt outcome:', outcome);
+    if (process.env.NODE_ENV === 'development') console.log('Install prompt outcome:', outcome);
     setDeferredPrompt(null);
     setShowInstallPrompt(false);
   }, [deferredPrompt]);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, updateBannerSchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const banner = await db.banner.findUnique({ where: { id } })
@@ -17,7 +21,7 @@ export async function GET(
     }
     return NextResponse.json(banner)
   } catch (error) {
-    console.error('Error fetching banner:', error)
+    console.error('Error fetching banner:')
     return NextResponse.json({ error: 'Gagal mengambil data banner' }, { status: 500 })
   }
 }
@@ -27,6 +31,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const data = await validateBody(request, updateBannerSchema)
@@ -45,7 +52,7 @@ export async function PUT(
 
     return NextResponse.json(banner)
   } catch (error) {
-    console.error('Error updating banner:', error)
+    console.error('Error updating banner:')
     return NextResponse.json({ error: 'Gagal mengupdate banner' }, { status: 500 })
   }
 }
@@ -55,12 +62,15 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     await db.banner.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting banner:', error)
+    console.error('Error deleting banner:')
     return NextResponse.json({ error: 'Gagal menghapus banner' }, { status: 500 })
   }
 }

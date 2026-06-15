@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, createCategorySchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 // GET - List categories
 export async function GET() {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const categories = await db.category.findMany({
       include: {
@@ -15,13 +19,16 @@ export async function GET() {
 
     return NextResponse.json({ categories })
   } catch (error) {
-    console.error('Categories API error:', error)
+    console.error('Categories API error:')
     return NextResponse.json({ categories: [] })
   }
 }
 
 // POST - Create category
 export async function POST(request: NextRequest) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const data = await validateBody(request, createCategorySchema)
     if (data instanceof NextResponse) return data
@@ -50,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ category }, { status: 201 })
   } catch (error) {
-    console.error('Create category error:', error)
+    console.error('Create category error:')
     return NextResponse.json({ error: 'Failed to create category' }, { status: 500 })
   }
 }

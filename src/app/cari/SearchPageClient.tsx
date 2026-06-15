@@ -109,7 +109,7 @@ function SearchPageContent({ initialQuery }: Props) {
           <form onSubmit={handleSearch} className="flex-1 flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="text" placeholder="Cari baju anak, dress bayi..." value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} className="pl-10 rounded-xl" />
+              <Input type="text" placeholder="Cari baju anak, dress bayi..." value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} className="pl-10 rounded-xl" aria-label="Cari produk" />
             </div>
             <Button type="submit" variant="default" className="rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950">Cari</Button>
           </form>

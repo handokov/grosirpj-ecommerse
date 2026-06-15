@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, createOrderSchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 // GET - List orders with filters
 export async function GET(request: NextRequest) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -45,7 +49,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
-    console.error('Orders API error:', error)
+    console.error('Orders API error:')
     return NextResponse.json({ orders: [], total: 0, page: 1, totalPages: 0 })
   }
 }
@@ -92,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ order }, { status: 201 })
   } catch (error) {
-    console.error('Create order error:', error)
+    console.error('Create order error:')
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
   }
 }

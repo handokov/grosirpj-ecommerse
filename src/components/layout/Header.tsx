@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useStore, type Product } from '@/store/useStore';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
 import ShippingCalculator, { type SelectedShipping } from '@/components/shipping/ShippingCalculator';
 import { WA_NUMBER, BCA_REKENING, getWhatsAppLink } from '@/lib/store-config';
+import { toast } from 'sonner';
 
 export default function Header() {
   const {
@@ -121,10 +123,13 @@ export default function Header() {
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-              <img
+              <Image
                 src="/logo.png"
-                alt="GrosirPJ Logo"
+                alt="GrosirPJ"
+                width={40}
+                height={40}
                 className="h-10 w-10 rounded-lg object-contain group-hover:scale-105 transition-transform"
+                priority
               />
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-emerald-900 leading-tight">
@@ -271,7 +276,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
     <div className="flex flex-col h-full">
       <div className="p-4 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="GrosirPJ Logo" className="h-10 w-10 rounded-lg object-contain" />
+          <Image src="/logo.png" alt="GrosirPJ" width={40} height={40} className="h-10 w-10 rounded-lg object-contain" priority />
           <div>
             <h2 className="text-lg font-bold">GrosirPJ</h2>
             <p className="text-xs text-emerald-200">Harga OK Kualitas OK</p>
@@ -416,9 +421,8 @@ function CartDrawer() {
       setStep('invoice');
       clearCart();
     } catch (err) {
-      console.error('Order error:', err);
-      const errorMsg = err instanceof Error ? err.message : 'Gagal membuat pesanan. Coba lagi.';
-      alert(errorMsg);
+      if (process.env.NODE_ENV === 'development') console.error('Order error:', err);
+      toast.error('Gagal membuat pesanan', { description: 'Silakan coba lagi atau hubungi kami via WhatsApp.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -575,8 +579,9 @@ function CartDrawer() {
 
             {/* Customer data */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Nama Lengkap *</label>
+              <label htmlFor="cust-name" className="text-sm font-medium text-gray-700 mb-1 block">Nama Lengkap *</label>
               <Input
+                id="cust-name"
                 placeholder="Masukkan nama Anda"
                 value={custName}
                 onChange={(e) => setCustName(e.target.value)}
@@ -584,8 +589,9 @@ function CartDrawer() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">No. WhatsApp *</label>
+              <label htmlFor="cust-phone" className="text-sm font-medium text-gray-700 mb-1 block">No. WhatsApp *</label>
               <Input
+                id="cust-phone"
                 placeholder="08xxxxxxxxxx"
                 value={custPhone}
                 onChange={(e) => setCustPhone(e.target.value.replace(/[^0-9+]/g, ''))}
@@ -597,8 +603,9 @@ function CartDrawer() {
               )}
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Alamat Pengiriman</label>
+              <label htmlFor="cust-addr" className="text-sm font-medium text-gray-700 mb-1 block">Alamat Pengiriman</label>
               <Input
+                id="cust-addr"
                 placeholder="Alamat lengkap (opsional)"
                 value={custAddr}
                 onChange={(e) => setCustAddr(e.target.value)}
@@ -614,8 +621,9 @@ function CartDrawer() {
             />
 
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Catatan</label>
+              <label htmlFor="cust-note" className="text-sm font-medium text-gray-700 mb-1 block">Catatan</label>
               <Input
+                id="cust-note"
                 placeholder="Catatan pesanan (opsional)"
                 value={custNote}
                 onChange={(e) => setCustNote(e.target.value)}

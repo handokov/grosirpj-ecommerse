@@ -12,7 +12,7 @@ export async function GET(
     const { orderNumber } = await params
 
     // Validate order number format (GPJ-YYYYMMDD-XXXX)
-    if (!/^GPJ-\d{8}-\d{4}$/.test(orderNumber)) {
+    if (!/^GPJ-\d{8}-\d{4,6}[A-Z]?$/.test(orderNumber)) {
       return NextResponse.json({ error: 'Nomor order tidak valid' }, { status: 400 })
     }
 
@@ -57,7 +57,7 @@ export async function GET(
 
     return NextResponse.json({ order: safeOrder })
   } catch (error) {
-    console.error('Order lookup error:', error)
+    console.error('Order lookup error:')
     return NextResponse.json({ error: 'Failed to lookup order' }, { status: 500 })
   }
 }

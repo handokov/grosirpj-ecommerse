@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, createProductSchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 // GET - List products with filters
 export async function GET(request: NextRequest) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -47,13 +51,16 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
-    console.error('Products API error:', error)
+    console.error('Products API error:')
     return NextResponse.json({ products: [], total: 0, page: 1, totalPages: 0 })
   }
 }
 
 // POST - Create product
 export async function POST(request: NextRequest) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const data = await validateBody(request, createProductSchema)
     if (data instanceof NextResponse) return data
@@ -97,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
-    console.error('Create product error:', error)
+    console.error('Create product error:')
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }

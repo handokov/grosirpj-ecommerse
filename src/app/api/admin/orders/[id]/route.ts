@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, updateOrderSchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 // GET - Single order
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const order = await db.order.findUnique({
@@ -26,7 +30,7 @@ export async function GET(
 
     return NextResponse.json({ order })
   } catch (error) {
-    console.error('Get order error:', error)
+    console.error('Get order error:')
     return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 })
   }
 }
@@ -36,6 +40,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const data = await validateBody(request, updateOrderSchema)
@@ -64,7 +71,7 @@ export async function PUT(
 
     return NextResponse.json({ order })
   } catch (error) {
-    console.error('Update order error:', error)
+    console.error('Update order error:')
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
   }
 }
@@ -74,13 +81,16 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     await db.orderItem.deleteMany({ where: { orderId: id } })
     await db.order.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete order error:', error)
+    console.error('Delete order error:')
     return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 })
   }
 }

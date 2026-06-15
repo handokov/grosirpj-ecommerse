@@ -109,7 +109,7 @@ export const updateOrderSchema = z.object({
 
 export const createOrderSchema = z.object({
   customerName: z.string().min(1, 'Nama pelanggan wajib diisi'),
-  customerPhone: z.string().min(1, 'No. telepon wajib diisi'),
+  customerPhone: z.string().min(1, 'No. telepon wajib diisi').regex(/^(\+62|62|0)[0-9]{8,13}$/, 'Format nomor telepon tidak valid'),
   customerEmail: z.string().email().optional().default(''),
   customerAddr: z.string().optional().default(''),
   paymentMethod: paymentMethodEnum.optional().default('whatsapp'),
@@ -127,7 +127,7 @@ export const createOrderSchema = z.object({
 // Price is calculated server-side from the database to prevent manipulation.
 export const publicCreateOrderSchema = z.object({
   customerName: z.string().min(1, 'Nama pelanggan wajib diisi').max(200),
-  customerPhone: z.string().min(1, 'No. telepon wajib diisi').max(50),
+  customerPhone: z.string().min(1, 'No. telepon wajib diisi').max(50).regex(/^(\+62|62|0)[0-9]{8,13}$/, 'Format nomor telepon tidak valid'),
   customerEmail: z.string().email().optional().default(''),
   customerAddr: z.string().max(500).optional().default(''),
   note: z.string().max(1000).optional().default(''),
@@ -172,5 +172,5 @@ export const bulkUpdateBannerSchema = z.object({
 
 export const uploadUrlSchema = z.object({
   url: z.string().url('URL tidak valid'),
-  folder: z.string().optional().default('grosirpj/products'),
+  folder: z.enum(['grosirpj/products', 'grosirpj/banners']).optional().default('grosirpj/products'),
 })

@@ -90,7 +90,7 @@ export async function GET(request: Request) {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error('Error fetching products:');
     // Return empty data instead of 500 to prevent frontend crash
     return NextResponse.json({
       products: [],

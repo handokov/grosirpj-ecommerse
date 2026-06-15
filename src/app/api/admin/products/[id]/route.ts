@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, updateProductSchema } from '@/lib/validations'
+import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 // GET - Single product
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const product = await db.product.findUnique({
@@ -21,7 +25,7 @@ export async function GET(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Get product error:', error)
+    console.error('Get product error:')
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
   }
 }
@@ -31,6 +35,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
     const data = await validateBody(request, updateProductSchema)
@@ -77,7 +84,7 @@ export async function PUT(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Update product error:', error)
+    console.error('Update product error:')
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
 }
@@ -87,6 +94,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireAuth()
+  if (isAuthError(session)) return session
+
   try {
     const { id } = await params
 
@@ -101,7 +111,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete product error:', error)
+    console.error('Delete product error:')
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }

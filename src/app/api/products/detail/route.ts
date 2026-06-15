@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       categorySlug: category.slug,
     });
   } catch (error) {
-    console.error('Error fetching product detail:', error);
+    console.error('Error fetching product detail:');
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
   }
 }

@@ -41,6 +41,14 @@ function getClientIp(request: NextRequest): string {
   )
 }
 
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  return response
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -48,10 +56,10 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/auth') && pathname.includes('callback')) {
     const ip = getClientIp(request)
     if (!checkRateLimit(ip, 60_000, 5)) {
-      return NextResponse.json(
+      return addSecurityHeaders(NextResponse.json(
         { error: 'Terlalu banyak percobaan login. Coba lagi dalam 1 menit.' },
         { status: 429, headers: { 'Retry-After': '60' } }
-      )
+      ))
     }
   }
 
@@ -59,10 +67,10 @@ export function middleware(request: NextRequest) {
   if (pathname === '/api/orders' && request.method === 'POST') {
     const ip = getClientIp(request)
     if (!checkRateLimit(ip, 60_000, 3)) {
-      return NextResponse.json(
+      return addSecurityHeaders(NextResponse.json(
         { error: 'Terlalu banyak order dibuat. Coba lagi dalam 1 menit.' },
         { status: 429, headers: { 'Retry-After': '60' } }
-      )
+      ))
     }
   }
 
@@ -70,10 +78,10 @@ export function middleware(request: NextRequest) {
   if (pathname.match(/^\/api\/orders\/GPJ-/) && request.method === 'GET') {
     const ip = getClientIp(request)
     if (!checkRateLimit(ip, 60_000, 10)) {
-      return NextResponse.json(
+      return addSecurityHeaders(NextResponse.json(
         { error: 'Terlalu banyak request. Coba lagi dalam 1 menit.' },
         { status: 429, headers: { 'Retry-After': '60' } }
-      )
+      ))
     }
   }
 
@@ -82,10 +90,10 @@ export function middleware(request: NextRequest) {
     const ip = getClientIp(request)
     const limit = pathname.includes('/cost') ? 10 : 20
     if (!checkRateLimit(ip, 60_000, limit)) {
-      return NextResponse.json(
+      return addSecurityHeaders(NextResponse.json(
         { error: 'Terlalu banyak request ongkir. Coba lagi dalam 1 menit.' },
         { status: 429, headers: { 'Retry-After': '60' } }
-      )
+      ))
     }
   }
 
@@ -93,21 +101,21 @@ export function middleware(request: NextRequest) {
   if (pathname === '/api/search') {
     const ip = getClientIp(request)
     if (!checkRateLimit(ip, 60_000, 20)) {
-      return NextResponse.json(
+      return addSecurityHeaders(NextResponse.json(
         { error: 'Terlalu banyak pencarian. Coba lagi dalam 1 menit.' },
         { status: 429, headers: { 'Retry-After': '60' } }
-      )
+      ))
     }
   }
 
   // Skip middleware for non-admin routes
   if (!pathname.startsWith('/admin') && !pathname.startsWith('/api/admin')) {
-    return NextResponse.next()
+    return addSecurityHeaders(NextResponse.next())
   }
 
   // Allow public admin paths
   if (publicPaths.some(path => pathname.startsWith(path))) {
-    return NextResponse.next()
+    return addSecurityHeaders(NextResponse.next())
   }
 
   // Allow static files and Next.js internals
@@ -117,7 +125,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/images') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next()
+    return addSecurityHeaders(NextResponse.next())
   }
 
   // Check for session token
@@ -128,15 +136,15 @@ export function middleware(request: NextRequest) {
   if (!sessionToken) {
     // API routes return 401
     if (pathname.startsWith('/api/admin')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return addSecurityHeaders(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
     }
     // Page routes redirect to login
     const loginUrl = new URL('/admin/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
-    return NextResponse.redirect(loginUrl)
+    return addSecurityHeaders(NextResponse.redirect(loginUrl))
   }
 
-  return NextResponse.next()
+  return addSecurityHeaders(NextResponse.next())
 }
 
 // Expand matcher to include public API routes that need rate limiting

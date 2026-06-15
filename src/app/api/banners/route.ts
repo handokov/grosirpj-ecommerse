@@ -19,7 +19,7 @@ export async function GET() {
     })
     return NextResponse.json(banners)
   } catch (error) {
-    console.error('Error fetching public banners:', error)
+    console.error('Error fetching public banners:')
     return NextResponse.json([])
   }
 }

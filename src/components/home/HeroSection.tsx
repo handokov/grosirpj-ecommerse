@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Truck, Shield, Headphones, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // Fallback images if no banners in database
 const FALLBACK_IMAGES = [
@@ -126,6 +127,7 @@ export default function HeroSection() {
                   value={searchVal}
                   onChange={(e) => setSearchVal(e.target.value)}
                   className="w-full pl-11 pr-4 py-3.5 rounded-xl text-gray-900 bg-white shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm"
+                  aria-label="Cari produk"
                 />
               </div>
               <Button type="submit" className="bg-amber-500 hover:bg-amber-500 text-gray-900 px-6 rounded-xl font-semibold shadow-lg h-auto">
@@ -164,10 +166,14 @@ export default function HeroSection() {
                           : 'opacity-0 scale-105'
                       }`}
                     >
-                      <img
+                      <Image
                         src={img.src}
                         alt={img.alt}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        priority={idx === currentSlide}
+                        unoptimized={img.src.startsWith('http')}
                       />
                     </div>
                   );

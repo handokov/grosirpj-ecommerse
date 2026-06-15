@@ -34,7 +34,7 @@ async function getCities(): Promise<City[]> {
 
     return []
   } catch (error) {
-    console.error('CekOngkir cities error:', error)
+    console.error('CekOngkir cities error:')
     return []
   }
 }
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ cities: results })
   } catch (error) {
-    console.error('Cities search error:', error)
+    console.error('Cities search error:')
     return NextResponse.json({ cities: [], error: 'Failed to search cities' }, { status: 500 })
   }
 }

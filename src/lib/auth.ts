@@ -70,3 +70,8 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 }
+
+// Warn if NEXTAUTH_SECRET is not set (critical in production)
+if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_SECRET) {
+  console.error('⚠️ CRITICAL: NEXTAUTH_SECRET is not set! JWT tokens can be forged.')
+}

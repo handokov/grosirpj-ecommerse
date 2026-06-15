@@ -135,16 +135,16 @@ export default function HeroSection() {
 
             <div className="flex flex-wrap gap-6 mt-8">
               <div>
-                <p className="text-2xl font-bold text-amber-400">100K</p>
-                <p className="text-xs text-emerald-200">Produk Fashion</p>
+                <p className="text-2xl font-bold text-amber-400">Grosir</p>
+                <p className="text-xs text-emerald-200">Harga Terjangkau</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-amber-400">30K+</p>
-                <p className="text-xs text-emerald-200">Reseller Aktif</p>
+                <p className="text-2xl font-bold text-amber-400">100%</p>
+                <p className="text-xs text-emerald-200">Baru & Berkualitas</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-amber-400">99%</p>
-                <p className="text-xs text-emerald-200">Puas & Repeat Order</p>
+                <p className="text-2xl font-bold text-amber-400">COD</p>
+                <p className="text-xs text-emerald-200">Tersedia</p>
               </div>
             </div>
           </div>

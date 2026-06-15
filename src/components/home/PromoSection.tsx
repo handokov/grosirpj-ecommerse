@@ -28,7 +28,7 @@ export default function PromoSection() {
               <p className="text-emerald-100 text-sm mb-4">Diskon hingga 30% untuk semua koleksi baju bayi dan balita. Berlaku untuk pembelian minimal 12 pcs.</p>
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="h-4 w-4 text-amber-400" />
-                <span className="text-sm text-amber-400 font-medium">Berakhir dalam 3 hari</span>
+                <span className="text-sm text-amber-400 font-medium">Promo terbatas!</span>
               </div>
               <Link href="/cari">
                 <Button className="bg-white text-emerald-800 hover:bg-amber-500 hover:text-gray-900 font-semibold rounded-xl">

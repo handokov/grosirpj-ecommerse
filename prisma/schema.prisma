@@ -42,6 +42,7 @@ model Product {
   supplierName  String?   // Nama supplier/toko supplier
   supplierLink  String?   // Link alamat toko supplier (Shopee, Tokopedia, dll)
   supplierPhone String?  // No telp/WhatsApp supplier
+  deletedAt   DateTime?   // Soft delete: null = active, set date = deleted
   cartItems   CartItem[]
   orderItems  OrderItem[]
   createdAt   DateTime  @default(now())

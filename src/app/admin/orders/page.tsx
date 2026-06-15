@@ -283,7 +283,35 @@ function OrdersContent() {
             Kelola pesanan masuk toko Anda
           </p>
         </div>
-        <Button variant="outline" size="sm" className="text-xs gap-1.5 border-gray-200 w-fit">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs gap-1.5 border-gray-200 w-fit"
+          onClick={() => {
+            // Export orders as CSV
+            const params = new URLSearchParams({ status, search, limit: '1000' })
+            fetch(`/api/admin/orders?${params}`)
+              .then(r => r.json())
+              .then(data => {
+                const orders = data.orders as Order[]
+                if (!orders.length) { toast.error('Tidak ada pesanan untuk diexport'); return }
+                const header = 'No Pesanan,Nama,No HP,Total,Status,Pembayaran,Tanggal'
+                const rows = orders.map((o: Order) =>
+                  `${o.orderNumber},${o.customerName},${o.customerPhone},${o.totalAmount},${o.status},${o.paymentStatus},${new Date(o.createdAt).toLocaleDateString('id-ID')}`
+                )
+                const csv = [header, ...rows].join('\n')
+                const blob = new Blob([csv], { type: 'text/csv' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `pesanan-grosirpj-${new Date().toISOString().slice(0, 10)}.csv`
+                a.click()
+                URL.revokeObjectURL(url)
+                toast.success(`${orders.length} pesanan berhasil diexport`)
+              })
+              .catch(() => toast.error('Gagal mengexport pesanan'))
+          }}
+        >
           <Download className="h-3.5 w-3.5" />
           Export Pesanan
         </Button>

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       include: { category: { select: { name: true, slug: true } } },
     });
 
-    if (!product) {
+    if (!product || product.deletedAt) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 

@@ -16,8 +16,12 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const categoryId = searchParams.get('categoryId') || ''
     const featured = searchParams.get('featured')
+    const showDeleted = searchParams.get('showDeleted') === 'true'
 
     const where: Record<string, unknown> = {}
+    
+    // By default, exclude soft-deleted products (unless explicitly requested)
+    if (!showDeleted) where.deletedAt = null
     
     if (search) {
       where.OR = [

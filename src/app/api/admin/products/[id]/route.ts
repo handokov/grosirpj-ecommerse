@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { deleteImage } from '@/lib/cloudinary'
 import { requireAuth, isAuthError } from '@/lib/auth-guard'
 import { updateProductSchema } from '@/lib/validations'
 
@@ -117,27 +116,14 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    // Delete related cart items first
+    // Soft delete: set deletedAt timestamp instead of hard deleting
+    // This preserves order history (OrderItems stay intact)
     await db.cartItem.deleteMany({ where: { productId: id } })
-    await db.orderItem.deleteMany({ where: { productId: id } })
 
-    const product = await db.product.delete({ where: { id } })
-
-    // Try to delete Cloudinary images
-    if (product.images) {
-      try {
-        const publicIds = product.images.split(',').map(img => {
-          const match = img.match(/grosirpj\/[^.]+/)
-          return match ? match[0] : null
-        }).filter(Boolean) as string[]
-
-        for (const publicId of publicIds) {
-          await deleteImage(publicId)
-        }
-      } catch {
-        // Image deletion failure shouldn't block product deletion
-      }
-    }
+    await db.product.update({
+      where: { id },
+      data: { deletedAt: new Date(), stock: 0, featured: false },
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

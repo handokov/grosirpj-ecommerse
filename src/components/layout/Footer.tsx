@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Mail, MapPin, Clock, Facebook, Instagram, Youtube } from 'lucide-react';
+import { Mail, MapPin, Clock, Phone } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -37,9 +37,7 @@ export default function Footer() {
               Pusat grosir baju anak terpercaya di Indonesia. Fashion bayi, balita, dan anak-anak dengan harga grosir termurah. Melayani sejak 2015.
             </p>
             <div className="flex gap-3">
-              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Facebook className="h-4 w-4" /></a>
-              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Instagram className="h-4 w-4" /></a>
-              <a href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Youtube className="h-4 w-4" /></a>
+              <a href="https://wa.me/6281281756262" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-emerald-800 transition-colors"><Phone className="h-4 w-4" /></a>
             </div>
           </div>
 
@@ -59,11 +57,21 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Informasi</h4>
             <ul className="space-y-2">
-              {['Tentang Kami', 'Cara Pemesanan', 'Ukuran Baju Anak', 'Kebijakan Pengembalian', 'Syarat & Ketentuan', 'FAQ'].map((item) => (
-                <li key={item}>
-                  <button className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">{item}</button>
-                </li>
-              ))}
+              <li>
+                <a href="https://wa.me/6281281756262?text=Halo%20GrosirPJ%2C%20saya%20ingin%20bertanya%20tentang%20cara%20pemesanan" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Cara Pemesanan</a>
+              </li>
+              <li>
+                <a href="https://wa.me/6281281756262?text=Halo%20GrosirPJ%2C%20saya%20ingin%20bertanya%20tentang%20ukuran%20baju%20anak" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Ukuran Baju Anak</a>
+              </li>
+              <li>
+                <a href="https://wa.me/6281281756262?text=Halo%20GrosirPJ%2C%20saya%20ingin%20bertanya%20tentang%20kebijakan%20pengembalian" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Kebijakan Pengembalian</a>
+              </li>
+              <li>
+                <a href="https://wa.me/6281281756262?text=Halo%20GrosirPJ%2C%20saya%20ingin%20bertanya%20tentang%20syarat%20ketentuan" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Syarat & Ketentuan</a>
+              </li>
+              <li>
+                <a href="https://wa.me/6281281756262?text=Halo%20GrosirPJ%2C%20saya%20ingin%20bertanya%20tentang%20FAQ" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">FAQ</a>
+              </li>
             </ul>
           </div>
 

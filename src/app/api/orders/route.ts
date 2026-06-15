@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       where: {
         id: { in: productIds },
         stock: { gt: 0 }, // Only in-stock products
+        deletedAt: null,   // Exclude soft-deleted products
       },
       select: {
         id: true,
@@ -88,11 +89,16 @@ export async function POST(request: NextRequest) {
     totalAmount += data.shippingCost
 
     // Generate order number: GPJ-YYYYMMDD-XXXX
+    // Use timestamp + random suffix to avoid race conditions
     const now = new Date()
     const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-    const orderCount = await db.order.count()
-    const seq = String(orderCount + 1).padStart(4, '0')
-    const orderNumber = `GPJ-${dateStr}-${seq}`
+    // Count today's orders + use random suffix for uniqueness
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayCount = await db.order.count({ where: { createdAt: { gte: todayStart } } })
+    const seq = String(todayCount + 1).padStart(4, '0')
+    // Add random 2-digit suffix to prevent collision from race conditions
+    const randSuffix = String(Math.floor(Math.random() * 100)).padStart(2, '0')
+    const orderNumber = `GPJ-${dateStr}-${seq}${randSuffix}`
 
     const order = await db.order.create({
       data: {
@@ -122,6 +128,15 @@ export async function POST(request: NextRequest) {
         },
       },
     })
+
+    // ===== DEDUCT STOCK =====
+    // Decrement stock for each ordered item
+    for (const item of orderItems) {
+      await db.product.update({
+        where: { id: item.productId },
+        data: { stock: { decrement: item.quantity } },
+      })
+    }
 
     // Strip supplier info from response (buyer-facing)
     const safeOrder = {

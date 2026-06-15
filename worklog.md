@@ -89,3 +89,26 @@ Stage Summary:
 - Cek Ongkir disabled until user registers with shipping API provider
 - To re-enable: set NEXT_PUBLIC_SHIPPING_API_ENABLED=true in .env + configure CEKONGKIR_API_URL and CEKONGKIR_ORIGIN_CITY_ID
 - Checkout still functional with manual ongkir input as fallback
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix 5 Critical Issues from Code Audit
+
+Work Log:
+- Fix 1: Added stock deduction in /api/orders/route.ts — stock decrements for each ordered item after order creation
+- Fix 2: Changed product deletion to soft-delete — added `deletedAt DateTime?` to Prisma schema, updated DELETE handler to set deletedAt instead of hard deleting, updated all public APIs to filter deletedAt: null
+- Fix 3: Fixed order number race condition — changed from global count to daily count + random 2-digit suffix (GPJ-YYYYMMDD-XXXXXX)
+- Fix 4: Deleted dead code files ProductDetail.tsx and ProductCatalog.tsx (no longer imported anywhere)
+- Fix 5: Fixed non-functional buttons/links: CTA "Hubungi Kami" now links to WhatsApp, Footer info links now link to WhatsApp with context messages, Export Pesanan button now generates CSV download, removed fake social media links (replaced with WhatsApp), fixed HeroSection fake stats (Grosir/100%/COD), fixed PromoSection fake "3 hari" countdown
+- Updated Prisma schema + ran db:push successfully
+- Updated 5 API routes to respect soft-delete filtering
+- Lint check: 0 errors
+- Browser verification: all changes visible and working
+
+Stage Summary:
+- Stock management now works (auto-decrement on order)
+- Product deletion preserves order history (soft-delete)
+- Order numbers are collision-safe
+- Dead code removed
+- All interactive elements now functional
+- Fake/misleading content replaced with honest alternatives

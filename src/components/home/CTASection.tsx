@@ -25,9 +25,15 @@ export default function CTASection() {
                   Mulai Belanja <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
               </Link>
-              <Button className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold h-12 px-8 rounded-xl text-base">
-                <Phone className="h-5 w-5 mr-2" /> Hubungi Kami
-              </Button>
+              <a
+                href="https://wa.me/6281281756262?text=Halo%20GrosirPJ%2C%20saya%20tertarik%20untuk%20menjadi%20reseller"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold h-12 px-8 rounded-xl text-base">
+                  <Phone className="h-5 w-5 mr-2" /> Hubungi Kami
+                </Button>
+              </a>
             </div>
           </div>
         </div>

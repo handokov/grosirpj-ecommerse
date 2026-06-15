@@ -1,12 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 export async function GET() {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     // Get total products
     const totalProducts = await db.product.count({ where: { deletedAt: null } })

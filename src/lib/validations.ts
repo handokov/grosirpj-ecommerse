@@ -1,4 +1,39 @@
-import { z } from 'zod'
+import { z, type ZodSchema } from 'zod'
+import { NextRequest, NextResponse } from 'next/server'
+
+/**
+ * Validate a request body against a Zod schema.
+ * Returns the parsed data on success, or a 400 NextResponse on failure.
+ *
+ * Usage:
+ * ```ts
+ * const data = await validateBody(request, schema)
+ * if (data instanceof NextResponse) return data // validation failed
+ * // data is now typed as schema output
+ * ```
+ */
+export async function validateBody<T>(
+  request: NextRequest,
+  schema: ZodSchema<T>
+): Promise<T | NextResponse> {
+  const body = await request.json()
+  const result = schema.safeParse(body)
+  if (!result.success) {
+    return NextResponse.json(
+      { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
+      { status: 400 }
+    )
+  }
+  return result.data
+}
+
+/**
+ * Format Zod error issues into a flat string array.
+ * Useful for logging or returning in error responses.
+ */
+export function formatZodError(error: z.ZodError): string[] {
+  return error.issues.map(i => `${i.path.join('.')}: ${i.message}`)
+}
 
 // ===== PRODUCT SCHEMAS =====
 

@@ -14,6 +14,7 @@ import {
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import { toast } from 'sonner';
 import ProductImage, { getAllImageUrls, getOptimizedImageUrl } from '@/components/ui/product-image';
+import { ProductCard } from '@/components/shared/ProductCard';
 
 interface Props {
   product: Product;
@@ -319,26 +320,14 @@ export default function ProductDetailClient({ product, related }: Props) {
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-4">Produk Serupa</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {related.map((rp) => {
-                const rDiscount = calculateDiscount(rp.price, rp.wholesalePrice);
-                const rpUrl = `/${rp.categorySlug || product.categorySlug}/${rp.slug}`;
-                return (
-                  <Link key={rp.id} href={rpUrl}>
-                    <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer h-full">
-                      <CardContent className="p-0">
-                        <div className="relative aspect-square overflow-hidden bg-gray-100">
-                          <ProductImage src={rp.images} alt={rp.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                          {rDiscount > 0 && <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{rDiscount}%</Badge>}
-                        </div>
-                        <div className="p-3">
-                          <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2">{rp.name}</h3>
-                          <span className="text-sm font-bold text-emerald-900">{formatRupiah(rp.wholesalePrice)}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
+              {related.map((rp) => (
+                <ProductCard
+                  key={rp.id}
+                  product={rp}
+                  fallbackCategorySlug={product.categorySlug}
+                  variant="compact"
+                />
+              ))}
             </div>
           </div>
         )}

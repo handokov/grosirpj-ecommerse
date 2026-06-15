@@ -20,3 +20,39 @@ export function getAllImageUrls(src: string | null | undefined): string[] {
   if (!src) return []
   return src.split(',').map(s => s.trim()).filter(Boolean)
 }
+
+/**
+ * Get optimized image URL
+ * - Cloudinary URLs get transformation parameters
+ * - Local paths stay as-is (Next.js Image handles optimization)
+ */
+export function getOptimizedImageUrl(
+  path: string,
+  options?: {
+    width?: number;
+    height?: number;
+    quality?: 'auto' | number;
+    format?: 'auto' | 'webp' | 'jpg' | 'png';
+  }
+): string {
+  // If already a full URL
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    // If it's a Cloudinary URL, add transformations
+    if (path.includes('res.cloudinary.com')) {
+      const transforms: string[] = [];
+      if (options?.width) transforms.push(`w_${options.width}`);
+      if (options?.height) transforms.push(`h_${options.height}`);
+      if (options?.quality) transforms.push(`q_${options.quality}`);
+      if (options?.format) transforms.push(`f_${options.format}`);
+      else transforms.push('f_auto');
+      transforms.push('c_limit');
+
+      const transformStr = transforms.join(',');
+      return path.replace('/image/upload/', `/image/upload/${transformStr}/`);
+    }
+    return path;
+  }
+
+  // Local path - just return as-is, Next.js Image will optimize
+  return path;
+}

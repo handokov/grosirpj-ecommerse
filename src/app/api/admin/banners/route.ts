@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
-import { createBannerSchema, bulkUpdateBannerSchema } from '@/lib/validations'
+import { validateBody, createBannerSchema, bulkUpdateBannerSchema } from '@/lib/validations'
 
 export const dynamic = 'force-dynamic'
 
 // GET all banners (admin)
 export async function GET() {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const banners = await db.banner.findMany({
       orderBy: { order: 'asc' },
@@ -24,22 +19,9 @@ export async function GET() {
 
 // POST create banner
 export async function POST(request: NextRequest) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
-    const body = await request.json()
-
-    // Validate input
-    const result = createBannerSchema.safeParse(body)
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
-        { status: 400 }
-      )
-    }
-    const data = result.data
+    const data = await validateBody(request, createBannerSchema)
+    if (data instanceof NextResponse) return data
 
     const banner = await db.banner.create({
       data: {
@@ -60,22 +42,9 @@ export async function POST(request: NextRequest) {
 
 // PUT update banner order (bulk)
 export async function PUT(request: NextRequest) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
-    const body = await request.json()
-
-    // Validate input
-    const result = bulkUpdateBannerSchema.safeParse(body)
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
-        { status: 400 }
-      )
-    }
-    const data = result.data
+    const data = await validateBody(request, bulkUpdateBannerSchema)
+    if (data instanceof NextResponse) return data
 
     for (const b of data.banners) {
       await db.banner.update({

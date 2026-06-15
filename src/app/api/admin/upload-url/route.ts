@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
-import { uploadUrlSchema } from '@/lib/validations'
+import { validateBody, uploadUrlSchema } from '@/lib/validations'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,22 +9,9 @@ export const dynamic = 'force-dynamic'
  * Used for importing images from external sources (e.g., Shopee).
  */
 export async function POST(request: NextRequest) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
-    const body = await request.json()
-
-    // Validate input
-    const result = uploadUrlSchema.safeParse(body)
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
-        { status: 400 }
-      )
-    }
-    const data = result.data
+    const data = await validateBody(request, uploadUrlSchema)
+    if (data instanceof NextResponse) return data
 
     // Only allow http/https
     const parsedUrl = new URL(data.url)

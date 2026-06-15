@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
-import { updateBannerSchema } from '@/lib/validations'
+import { validateBody, updateBannerSchema } from '@/lib/validations'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,10 +9,6 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const { id } = await params
     const banner = await db.banner.findUnique({ where: { id } })
@@ -32,23 +27,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const { id } = await params
-    const body = await request.json()
-
-    // Validate input
-    const result = updateBannerSchema.safeParse(body)
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
-        { status: 400 }
-      )
-    }
-    const data = result.data
+    const data = await validateBody(request, updateBannerSchema)
+    if (data instanceof NextResponse) return data
 
     const banner = await db.banner.update({
       where: { id },
@@ -73,10 +55,6 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const { id } = await params
     await db.banner.delete({ where: { id } })

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { getFirstImageUrl } from '@/lib/image-utils'
+import { useCategories } from '@/hooks/use-categories'
 import {
   Plus,
   Search,
@@ -56,12 +57,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-interface Category {
-  id: string
-  name: string
-  slug: string
-  _count: { products: number }
-}
+// Category type from useCategories hook
+type Category = ReturnType<typeof useCategories>['categories'][number]
 
 interface Product {
   id: string
@@ -99,8 +96,8 @@ interface ProductsResponse {
 type ProductTab = 'all' | 'active' | 'featured' | 'lowstock' | 'outofstock'
 
 export default function ProductsPage() {
+  const { categories } = useCategories()
   const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -135,21 +132,6 @@ export default function ProductsPage() {
       setLoading(false)
     }
   }, [page, search, categoryId])
-
-  const fetchCategories = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/categories')
-      if (!res.ok) throw new Error('Gagal memuat kategori')
-      const data = await res.json()
-      setCategories(data.categories)
-    } catch {
-      toast.error('Gagal memuat kategori')
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchCategories()
-  }, [fetchCategories])
 
   useEffect(() => {
     fetchProducts()

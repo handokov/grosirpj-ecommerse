@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
-import { updateOrderSchema } from '@/lib/validations'
+import { validateBody, updateOrderSchema } from '@/lib/validations'
 
 // GET - Single order
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const { id } = await params
     const order = await db.order.findUnique({
@@ -41,23 +36,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const { id } = await params
-    const body = await request.json()
-
-    // Validate input
-    const result = updateOrderSchema.safeParse(body)
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
-        { status: 400 }
-      )
-    }
-    const data = result.data
+    const data = await validateBody(request, updateOrderSchema)
+    if (data instanceof NextResponse) return data
 
     const updateData: Record<string, unknown> = {}
     if (data.status !== undefined) updateData.status = data.status
@@ -92,10 +74,6 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const { id } = await params
     await db.orderItem.deleteMany({ where: { orderId: id } })

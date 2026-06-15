@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { getFirstImageUrl, getAllImageUrls, getOptimizedImageUrl } from '@/lib/image-utils';
 
 interface ProductImageProps {
   src: string;
@@ -38,21 +39,6 @@ function ImagePlaceholder({ className = '' }: { className?: string }) {
       </div>
     </div>
   );
-}
-
-/**
- * Extract the first image URL from a comma-separated string of image URLs.
- * Database stores images as "url1,url2,url3" — we only use the first one.
- */
-function getFirstImageUrl(src: string): string {
-  if (!src) return '';
-  const trimmed = src.trim();
-  // If it contains commas, split and take the first URL
-  if (trimmed.includes(',')) {
-    const parts = trimmed.split(',').map(s => s.trim()).filter(Boolean);
-    return parts[0] || '';
-  }
-  return trimmed;
 }
 
 /**
@@ -113,47 +99,5 @@ export default function ProductImage({
   );
 }
 
-/**
- * Get optimized image URL
- * - Cloudinary URLs get transformation parameters
- * - Local paths stay as-is (Next.js Image handles optimization)
- */
-export function getOptimizedImageUrl(
-  path: string,
-  options?: {
-    width?: number;
-    height?: number;
-    quality?: 'auto' | number;
-    format?: 'auto' | 'webp' | 'jpg' | 'png';
-  }
-): string {
-  // If already a full URL
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    // If it's a Cloudinary URL, add transformations
-    if (path.includes('res.cloudinary.com')) {
-      const transforms: string[] = [];
-      if (options?.width) transforms.push(`w_${options.width}`);
-      if (options?.height) transforms.push(`h_${options.height}`);
-      if (options?.quality) transforms.push(`q_${options.quality}`);
-      if (options?.format) transforms.push(`f_${options.format}`);
-      else transforms.push('f_auto');
-      transforms.push('c_limit');
-
-      const transformStr = transforms.join(',');
-      return path.replace('/image/upload/', `/image/upload/${transformStr}/`);
-    }
-    return path;
-  }
-
-  // Local path - just return as-is, Next.js Image will optimize
-  return path;
-}
-
-/**
- * Get all image URLs from a comma-separated string.
- * Useful for image galleries.
- */
-export function getAllImageUrls(src: string): string[] {
-  if (!src) return [];
-  return src.split(',').map(s => s.trim()).filter(Boolean);
-}
+// Re-export image utilities for consumers who previously imported them from here
+export { getFirstImageUrl, getAllImageUrls, getOptimizedImageUrl } from '@/lib/image-utils';

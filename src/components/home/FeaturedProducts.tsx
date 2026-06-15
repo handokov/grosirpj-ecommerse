@@ -3,12 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { type Product } from '@/store/useStore';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, TrendingUp } from 'lucide-react';
-import { formatRupiah, calculateDiscount } from '@/lib/format';
-import ProductImage from '@/components/ui/product-image';
+import { TrendingUp } from 'lucide-react';
+import { ProductCard, ProductCardSkeletonGrid } from '@/components/shared/ProductCard';
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -40,56 +37,13 @@ export default function FeaturedProducts() {
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <div className="aspect-square bg-gray-200 animate-pulse" />
-                <CardContent className="p-3">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
-                </CardContent>
-              </Card>
-            ))}
+            <ProductCardSkeletonGrid count={8} />
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product) => {
-              const discount = calculateDiscount(product.price, product.wholesalePrice);
-              const productUrl = `/${product.categorySlug}/${product.slug}`;
-              return (
-                <Link key={product.id} href={productUrl} prefetch={true}>
-                  <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer h-full">
-                    <CardContent className="p-0">
-                      <div className="relative aspect-square overflow-hidden bg-gray-100">
-                        <ProductImage src={product.images} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                        {discount > 0 && (
-                          <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">-{discount}%</Badge>
-                        )}
-                        {product.featured && (
-                          <Badge className="absolute top-2 right-2 bg-amber-500 text-gray-900 text-xs px-2">
-                            <Star className="h-3 w-3 fill-current mr-0.5" />TOP
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
-                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-2 group-hover:text-emerald-900 transition-colors">
-                          {product.name}
-                        </h3>
-                      <div className="flex items-baseline gap-2 mb-2">
-                        <span className="text-sm font-bold text-emerald-900">{formatRupiah(product.wholesalePrice)}</span>
-                        {discount > 0 && <span className="text-xs text-muted-foreground line-through">{formatRupiah(product.price)}</span>}
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-0.5"><Star className="h-3 w-3 text-amber-500 fill-amber-500" />{product.rating}</span>
-                        <span>Min. {product.minOrder} pcs</span>
-                        <span>{product.sold > 999 ? `${(product.sold / 1000).toFixed(1)}rb` : product.sold} terjual</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                </Link>
-              );
-            })}
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
         )}
 

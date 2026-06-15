@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,10 +8,6 @@ export const dynamic = 'force-dynamic'
  * Used for uploading images from the admin product form.
  */
 export async function POST(request: NextRequest) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File | null

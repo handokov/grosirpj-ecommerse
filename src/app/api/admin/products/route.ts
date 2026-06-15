@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAuth, isAuthError } from '@/lib/auth-guard'
-import { createProductSchema } from '@/lib/validations'
+import { generateSlug } from '@/lib/utils'
+import { validateBody, createProductSchema } from '@/lib/validations'
 
 // GET - List products with filters
 export async function GET(request: NextRequest) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
@@ -58,30 +54,12 @@ export async function GET(request: NextRequest) {
 
 // POST - Create product
 export async function POST(request: NextRequest) {
-  // Auth check
-  const auth = await requireAuth()
-  if (isAuthError(auth)) return auth
-
   try {
-    const body = await request.json()
-    
-    // Validate input
-    const result = createProductSchema.safeParse(body)
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Data tidak valid', details: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`) },
-        { status: 400 }
-      )
-    }
-    const data = result.data
+    const data = await validateBody(request, createProductSchema)
+    if (data instanceof NextResponse) return data
 
     // Generate slug from name
-    const slug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim()
+    const slug = generateSlug(data.name)
 
     // Check slug uniqueness
     const existing = await db.product.findUnique({ where: { slug } })

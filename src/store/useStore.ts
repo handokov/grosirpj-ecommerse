@@ -1,43 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { Product, CartItemType, Category } from '@/types';
 
-export interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  wholesalePrice: number;
-  minOrder: number;
-  stock: number;
-  images: string;
-  categoryId: string;
-  categoryName?: string;
-  categorySlug?: string;
-  rating: number;
-  reviewCount: number;
-  sold: number;
-  featured: boolean;
-  tags?: string;
-  weight?: string;
-  sizes?: string;
-}
-
-export interface CartItemType {
-  product: Product;
-  quantity: number;
-  size?: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  icon?: string;
-  image?: string;
-  order: number;
-}
+// Re-export types for backward compatibility — other files may import from here
+export type { Product, CartItemType, Category } from '@/types';
 
 interface StoreState {
   searchQuery: string;

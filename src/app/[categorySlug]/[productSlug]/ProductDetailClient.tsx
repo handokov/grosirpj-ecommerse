@@ -15,6 +15,7 @@ import { formatRupiah, calculateDiscount } from '@/lib/format';
 import { toast } from 'sonner';
 import ProductImage, { getAllImageUrls, getOptimizedImageUrl } from '@/components/ui/product-image';
 import { ProductCard } from '@/components/shared/ProductCard';
+import SizeChart from '@/components/product/SizeChart';
 
 interface Props {
   product: Product;
@@ -254,7 +255,14 @@ export default function ProductDetailClient({ product, related }: Props) {
             {/* Size selection */}
             {sizeList.length > 0 && (
               <div className="mb-4">
-                <h3 className="font-semibold text-gray-900 mb-2 text-sm">Pilih Ukuran</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900 text-sm">Pilih Ukuran</h3>
+                  <SizeChart
+                    categorySlug={product.categorySlug}
+                    triggerLabel="Panduan Ukuran"
+                    triggerClassName="h-7 px-2.5 text-xs"
+                  />
+                </div>
                 <div className="flex flex-wrap gap-1.5">
                   {sizeList.map((size) => (
                     <Button
@@ -268,6 +276,17 @@ export default function ProductDetailClient({ product, related }: Props) {
                     </Button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Size chart link — shown when no sizes exist for this product */}
+            {sizeList.length === 0 && (
+              <div className="mb-4">
+                <SizeChart
+                  categorySlug={product.categorySlug}
+                  triggerLabel="Lihat Panduan Ukuran"
+                  triggerClassName="h-8 px-3 text-xs"
+                />
               </div>
             )}
 

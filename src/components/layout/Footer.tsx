@@ -55,19 +55,19 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-4">Informasi</h4>
             <ul className="space-y-2">
               <li>
-                <a href={getWhatsAppLink('Halo GrosirPJ, saya ingin bertanya tentang cara pemesanan')} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Cara Pemesanan</a>
+                <Link href="/tentang" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Tentang Kami</Link>
               </li>
               <li>
-                <a href={getWhatsAppLink('Halo GrosirPJ, saya ingin bertanya tentang ukuran baju anak')} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Ukuran Baju Anak</a>
+                <Link href="/cara-belanja" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Cara Belanja</Link>
               </li>
               <li>
-                <a href={getWhatsAppLink('Halo GrosirPJ, saya ingin bertanya tentang kebijakan pengembalian')} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Kebijakan Pengembalian</a>
+                <Link href="/syarat-ketentuan" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Syarat & Ketentuan</Link>
               </li>
               <li>
-                <a href={getWhatsAppLink('Halo GrosirPJ, saya ingin bertanya tentang syarat ketentuan')} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Syarat & Ketentuan</a>
+                <Link href="/kebijakan-privasi" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Kebijakan Privasi</Link>
               </li>
               <li>
-                <a href={getWhatsAppLink('Halo GrosirPJ, saya ingin bertanya tentang FAQ')} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">FAQ</a>
+                <Link href="/lacak" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Lacak Pesanan</Link>
               </li>
             </ul>
           </div>

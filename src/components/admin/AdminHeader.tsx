@@ -24,6 +24,7 @@ const BREADCRUMB_MAP: Record<string, { label: string; parent?: { label: string; 
   '/admin/banners': { label: 'Banner', parent: { label: 'Dashboard', href: '/admin' } },
   '/admin/settings': { label: 'Pengaturan', parent: { label: 'Dashboard', href: '/admin' } },
   '/admin/shipping': { label: 'Ongkir', parent: { label: 'Dashboard', href: '/admin' } },
+  '/admin/export': { label: 'Export Data', parent: { label: 'Dashboard', href: '/admin' } },
 }
 
 export default function AdminHeader() {

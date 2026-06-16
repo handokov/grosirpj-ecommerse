@@ -19,6 +19,7 @@ import {
   HelpCircle,
   ImageIcon,
   Truck,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -65,6 +66,11 @@ const navItems: NavItem[] = [
     label: 'Ongkir',
     href: '/admin/shipping',
     icon: Truck,
+  },
+  {
+    label: 'Export Data',
+    href: '/admin/export',
+    icon: Download,
   },
   {
     label: 'Analitik',

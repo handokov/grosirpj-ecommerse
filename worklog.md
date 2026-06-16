@@ -285,3 +285,39 @@ Stage Summary:
 - Transaction only contains: stock re-check, order number generation, order creation, stock deduction
 - Admin can check schema status and run migrations from Settings page
 - This should eliminate the Turso timeout issue on Vercel serverless
+
+---
+Task ID: 31
+Agent: Main Agent
+Task: Verify Panduan Ukuran (Size Guide) feature #11 — user reported "belum ada di vercel"
+
+Work Log:
+- Read worklog to understand context — feature was already committed in 2d33058 "feat: static info pages + export data + size chart"
+- Reviewed existing SizeChart.tsx component (src/components/product/SizeChart.tsx) — 330 lines, fully implemented
+- Reviewed ProductDetailClient.tsx — SizeChart integrated at line 260-264 (next to "Pilih Ukuran" header) AND at line 285-289 (fallback for products without sizes)
+- Verified category slugs via /api/categories: bayi-0-12-bulan, balita-1-5-tahun, anak-anak-6-12-tahun, aksesoris-baby-kids, sepatu
+- Confirmed resolveDefaultTab() logic correctly maps slugs → tab ids (includes 'anak' → anak, includes 'balita' → balita, else bayi)
+- Used Agent Browser for end-to-end verification:
+  - Test 1: Opened /bayi-0-12-bulan/set-baju-bayi-laki-laki-casual → "Buka panduan ukuran" button (ref=e26) present next to "Pilih Ukuran" header
+  - Clicked button → dialog opened with 3 tabs (Bayi/Balita/Anak), "Bayi" tab auto-selected ✅
+  - Table shows 4 columns: Ukuran, Usia, Tinggi (cm), Berat (kg) with correct bayi data (BB, 0-3B, 3-6B, 6-12B)
+  - Switched to "Anak" tab → content updated to show 5-6T, 7-8T, 9-10T, 11-12T with heights 110-148cm ✅
+  - Verified notes section: "Catatan Penting", "Ukuran bersifat estimasi...", "Jika anak berada di antara 2 ukuran, disarankan pilih ukuran lebih besar" ✅
+  - Verified disclaimer: "Tinggi & berat badan adalah acuan umum anak Indonesia..." ✅
+  - Verified footer: "Tutup" + "Tanya via WhatsApp" buttons ✅
+  - Test 2: Opened /anak-anak-6-12-tahun/kaos-anak-unisex-print-kartun → clicked button → "Anak 5-12 Tahun" tab auto-selected ✅ (auto-select works cross-category)
+  - Encountered stale cache error "Export Child doesn't exist" (file actually uses `Smile`) — cleared after page reload, confirmed false alarm
+  - Post-reload: build succeeded in 311ms, no console errors, button works, dialog opens correctly
+- Checked dev.log — only normal Prisma queries, no errors/warnings during testing
+
+Stage Summary:
+- Feature #11 (Panduan Ukuran / Size Guide) is FULLY IMPLEMENTED and WORKING locally
+- All 5 spec requirements verified via Agent Browser:
+  1. ✅ Button with Ruler icon next to size selection on product detail page
+  2. ✅ 3 tabs: Bayi (0-12 bln), Balita (1-5 thn), Anak (5-12 thn)
+  3. ✅ Tinggi & berat badan sesuai usia (Height & Weight columns)
+  4. ✅ Catatan: estimasi + pilih ukuran lebih besar kalau di antara 2 ukuran
+  5. ✅ Tab auto-selects based on product category slug
+- The user's note "belum ada di vercel" means the feature exists in code (committed) but hasn't been deployed to Vercel production yet
+- No code changes needed — feature is production-ready, user just needs to push/deploy to Vercel
+- Files involved: src/components/product/SizeChart.tsx (component), src/app/[categorySlug]/[productSlug]/ProductDetailClient.tsx (integration)

@@ -148,3 +148,39 @@ model Banner {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model ShippingZone {
+  id        String         @id @default(cuid())
+  code      String         @unique
+  name      String
+  provinces String         // Comma-separated province names
+  order     Int            @default(0)
+  active    Boolean        @default(true)
+  rates     ShippingRate[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([active])
+  @@index([order])
+}
+
+model ShippingRate {
+  id           String        @id @default(cuid())
+  zoneId       String
+  zone         ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  courier      String        // e.g. jne, jnt, sicepat
+  service      String        // e.g. REG, YES, ECO
+  serviceLabel String        // e.g. JNE REGULER, JNE YES
+  firstKg      Int           // Price for first kg in Rupiah
+  nextKg       Int           // Price per additional kg in Rupiah
+  etd          String        @default("-") // Estimated time of delivery
+  active       Boolean       @default(true)
+  order        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([zoneId, courier, service])
+  @@index([zoneId])
+  @@index([active])
+  @@index([courier])
+}

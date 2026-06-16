@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { publicCreateOrderSchema, isCuid } from '@/lib/validations'
+import { verifyShippingCost } from '@/lib/shipping-calc'
 
 // POST - Create order from public checkout (generates invoice)
 export async function POST(request: NextRequest) {
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
           stock: true,
           name: true,
           images: true,
+          weight: true,
         },
       })
 
@@ -115,9 +117,35 @@ export async function POST(request: NextRequest) {
         throw Object.assign(new Error('Tidak ada item yang valid untuk dipesan'), { statusCode: 400 })
       }
 
-      // Validate shipping cost — must be non-negative and within reasonable range
-      // For now, we cap it at 500k (already in Zod schema) and ensure it's reasonable
-      const shippingCost = data.shippingCost ?? 0
+      // ===== SERVER-SIDE SHIPPING COST VERIFICATION =====
+      // Calculate total weight from products (weight field is String, parse carefully)
+      let totalWeightGrams = 0
+      for (const item of orderItems) {
+        const product = productMap.get(item.productId)
+        const weightStr = product?.weight || '250'
+        const parsed = parseWeight(weightStr)
+        totalWeightGrams += parsed * item.quantity
+      }
+      // Minimum weight: 250g if all products have no weight set
+      if (totalWeightGrams === 0) totalWeightGrams = 250
+
+      // Verify shipping cost against rate table
+      const clientShippingCost = data.shippingCost ?? 0
+      const verification = await verifyShippingCost(
+        data.destinationCity || '',
+        data.courier || '',
+        data.courierService || '',
+        totalWeightGrams,
+        clientShippingCost
+      )
+      const shippingCost = verification.cost
+
+      if (verification.adjusted) {
+        console.log(
+          `[orders] Shipping cost adjusted: client=${clientShippingCost} → server=${shippingCost} (${verification.source})`
+        )
+      }
+
       totalAmount += shippingCost
 
       // Count today's orders INSIDE the transaction to prevent race conditions
@@ -210,4 +238,38 @@ export async function POST(request: NextRequest) {
     // Generic error — never expose internal details to client
     return NextResponse.json({ error: 'Gagal membuat pesanan. Silakan coba lagi.' }, { status: 500 })
   }
+}
+
+/**
+ * Parse product weight string to grams.
+ * Handles various formats: "250", "250g", "1.5kg", "1 kg", "0.5", etc.
+ * Returns weight in grams. Defaults to 250g if unparseable.
+ */
+function parseWeight(weightStr: string): number {
+  if (!weightStr || typeof weightStr !== 'string') return 250
+
+  const normalized = weightStr.trim().toLowerCase()
+
+  // Try "Xkg" format
+  const kgMatch = normalized.match(/^([\d.]+)\s*kg$/)
+  if (kgMatch) {
+    const val = parseFloat(kgMatch[1])
+    return isNaN(val) ? 250 : Math.round(val * 1000)
+  }
+
+  // Try "Xg" format
+  const gMatch = normalized.match(/^([\d.]+)\s*g$/)
+  if (gMatch) {
+    const val = parseFloat(gMatch[1])
+    return isNaN(val) ? 250 : Math.round(val)
+  }
+
+  // Try plain number (assume grams)
+  const numVal = parseFloat(normalized)
+  if (!isNaN(numVal) && numVal > 0) {
+    // If number < 10, assume kg; if >= 10, assume grams
+    return numVal < 10 ? Math.round(numVal * 1000) : Math.round(numVal)
+  }
+
+  return 250 // Default: 250g
 }

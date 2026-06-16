@@ -18,6 +18,7 @@ import {
   ImagePlus,
   HelpCircle,
   ImageIcon,
+  Truck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -59,6 +60,11 @@ const navItems: NavItem[] = [
     label: 'Banner',
     href: '/admin/banners',
     icon: ImageIcon,
+  },
+  {
+    label: 'Ongkir',
+    href: '/admin/shipping',
+    icon: Truck,
   },
   {
     label: 'Analitik',

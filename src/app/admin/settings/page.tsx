@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   Store,
   User,
@@ -14,6 +15,8 @@ import {
   Globe,
   CreditCard,
   Truck,
+  ArrowRight,
+  CheckCircle2,
 } from 'lucide-react'
 import {
   Card,
@@ -133,35 +136,54 @@ export default function SettingsPage() {
         </Card>
       </div>
 
-      {/* Coming Soon Features */}
-      <Card className="border-0 shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-6 text-white">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="w-5 h-5" />
+      {/* Fitur Pengaturan */}
+      <div>
+        <h2 className="text-sm font-bold text-gray-900 mb-3">Pengaturan Fitur</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Pengaturan Toko - Coming Soon */}
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 relative overflow-hidden">
+            <div className="absolute top-2 right-2">
+              <Badge variant="outline" className="text-[9px] bg-gray-100 border-gray-200 text-gray-400">
+                Segera Hadir
+              </Badge>
             </div>
-            <div>
-              <h3 className="text-base font-bold">Fitur Segera Hadir</h3>
-              <p className="text-[11px] text-emerald-100">Fitur pengaturan toko yang sedang dikembangkan</p>
-            </div>
+            <Settings className="w-5 h-5 text-gray-400 mb-2" />
+            <p className="text-xs font-semibold text-gray-900">Pengaturan Toko</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Ubah nama, logo, dan informasi toko</p>
           </div>
-        </div>
-        <CardContent className="p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { icon: Settings, label: 'Pengaturan Toko', desc: 'Ubah nama, logo, dan informasi toko' },
-              { icon: CreditCard, label: 'Metode Pembayaran', desc: 'Atur metode pembayaran yang tersedia' },
-              { icon: Truck, label: 'Pengiriman', desc: 'Atur opsi dan biaya pengiriman' },
-            ].map(feature => (
-              <div key={feature.label} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                <feature.icon className="w-5 h-5 text-emerald-600 mb-2" />
-                <p className="text-xs font-semibold text-gray-900">{feature.label}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">{feature.desc}</p>
+
+          {/* Metode Pembayaran - Coming Soon */}
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 relative overflow-hidden">
+            <div className="absolute top-2 right-2">
+              <Badge variant="outline" className="text-[9px] bg-gray-100 border-gray-200 text-gray-400">
+                Segera Hadir
+              </Badge>
+            </div>
+            <CreditCard className="w-5 h-5 text-gray-400 mb-2" />
+            <p className="text-xs font-semibold text-gray-900">Metode Pembayaran</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Atur metode pembayaran yang tersedia</p>
+          </div>
+
+          {/* Pengiriman - AKTIF */}
+          <Link href="/admin/shipping" className="block">
+            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-colors cursor-pointer relative overflow-hidden group">
+              <div className="absolute top-2 right-2">
+                <Badge variant="outline" className="text-[9px] bg-emerald-100 border-emerald-300 text-emerald-700">
+                  <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                  Aktif
+                </Badge>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <Truck className="w-5 h-5 text-emerald-600 mb-2" />
+              <p className="text-xs font-semibold text-gray-900">Pengiriman</p>
+              <p className="text-[10px] text-gray-600 mt-0.5">Atur zona & tarif pengiriman</p>
+              <div className="flex items-center gap-1 mt-3 text-[10px] font-medium text-emerald-700 group-hover:text-emerald-800">
+                Kelola Ongkir
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

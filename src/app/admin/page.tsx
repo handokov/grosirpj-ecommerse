@@ -20,6 +20,9 @@ import {
   PackageCheck,
   ChevronRight,
   BarChart3,
+  Users,
+  Repeat,
+  Wallet,
 } from 'lucide-react'
 import {
   Card,
@@ -47,6 +50,18 @@ import dynamic from 'next/dynamic'
 const RevenueChart = dynamic(() => import('@/components/admin/RevenueChart'), {
   ssr: false,
   loading: () => <div className="lg:col-span-2 border-0 shadow-sm bg-white rounded-xl h-[380px] flex items-center justify-center"><p className="text-gray-400 text-sm">Memuat chart...</p></div>,
+})
+const RevenueTrendChart = dynamic(() => import('@/components/admin/RevenueTrendChart'), {
+  ssr: false,
+  loading: () => <div className="lg:col-span-2 border-0 shadow-sm bg-white rounded-xl h-[400px] flex items-center justify-center"><p className="text-gray-400 text-sm">Memuat tren...</p></div>,
+})
+const CategorySalesChart = dynamic(() => import('@/components/admin/CategorySalesChart'), {
+  ssr: false,
+  loading: () => <div className="border-0 shadow-sm bg-white rounded-xl h-[400px] flex items-center justify-center"><p className="text-gray-400 text-sm">Memuat kategori...</p></div>,
+})
+const PeakHoursChart = dynamic(() => import('@/components/admin/PeakHoursChart'), {
+  ssr: false,
+  loading: () => <div className="border-0 shadow-sm bg-white rounded-xl h-[300px] flex items-center justify-center"><p className="text-gray-400 text-sm">Memuat jam ramai...</p></div>,
 })
 
 // Types
@@ -94,6 +109,17 @@ interface DashboardData {
     revenue: number
     orders: number
   }[]
+  // NEW: enhanced analytics
+  dailyRevenue: { date: string; revenue: number; orders: number }[]
+  weeklyRevenue: { date: string; revenue: number; orders: number }[]
+  categorySales: { id: string; name: string; revenue: number; quantity: number }[]
+  avgOrderValue: number
+  last30Revenue: number
+  last30OrderCount: number
+  peakHours: { hour: string; orders: number }[]
+  uniqueCustomers: number
+  repeatCustomers: number
+  repeatCustomerRate: number
 }
 
 
@@ -425,6 +451,127 @@ export default function AdminDashboardPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* ===== NEW: Enhanced Sales Analytics Section ===== */}
+      <div className="space-y-4">
+        {/* Section heading */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+            <BarChart3 className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-gray-900">Analitik Penjualan</h2>
+            <p className="text-[11px] text-gray-500">Insight performa toko 30 hari terakhir</p>
+          </div>
+        </div>
+
+        {/* KPI strip: AOV, Revenue 30d, Unique Customers, Repeat Rate */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Avg Order Value */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <Wallet className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <span className="text-[11px] font-medium text-gray-500">Avg Order Value</span>
+              </div>
+              {loading ? (
+                <Skeleton className="h-7 w-24" />
+              ) : (
+                <>
+                  <p className="text-lg font-bold text-gray-900">{formatRupiah(data?.avgOrderValue || 0)}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">per pesanan paid</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Revenue 30 days */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg bg-sky-50 flex items-center justify-center">
+                  <Banknote className="w-3.5 h-3.5 text-sky-600" />
+                </div>
+                <span className="text-[11px] font-medium text-gray-500">Pendapatan 30 Hari</span>
+              </div>
+              {loading ? (
+                <Skeleton className="h-7 w-24" />
+              ) : (
+                <>
+                  <p className="text-lg font-bold text-gray-900">{formatRupiah(data?.last30Revenue || 0)}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">{data?.last30OrderCount || 0} pesanan paid</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Unique Customers */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
+                  <Users className="w-3.5 h-3.5 text-violet-600" />
+                </div>
+                <span className="text-[11px] font-medium text-gray-500">Pelanggan Unik</span>
+              </div>
+              {loading ? (
+                <Skeleton className="h-7 w-24" />
+              ) : (
+                <>
+                  <p className="text-lg font-bold text-gray-900">{data?.uniqueCustomers || 0}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">pembeli 30 hari terakhir</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Repeat Customer Rate */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                  <Repeat className="w-3.5 h-3.5 text-amber-600" />
+                </div>
+                <span className="text-[11px] font-medium text-gray-500">Repeat Customer</span>
+              </div>
+              {loading ? (
+                <Skeleton className="h-7 w-24" />
+              ) : (
+                <>
+                  <p className="text-lg font-bold text-gray-900">{data?.repeatCustomerRate || 0}%</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    {data?.repeatCustomers || 0} dari {data?.uniqueCustomers || 0} pelanggan
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Revenue Trend Chart (7d/30d toggle) + Category Sales Pie */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <RevenueTrendChart
+            weeklyRevenue={data?.weeklyRevenue || []}
+            dailyRevenue={data?.dailyRevenue || []}
+            loading={loading}
+            error={error}
+          />
+          <CategorySalesChart
+            data={data?.categorySales || []}
+            loading={loading}
+            error={error}
+          />
+        </div>
+
+        {/* Peak Hours Chart */}
+        <PeakHoursChart
+          data={data?.peakHours || []}
+          loading={loading}
+          error={error}
+        />
       </div>
 
       {/* Two-column: Top Products + Low Stock */}

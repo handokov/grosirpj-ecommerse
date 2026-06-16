@@ -100,14 +100,113 @@ const ratesByZone: Record<string, Array<{
   ],
 }
 
+/**
+ * Ensure shipping tables exist in the database.
+ * Uses raw SQL via $executeRawUnsafe so it works even if Prisma
+ * hasn't been push/migrated yet (e.g. fresh Turso DB).
+ */
+async function ensureTablesExist() {
+  // Create ShippingZone table
+  await db.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ShippingZone" (
+      "id" TEXT PRIMARY KEY NOT NULL,
+      "code" TEXT NOT NULL,
+      "name" TEXT NOT NULL,
+      "provinces" TEXT NOT NULL,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      "active" BOOLEAN NOT NULL DEFAULT true,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Create unique index on code if not exists
+  try {
+    await db.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "ShippingZone_code_key" ON "ShippingZone"("code")
+    `)
+  } catch {
+    // Index may already exist, ignore
+  }
+
+  // Create index on active
+  try {
+    await db.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "ShippingZone_active_idx" ON "ShippingZone"("active")
+    `)
+  } catch {
+    // ignore
+  }
+
+  // Create index on order
+  try {
+    await db.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS "ShippingZone_order_idx" ON "ShippingZone"("order")
+    `)
+  } catch {
+    // ignore
+  }
+
+  // Create ShippingRate table
+  await db.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ShippingRate" (
+      "id" TEXT PRIMARY KEY NOT NULL,
+      "zoneId" TEXT NOT NULL,
+      "courier" TEXT NOT NULL,
+      "service" TEXT NOT NULL,
+      "serviceLabel" TEXT NOT NULL,
+      "firstKg" INTEGER NOT NULL,
+      "nextKg" INTEGER NOT NULL,
+      "etd" TEXT NOT NULL DEFAULT '-',
+      "active" BOOLEAN NOT NULL DEFAULT true,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY ("zoneId") REFERENCES "ShippingZone"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+
+  // Create unique constraint on zoneId+couier+service
+  try {
+    await db.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "ShippingRate_zoneId_courier_service_key" ON "ShippingRate"("zoneId", "courier", "service")
+    `)
+  } catch {
+    // Index may already exist, ignore
+  }
+
+  // Create indexes
+  try {
+    await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShippingRate_zoneId_idx" ON "ShippingRate"("zoneId")`)
+  } catch { /* ignore */ }
+  try {
+    await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShippingRate_active_idx" ON "ShippingRate"("active")`)
+  } catch { /* ignore */ }
+  try {
+    await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShippingRate_courier_idx" ON "ShippingRate"("courier")`)
+  } catch { /* ignore */ }
+
+  console.log('[seed] Tables ensured')
+}
+
 // POST /api/admin/shipping/seed — Seed shipping zones & rates (admin only)
 export async function POST() {
   try {
     await requireAdmin()
 
+    // Step 0: Ensure tables exist (critical for Turso/production)
+    await ensureTablesExist()
+
     // Step 1: Delete existing data (rates first due to FK constraint)
-    const deletedRates = await db.shippingRate.deleteMany()
-    const deletedZones = await db.shippingZone.deleteMany()
+    let deletedRates = { count: 0 }
+    let deletedZones = { count: 0 }
+
+    try {
+      deletedRates = await db.shippingRate.deleteMany()
+      deletedZones = await db.shippingZone.deleteMany()
+    } catch (delErr) {
+      console.warn('[seed] Delete warning:', delErr)
+    }
 
     // Step 2: Create zones
     const createdZones: Record<string, string> = {}
@@ -125,7 +224,7 @@ export async function POST() {
       createdZones[zone.code] = created.id
     }
 
-    // Step 3: Create rates
+    // Step 3: Create rates using createMany for performance
     let totalRates = 0
 
     for (const zone of zones) {
@@ -133,22 +232,20 @@ export async function POST() {
       const rates = ratesByZone[zone.code]
       if (!rates || !zoneId) continue
 
-      for (const rate of rates) {
-        await db.shippingRate.create({
-          data: {
-            zoneId,
-            courier: rate.courier,
-            service: rate.service,
-            serviceLabel: rate.serviceLabel,
-            firstKg: rate.firstKg,
-            nextKg: rate.nextKg,
-            etd: rate.etd,
-            active: true,
-            order: rate.order,
-          },
-        })
-        totalRates++
-      }
+      const result = await db.shippingRate.createMany({
+        data: rates.map(rate => ({
+          zoneId,
+          courier: rate.courier,
+          service: rate.service,
+          serviceLabel: rate.serviceLabel,
+          firstKg: rate.firstKg,
+          nextKg: rate.nextKg,
+          etd: rate.etd,
+          active: true,
+          order: rate.order,
+        })),
+      })
+      totalRates += result.count
     }
 
     return NextResponse.json({
@@ -163,7 +260,37 @@ export async function POST() {
     })
   } catch (error) {
     if (isAuthError(error)) return error.toResponse()
-    console.error('Shipping seed error:', error)
-    return NextResponse.json({ error: 'Gagal seed data ongkir' }, { status: 500 })
+
+    // Return detailed error info for debugging
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    console.error('[seed] Shipping seed error:', errorMessage)
+
+    // Detect common issues and return helpful messages
+    if (errorMessage.includes('does not exist') || errorMessage.includes('no such table')) {
+      return NextResponse.json({
+        error: 'Tabel database belum ada. Coba lagi — sistem akan membuat tabel otomatis.',
+        detail: errorMessage,
+      }, { status: 500 })
+    }
+
+    if (errorMessage.includes('Unique constraint') || errorMessage.includes('UNIQUE')) {
+      return NextResponse.json({
+        error: 'Data ongkir sudah ada. Tekan tombol seed untuk reset dan isi ulang.',
+        detail: errorMessage,
+      }, { status: 409 })
+    }
+
+    if (errorMessage.includes('timeout') || errorMessage.includes('Timed out')) {
+      return NextResponse.json({
+        error: 'Database timeout. Coba lagi dalam beberapa saat.',
+        detail: errorMessage,
+      }, { status: 504 })
+    }
+
+    return NextResponse.json({
+      error: 'Gagal seed data ongkir',
+      detail: errorMessage,
+    }, { status: 500 })
   }
 }

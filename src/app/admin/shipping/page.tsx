@@ -234,12 +234,19 @@ export default function ShippingManagementPage() {
     try {
       const res = await fetch('/api/admin/shipping/seed', { method: 'POST' })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Gagal seed data')
+      if (!res.ok) {
+        // Show detailed error if available
+        const errorMsg = data.error || 'Gagal seed data'
+        const detail = data.detail ? `\nDetail: ${data.detail}` : ''
+        throw new Error(errorMsg + detail)
+      }
       toast.success(`Berhasil! ${data.summary.zonesCreated} zona & ${data.summary.ratesCreated} tarif ongkir dibuat.`)
       fetchZones()
       fetchRates()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Gagal seed data ongkir')
+      toast.error(err instanceof Error ? err.message : 'Gagal seed data ongkir', {
+        duration: 8000,
+      })
     } finally {
       setSeeding(false)
     }

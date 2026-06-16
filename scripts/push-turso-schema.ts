@@ -245,6 +245,106 @@ async function pushSchema() {
     console.log('ℹ️ Admin user already exists')
   }
 
+  // Create ShippingZone table
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS "ShippingZone" (
+      "id" TEXT PRIMARY KEY NOT NULL,
+      "code" TEXT NOT NULL,
+      "name" TEXT NOT NULL,
+      "provinces" TEXT NOT NULL,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      "active" BOOLEAN NOT NULL DEFAULT true,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+  try {
+    await turso.execute('CREATE UNIQUE INDEX IF NOT EXISTS "ShippingZone_code_key" ON "ShippingZone"("code")')
+  } catch { /* may already exist */ }
+  try {
+    await turso.execute('CREATE INDEX IF NOT EXISTS "ShippingZone_active_idx" ON "ShippingZone"("active")')
+  } catch { /* ignore */ }
+  try {
+    await turso.execute('CREATE INDEX IF NOT EXISTS "ShippingZone_order_idx" ON "ShippingZone"("order")')
+  } catch { /* ignore */ }
+  console.log('✅ ShippingZone table created')
+
+  // Create ShippingRate table
+  await turso.execute(`
+    CREATE TABLE IF NOT EXISTS "ShippingRate" (
+      "id" TEXT PRIMARY KEY NOT NULL,
+      "zoneId" TEXT NOT NULL,
+      "courier" TEXT NOT NULL,
+      "service" TEXT NOT NULL,
+      "serviceLabel" TEXT NOT NULL,
+      "firstKg" INTEGER NOT NULL,
+      "nextKg" INTEGER NOT NULL,
+      "etd" TEXT NOT NULL DEFAULT '-',
+      "active" BOOLEAN NOT NULL DEFAULT true,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY ("zoneId") REFERENCES "ShippingZone"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    )
+  `)
+  try {
+    await turso.execute('CREATE UNIQUE INDEX IF NOT EXISTS "ShippingRate_zoneId_courier_service_key" ON "ShippingRate"("zoneId", "courier", "service")')
+  } catch { /* may already exist */ }
+  try {
+    await turso.execute('CREATE INDEX IF NOT EXISTS "ShippingRate_zoneId_idx" ON "ShippingRate"("zoneId")')
+  } catch { /* ignore */ }
+  try {
+    await turso.execute('CREATE INDEX IF NOT EXISTS "ShippingRate_active_idx" ON "ShippingRate"("active")')
+  } catch { /* ignore */ }
+  try {
+    await turso.execute('CREATE INDEX IF NOT EXISTS "ShippingRate_courier_idx" ON "ShippingRate"("courier")')
+  } catch { /* ignore */ }
+  console.log('✅ ShippingRate table created')
+
+  // Add new columns to Order table (paymentProof, paymentNotes, paidAt, deletedAt)
+  try {
+    const orderColumns2 = await turso.execute("PRAGMA table_info('Order')")
+    const orderColumnNames2 = orderColumns2.rows.map(r => r.name as string)
+    if (!orderColumnNames2.includes('paymentProof')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN paymentProof TEXT')
+      console.log('✅ Added paymentProof column to Order table')
+    }
+    if (!orderColumnNames2.includes('paymentNotes')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN paymentNotes TEXT')
+      console.log('✅ Added paymentNotes column to Order table')
+    }
+    if (!orderColumnNames2.includes('paidAt')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN paidAt DATETIME')
+      console.log('✅ Added paidAt column to Order table')
+    }
+    if (!orderColumnNames2.includes('deletedAt')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN deletedAt DATETIME')
+      console.log('✅ Added deletedAt column to Order table')
+    }
+    if (!orderColumnNames2.includes('note')) {
+      await turso.execute('ALTER TABLE "Order" ADD COLUMN note TEXT')
+      console.log('✅ Added note column to Order table')
+    }
+  } catch (e) {
+    console.log('⚠️ Order column migration warning:', e)
+  }
+
+  // Add productName and productImage columns to OrderItem if missing
+  try {
+    const oiColumns = await turso.execute("PRAGMA table_info('OrderItem')")
+    const oiColumnNames = oiColumns.rows.map(r => r.name as string)
+    if (!oiColumnNames.includes('productName')) {
+      await turso.execute('ALTER TABLE "OrderItem" ADD COLUMN productName TEXT')
+      console.log('✅ Added productName column to OrderItem table')
+    }
+    if (!oiColumnNames.includes('productImage')) {
+      await turso.execute('ALTER TABLE "OrderItem" ADD COLUMN productImage TEXT')
+      console.log('✅ Added productImage column to OrderItem table')
+    }
+  } catch (e) {
+    console.log('⚠️ OrderItem column migration warning:', e)
+  }
+
   // Verify all tables
   const finalTables = await turso.execute("SELECT name FROM sqlite_master WHERE type='table'")
   console.log('\n📋 All tables in Turso:', finalTables.rows.map(r => r.name))

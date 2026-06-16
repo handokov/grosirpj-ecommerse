@@ -405,6 +405,7 @@ function CartDrawer() {
           courier: selectedShipping?.courier || '',
           courierService: selectedShipping?.service?.code || '',
           destinationCity: selectedShipping?.destinationName || '',
+          destinationProvince: selectedShipping?.province || '',
           items: orderItems,
         }),
       });

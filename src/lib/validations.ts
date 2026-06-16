@@ -159,6 +159,7 @@ export const publicCreateOrderSchema = z.object({
   courier: z.string().max(100).optional().default(''),
   courierService: z.string().max(200).optional().default(''),
   destinationCity: z.string().max(200).optional().default(''),
+  destinationProvince: z.string().max(200).optional().default(''),
   items: z.array(z.object({
     productId: z.string().min(1, 'Product ID wajib'),
     quantity: z.coerce.number().int().min(1, 'Minimal 1 item').max(9999),

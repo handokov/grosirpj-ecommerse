@@ -130,9 +130,10 @@ export async function POST(request: NextRequest) {
       if (totalWeightGrams === 0) totalWeightGrams = 250
 
       // Verify shipping cost against rate table
+      // Use destinationProvince for zone lookup (more accurate than city name)
       const clientShippingCost = data.shippingCost ?? 0
       const verification = await verifyShippingCost(
-        data.destinationCity || '',
+        data.destinationProvince || data.destinationCity || '',
         data.courier || '',
         data.courierService || '',
         totalWeightGrams,

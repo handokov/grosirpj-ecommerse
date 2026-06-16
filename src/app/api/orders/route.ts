@@ -3,9 +3,122 @@ import { db } from '@/lib/db'
 import { publicCreateOrderSchema, isCuid } from '@/lib/validations'
 import { verifyShippingCost } from '@/lib/shipping-calc'
 
+// ─── Auto-migrate missing columns in Turso production DB ─────────────
+// When we deploy new schema changes (new columns), the Turso DB may not
+// have them yet. This function adds missing columns before order creation.
+// Uses a module-level flag so it only runs once per cold start.
+
+let schemaEnsured = false
+
+async function ensureSchemaColumns() {
+  if (schemaEnsured) return
+
+  try {
+    // Check Order table columns
+    const orderCols = await db.$queryRawUnsafe<{ name: string }[]>(
+      "PRAGMA table_info('Order')"
+    )
+    const orderColNames = new Set(orderCols.map(c => c.name))
+
+    const orderMigrations: string[] = []
+
+    if (!orderColNames.has('courier')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN courier TEXT')
+    }
+    if (!orderColNames.has('courierService')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN courierService TEXT')
+    }
+    if (!orderColNames.has('destinationCity')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN destinationCity TEXT')
+    }
+    if (!orderColNames.has('note')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN note TEXT')
+    }
+    if (!orderColNames.has('paymentProof')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN paymentProof TEXT')
+    }
+    if (!orderColNames.has('paymentNotes')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN paymentNotes TEXT')
+    }
+    if (!orderColNames.has('paidAt')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN paidAt DATETIME')
+    }
+    if (!orderColNames.has('deletedAt')) {
+      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN deletedAt DATETIME')
+    }
+
+    for (const sql of orderMigrations) {
+      await db.$executeRawUnsafe(sql)
+    }
+    if (orderMigrations.length > 0) {
+      console.log(`[orders] Auto-migrated ${orderMigrations.length} Order columns`)
+    }
+
+    // Check OrderItem table columns
+    const itemCols = await db.$queryRawUnsafe<{ name: string }[]>(
+      "PRAGMA table_info('OrderItem')"
+    )
+    const itemColNames = new Set(itemCols.map(c => c.name))
+
+    const itemMigrations: string[] = []
+
+    if (!itemColNames.has('productName')) {
+      itemMigrations.push('ALTER TABLE "OrderItem" ADD COLUMN productName TEXT')
+    }
+    if (!itemColNames.has('productImage')) {
+      itemMigrations.push('ALTER TABLE "OrderItem" ADD COLUMN productImage TEXT')
+    }
+
+    for (const sql of itemMigrations) {
+      await db.$executeRawUnsafe(sql)
+    }
+    if (itemMigrations.length > 0) {
+      console.log(`[orders] Auto-migrated ${itemMigrations.length} OrderItem columns`)
+    }
+
+    // Check Product table columns
+    const productCols = await db.$queryRawUnsafe<{ name: string }[]>(
+      "PRAGMA table_info('Product')"
+    )
+    const productColNames = new Set(productCols.map(c => c.name))
+
+    const productMigrations: string[] = []
+
+    if (!productColNames.has('deletedAt')) {
+      productMigrations.push('ALTER TABLE "Product" ADD COLUMN deletedAt DATETIME')
+    }
+    if (!productColNames.has('supplierName')) {
+      productMigrations.push('ALTER TABLE "Product" ADD COLUMN supplierName TEXT')
+    }
+    if (!productColNames.has('supplierLink')) {
+      productMigrations.push('ALTER TABLE "Product" ADD COLUMN supplierLink TEXT')
+    }
+    if (!productColNames.has('supplierPhone')) {
+      productMigrations.push('ALTER TABLE "Product" ADD COLUMN supplierPhone TEXT')
+    }
+
+    for (const sql of productMigrations) {
+      await db.$executeRawUnsafe(sql)
+    }
+    if (productMigrations.length > 0) {
+      console.log(`[orders] Auto-migrated ${productMigrations.length} Product columns`)
+    }
+
+    schemaEnsured = true
+  } catch (err) {
+    // Log but don't crash — the order might still work if columns already exist
+    console.warn('[orders] Schema migration warning:', err)
+    // Mark as ensured to avoid retrying on every request
+    schemaEnsured = true
+  }
+}
+
 // POST - Create order from public checkout (generates invoice)
 export async function POST(request: NextRequest) {
   try {
+    // Auto-migrate missing columns in production (Turso)
+    await ensureSchemaColumns()
+
     // Safely parse JSON body
     let body: unknown
     try {
@@ -234,6 +347,17 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && 'statusCode' in error) {
       const statusCode = (error as Error & { statusCode: number }).statusCode
       return NextResponse.json({ error: error.message }, { status: statusCode })
+    }
+
+    // Return more detailed error for debugging (but not internal details)
+    const errMsg = error instanceof Error ? error.message : String(error)
+
+    // Detect common Turso/column errors and give helpful message
+    if (errMsg.includes('no such column') || errMsg.includes('SQLITE_ERROR')) {
+      console.error('[orders] Missing column error — ensureSchemaColumns may have failed:', errMsg)
+      return NextResponse.json({
+        error: 'Sistem sedang diperbarui. Silakan coba lagi dalam 1-2 menit.',
+      }, { status: 503 })
     }
 
     // Generic error — never expose internal details to client

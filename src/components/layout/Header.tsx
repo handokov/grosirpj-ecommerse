@@ -20,6 +20,10 @@ import {
   ChevronLeft,
   Upload,
   CheckCircle,
+  User,
+  Phone,
+  Truck,
+  CreditCard,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
@@ -728,12 +732,21 @@ function CartDrawer() {
 
               <div className="p-4 space-y-4">
                 {/* Customer info */}
-                <div className="text-sm">
-                  <p className="text-muted-foreground text-xs">Pemesan</p>
-                  <p className="font-semibold">{invoice.customerName}</p>
-                  <p className="text-muted-foreground">{invoice.customerPhone}</p>
+                <div className="text-sm space-y-1.5">
+                  <p className="text-muted-foreground text-xs font-medium mb-1">Data Pemesan</p>
+                  <div className="flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="font-semibold">{invoice.customerName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="text-muted-foreground">{invoice.customerPhone}</span>
+                  </div>
                   {invoice.destinationCity && (
-                    <p className="text-muted-foreground text-xs mt-0.5">📍 {invoice.destinationCity}</p>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <span className="text-muted-foreground text-xs">{invoice.destinationCity}</span>
+                    </div>
                   )}
                 </div>
 
@@ -741,6 +754,10 @@ function CartDrawer() {
 
                 {/* Items */}
                 <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Package className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs text-muted-foreground font-medium">Detail Pesanan</span>
+                  </div>
                   {invoice.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between text-sm">
                       <div className="flex-1">
@@ -760,14 +777,18 @@ function CartDrawer() {
                 {/* Subtotal Produk + Ongkir + Total Bayar */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal Produk</span>
+                    <span className="text-gray-600 flex items-center gap-1.5">
+                      <Package className="w-3.5 h-3.5 text-gray-400" />
+                      Subtotal Produk
+                    </span>
                     <span className="font-medium">{formatRupiah(invoice.totalAmount - invoice.shippingCost)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">
+                    <span className="text-gray-600 flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5 text-gray-400" />
                       Estimasi Ongkir
                       {invoice.courier && invoice.courier !== 'manual' && (
-                        <span className="text-xs text-gray-400 ml-1">
+                        <span className="text-xs text-gray-400 ml-0.5">
                           ({invoice.courier.toUpperCase()} {invoice.courierService})
                         </span>
                       )}
@@ -775,7 +796,10 @@ function CartDrawer() {
                     <span className="font-medium">{invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between items-center">
-                    <span className="font-bold text-gray-900">TOTAL BAYAR</span>
+                    <span className="font-bold text-gray-900 flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-700" />
+                      TOTAL BAYAR
+                    </span>
                     <span className="text-xl font-bold text-emerald-900">{formatRupiah(invoice.totalAmount)}</span>
                   </div>
                 </div>
@@ -784,7 +808,10 @@ function CartDrawer() {
 
                 {/* Payment info */}
                 <div className="bg-blue-50 rounded-xl p-3">
-                  <p className="font-semibold text-blue-900 text-sm mb-2">💳 Pembayaran Transfer BCA</p>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <CreditCard className="w-4 h-4 text-blue-700" />
+                    <p className="font-semibold text-blue-900 text-sm">Pembayaran Transfer BCA</p>
+                  </div>
                   <div className="bg-white rounded-lg p-3 text-center">
                     <p className="text-xs text-muted-foreground">Nomor Rekening</p>
                     <p className="text-2xl font-bold font-mono text-blue-900 tracking-wider">{BCA_REKENING}</p>

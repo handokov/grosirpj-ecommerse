@@ -321,3 +321,45 @@ Stage Summary:
 - The user's note "belum ada di vercel" means the feature exists in code (committed) but hasn't been deployed to Vercel production yet
 - No code changes needed — feature is production-ready, user just needs to push/deploy to Vercel
 - Files involved: src/components/product/SizeChart.tsx (component), src/app/[categorySlug]/[productSlug]/ProductDetailClient.tsx (integration)
+
+---
+Task ID: 32
+Agent: Main Agent
+Task: Verify Export Data feature #6 — user requested "6" (Export Data)
+
+Work Log:
+- Read worklog for context — feature was already committed in 2d33058 "feat: static info pages + export data + size chart"
+- Reviewed existing implementation:
+  - src/app/admin/export/page.tsx (419 lines) — Full UI with 3 export type cards, date range picker, format selector, column preview, download button
+  - src/app/api/admin/export/route.ts (357 lines) — Full API with 3 export builders, CSV escaping with BOM, Indonesian date/currency formatting, Content-Disposition headers
+- Verified AdminSidebar.tsx has "Export Data" link with Download icon (line 71-74)
+- Used Agent Browser for end-to-end verification:
+  - Logged into /admin/login (admin@grosirpj.com)
+  - Navigated to /admin/export — page rendered with all 3 cards (Laporan Penjualan, Stok Produk, Rekap Order), date range defaulting to current month, CSV format selected, 11/9/10 column previews
+  - Clicked "Unduh Sekarang" — no console errors, download triggered
+- Tested API directly via curl with session cookie (6 test cases):
+  1. Sales CSV (Jun 1-16): 200 OK, 15 orders, correct headers (No, Tanggal, Invoice, Pemesan, Telepon, Kota, Jumlah Item, Subtotal Produk, Ongkir, Total, Status Pembayaran, Status Order), Rupiah formatting (696.000), DD/MM/YYYY dates, CSV escaping ("Kota Yogyakarta, DI Yogyakarta" quoted), UTF-8 BOM present
+  2. Stock CSV: 200 OK, 19 products, sorted by stock ascending (250→336...), correct headers, status "Aktif"/"Nonaktif (Dihapus)"
+  3. Orders CSV (Jun 1-16): 200 OK, 15 orders, courier info (jne REG, sicepat REG), payment proof column
+  4. Stock XLSX (Excel format): 200 OK, .xls extension, application/vnd.ms-excel MIME type, same UTF-8 BOM content
+  5. Auth check (no cookie): 401 — proper admin protection
+  6. Invalid type: 400 with Indonesian error "Tipe export tidak valid. Gunakan: sales, stock, atau orders"
+  7. Invalid date range (to < from): 400 with "Tanggal akhir tidak boleh sebelum tanggal mulai"
+- Checked dev.log — all export API calls return 200/400 correctly, 9-19ms response times, no errors
+
+Stage Summary:
+- Feature #6 (Export Data) is FULLY IMPLEMENTED and WORKING — no code changes needed
+- All spec requirements met:
+  1. ✅ Export to CSV/Excel format (2 formats: CSV + Excel .xls)
+  2. ✅ 3 export types: Laporan Penjualan (sales), Stok Produk (stock), Rekap Order (orders)
+  3. ✅ Date range filter for sales & orders (defaults to current month)
+  4. ✅ Indonesian localization (dates DD/MM/YYYY, Rupiah with thousands separators, status labels)
+  5. ✅ Excel compatibility (UTF-8 BOM, proper MIME types, .xls extension)
+  6. ✅ CSV escaping (commas, quotes, newlines properly handled)
+  7. ✅ Admin-only access (requireAdmin() auth guard, returns 401 without session)
+  8. ✅ Input validation (invalid type → 400, invalid date range → 400)
+  9. ✅ Linked in admin sidebar with Download icon
+  10. ✅ Beautiful UI: 3-step wizard (select type → configure → download), column preview, info notes
+- Performance: 9-19ms API response time for all export types
+- Files: src/app/admin/export/page.tsx, src/app/api/admin/export/route.ts, AdminSidebar.tsx (link)
+- Feature is production-ready and already pushed to GitHub (commit 2d33058 in origin/main)

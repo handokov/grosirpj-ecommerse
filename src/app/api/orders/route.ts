@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { publicCreateOrderSchema, isCuid } from '@/lib/validations'
 import { verifyShippingCost } from '@/lib/shipping-calc'
+import { notifyAdminNewOrder } from '@/lib/whatsapp-notify'
 
 // POST - Create order from public checkout (generates invoice)
 export async function POST(request: NextRequest) {
@@ -225,6 +226,25 @@ export async function POST(request: NextRequest) {
         product: item.product ? { name: item.product.name, images: item.product.images } : { name: item.productName, images: item.productImage },
       })),
     }
+
+    // Send WhatsApp notification to admin (non-blocking)
+    notifyAdminNewOrder({
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      totalAmount: order.totalAmount,
+      shippingCost: order.shippingCost,
+      destinationCity: order.destinationCity ?? undefined,
+      paymentStatus: order.paymentStatus,
+      items: order.items.map((item) => ({
+        name: item.productName,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      createdAt: order.createdAt,
+    }).catch(err =>
+      console.warn('[orders] WhatsApp notification failed:', err)
+    )
 
     return NextResponse.json({ order: safeOrder }, { status: 201 })
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, updateOrderSchema, isCuid } from '@/lib/validations'
 import { requireAdmin, isAuthError } from '@/lib/auth-guard'
+import { notifyBuyerStatusUpdate } from '@/lib/whatsapp-notify'
 
 // Valid order status transitions — enforced server-side to prevent invalid state
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -174,6 +175,18 @@ export async function PUT(
         return updated
       })
 
+      // Send WhatsApp notification to buyer about cancellation (non-blocking)
+      notifyBuyerStatusUpdate({
+        orderNumber: order.orderNumber,
+        customerPhone: order.customerPhone,
+        customerName: order.customerName,
+        status: 'cancelled',
+        courier: order.courier ?? undefined,
+        courierService: order.courierService ?? undefined,
+      }).catch(err =>
+        console.warn('[admin/orders] WhatsApp notification failed:', err)
+      )
+
       return NextResponse.json({ order })
     }
 
@@ -188,6 +201,20 @@ export async function PUT(
         },
       },
     })
+
+    // Send WhatsApp notification to buyer about status change (non-blocking)
+    if (data.status) {
+      notifyBuyerStatusUpdate({
+        orderNumber: order.orderNumber,
+        customerPhone: order.customerPhone,
+        customerName: order.customerName,
+        status: data.status,
+        courier: order.courier ?? undefined,
+        courierService: order.courierService ?? undefined,
+      }).catch(err =>
+        console.warn('[admin/orders] WhatsApp notification failed:', err)
+      )
+    }
 
     return NextResponse.json({ order })
   } catch (error) {

@@ -14,101 +14,49 @@ async function ensureSchemaColumns() {
   if (schemaEnsured) return
 
   try {
-    // Check Order table columns
-    const orderCols = await db.$queryRawUnsafe<{ name: string }[]>(
-      "PRAGMA table_info('Order')"
-    )
-    const orderColNames = new Set(orderCols.map(c => c.name))
+    // List of ALTER TABLE statements to run.
+    // Each will fail silently if the column already exists ("duplicate column name").
+    const migrations = [
+      // Order table
+      'ALTER TABLE "Order" ADD COLUMN courier TEXT',
+      'ALTER TABLE "Order" ADD COLUMN courierService TEXT',
+      'ALTER TABLE "Order" ADD COLUMN destinationCity TEXT',
+      'ALTER TABLE "Order" ADD COLUMN note TEXT',
+      'ALTER TABLE "Order" ADD COLUMN paymentProof TEXT',
+      'ALTER TABLE "Order" ADD COLUMN paymentNotes TEXT',
+      'ALTER TABLE "Order" ADD COLUMN paidAt DATETIME',
+      'ALTER TABLE "Order" ADD COLUMN deletedAt DATETIME',
+      // OrderItem table
+      'ALTER TABLE "OrderItem" ADD COLUMN productName TEXT',
+      'ALTER TABLE "OrderItem" ADD COLUMN productImage TEXT',
+      // Product table
+      'ALTER TABLE "Product" ADD COLUMN deletedAt DATETIME',
+      'ALTER TABLE "Product" ADD COLUMN supplierName TEXT',
+      'ALTER TABLE "Product" ADD COLUMN supplierLink TEXT',
+      'ALTER TABLE "Product" ADD COLUMN supplierPhone TEXT',
+    ]
 
-    const orderMigrations: string[] = []
-
-    if (!orderColNames.has('courier')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN courier TEXT')
-    }
-    if (!orderColNames.has('courierService')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN courierService TEXT')
-    }
-    if (!orderColNames.has('destinationCity')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN destinationCity TEXT')
-    }
-    if (!orderColNames.has('note')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN note TEXT')
-    }
-    if (!orderColNames.has('paymentProof')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN paymentProof TEXT')
-    }
-    if (!orderColNames.has('paymentNotes')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN paymentNotes TEXT')
-    }
-    if (!orderColNames.has('paidAt')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN paidAt DATETIME')
-    }
-    if (!orderColNames.has('deletedAt')) {
-      orderMigrations.push('ALTER TABLE "Order" ADD COLUMN deletedAt DATETIME')
-    }
-
-    for (const sql of orderMigrations) {
-      await db.$executeRawUnsafe(sql)
-    }
-    if (orderMigrations.length > 0) {
-      console.log(`[orders] Auto-migrated ${orderMigrations.length} Order columns`)
+    let migrated = 0
+    for (const sql of migrations) {
+      try {
+        await db.$executeRawUnsafe(sql)
+        migrated++
+      } catch (alterErr) {
+        // "duplicate column name" or "already exists" means column is there — OK
+        const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+        if (!msg.includes('duplicate') && !msg.includes('already exists')) {
+          console.warn(`[orders] Migration failed: ${sql} — ${msg}`)
+        }
+      }
     }
 
-    // Check OrderItem table columns
-    const itemCols = await db.$queryRawUnsafe<{ name: string }[]>(
-      "PRAGMA table_info('OrderItem')"
-    )
-    const itemColNames = new Set(itemCols.map(c => c.name))
-
-    const itemMigrations: string[] = []
-
-    if (!itemColNames.has('productName')) {
-      itemMigrations.push('ALTER TABLE "OrderItem" ADD COLUMN productName TEXT')
-    }
-    if (!itemColNames.has('productImage')) {
-      itemMigrations.push('ALTER TABLE "OrderItem" ADD COLUMN productImage TEXT')
-    }
-
-    for (const sql of itemMigrations) {
-      await db.$executeRawUnsafe(sql)
-    }
-    if (itemMigrations.length > 0) {
-      console.log(`[orders] Auto-migrated ${itemMigrations.length} OrderItem columns`)
-    }
-
-    // Check Product table columns
-    const productCols = await db.$queryRawUnsafe<{ name: string }[]>(
-      "PRAGMA table_info('Product')"
-    )
-    const productColNames = new Set(productCols.map(c => c.name))
-
-    const productMigrations: string[] = []
-
-    if (!productColNames.has('deletedAt')) {
-      productMigrations.push('ALTER TABLE "Product" ADD COLUMN deletedAt DATETIME')
-    }
-    if (!productColNames.has('supplierName')) {
-      productMigrations.push('ALTER TABLE "Product" ADD COLUMN supplierName TEXT')
-    }
-    if (!productColNames.has('supplierLink')) {
-      productMigrations.push('ALTER TABLE "Product" ADD COLUMN supplierLink TEXT')
-    }
-    if (!productColNames.has('supplierPhone')) {
-      productMigrations.push('ALTER TABLE "Product" ADD COLUMN supplierPhone TEXT')
-    }
-
-    for (const sql of productMigrations) {
-      await db.$executeRawUnsafe(sql)
-    }
-    if (productMigrations.length > 0) {
-      console.log(`[orders] Auto-migrated ${productMigrations.length} Product columns`)
+    if (migrated > 0) {
+      console.log(`[orders] Auto-migrated ${migrated} columns`)
     }
 
     schemaEnsured = true
   } catch (err) {
-    // Log but don't crash — the order might still work if columns already exist
     console.warn('[orders] Schema migration warning:', err)
-    // Mark as ensured to avoid retrying on every request
     schemaEnsured = true
   }
 }
@@ -145,8 +93,6 @@ export async function POST(request: NextRequest) {
     }
 
     // ===== EVERYTHING INSIDE TRANSACTION FOR ATOMICITY =====
-    // Stock validation AND deduction must happen in the same transaction
-    // to prevent race conditions where stock changes between validation and deduction.
     const now = new Date()
     const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
 
@@ -156,7 +102,7 @@ export async function POST(request: NextRequest) {
       const products = await tx.product.findMany({
         where: {
           id: { in: productIds },
-          deletedAt: null, // Exclude soft-deleted products
+          deletedAt: null,
         },
         select: {
           id: true,
@@ -170,10 +116,8 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Build a lookup map
       const productMap = new Map(products.map(p => [p.id, p]))
 
-      // Validate each item and calculate prices server-side
       const orderItems: { productId: string; quantity: number; size: string; price: number; productName: string; productImage: string }[] = []
       let totalAmount = 0
       const errors: string[] = []
@@ -186,29 +130,24 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Check if in stock
         if (product.stock <= 0) {
           errors.push(`Produk ${product.name} sudah habis`)
           continue
         }
 
-        // Check min order
         if (item.quantity < product.minOrder) {
           errors.push(`Minimal order untuk ${product.name} adalah ${product.minOrder}`)
           continue
         }
 
-        // Check stock
         if (item.quantity > product.stock) {
           errors.push(`Stok ${product.name} tidak mencukupi (tersedia: ${product.stock})`)
           continue
         }
 
-        // Use wholesale price if quantity meets min order, otherwise retail price
         const unitPrice = item.quantity >= product.minOrder ? product.wholesalePrice : product.price
         totalAmount += unitPrice * item.quantity
 
-        // Extract first image from product's images field
         const firstImage = product.images ? product.images.split(',')[0].trim() : ''
 
         orderItems.push({
@@ -222,7 +161,6 @@ export async function POST(request: NextRequest) {
       }
 
       if (errors.length > 0) {
-        // Throw to rollback transaction — these are validation errors
         throw Object.assign(new Error(errors.join('. ')), { statusCode: 400 })
       }
 
@@ -231,7 +169,6 @@ export async function POST(request: NextRequest) {
       }
 
       // ===== SERVER-SIDE SHIPPING COST VERIFICATION =====
-      // Calculate total weight from products (weight field is String, parse carefully)
       let totalWeightGrams = 0
       for (const item of orderItems) {
         const product = productMap.get(item.productId)
@@ -239,11 +176,8 @@ export async function POST(request: NextRequest) {
         const parsed = parseWeight(weightStr)
         totalWeightGrams += parsed * item.quantity
       }
-      // Minimum weight: 250g if all products have no weight set
       if (totalWeightGrams === 0) totalWeightGrams = 250
 
-      // Verify shipping cost against rate table
-      // Use destinationProvince for zone lookup (more accurate than city name)
       const clientShippingCost = data.shippingCost ?? 0
       const verification = await verifyShippingCost(
         data.destinationProvince || data.destinationCity || '',
@@ -262,17 +196,17 @@ export async function POST(request: NextRequest) {
 
       totalAmount += shippingCost
 
-      // Count today's orders INSIDE the transaction to prevent race conditions
+      // Count today's orders INSIDE the transaction
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       const todayCount = await tx.order.count({ where: { createdAt: { gte: todayStart } } })
 
-      // Generate unique order number with crypto-safe random
+      // Generate unique order number
       const { randomInt } = await import('crypto')
       let orderNumber = ''
       let attempts = 0
       do {
         const seq = String(todayCount + 1 + attempts).padStart(4, '0')
-        const rand = String(randomInt(0, 10000)).padStart(4, '0') // 4-digit crypto-safe random
+        const rand = String(randomInt(0, 10000)).padStart(4, '0')
         orderNumber = `GPJ-${dateStr}-${seq}${rand}`
         attempts++
         if (attempts > 10) {
@@ -309,7 +243,7 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // ===== DEDUCT STOCK & INCREMENT SOLD (atomic within transaction) =====
+      // ===== DEDUCT STOCK & INCREMENT SOLD =====
       for (const item of orderItems) {
         const updated = await tx.product.updateMany({
           where: { id: item.productId, stock: { gte: item.quantity }, deletedAt: null },
@@ -319,10 +253,9 @@ export async function POST(request: NextRequest) {
           },
         })
         if (updated.count === 0) {
-          // Stock was consumed by another concurrent order — rollback entire transaction
           throw Object.assign(
             new Error('Stok tidak mencukupi. Pesanan lain baru saja menghabiskan stok ini.'),
-            { statusCode: 409 } // 409 Conflict
+            { statusCode: 409 }
           )
         }
       }
@@ -330,7 +263,7 @@ export async function POST(request: NextRequest) {
       return newOrder
     })
 
-    // Strip supplier info from response (buyer-facing)
+    // Strip supplier info from response
     const safeOrder = {
       ...order,
       items: order.items.map((item) => ({
@@ -341,7 +274,18 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ order: safeOrder }, { status: 201 })
   } catch (error) {
-    console.error('Create order error:', error)
+    // Log FULL error details for debugging (visible in Vercel logs)
+    const errorType = error?.constructor?.name || 'Unknown'
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : ''
+    console.error(`[orders] CREATE ORDER FAILED: type=${errorType} message="${errorMessage}"`)
+    if (errorStack) console.error(`[orders] Stack: ${errorStack}`)
+
+    // Log the full Prisma error if available
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code?: string; meta?: unknown }
+      console.error(`[orders] Prisma error code: ${prismaError.code}, meta:`, prismaError.meta)
+    }
 
     // Check if this is a controlled validation error with statusCode
     if (error instanceof Error && 'statusCode' in error) {
@@ -349,52 +293,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: statusCode })
     }
 
-    // Return more detailed error for debugging (but not internal details)
-    const errMsg = error instanceof Error ? error.message : String(error)
-
-    // Detect common Turso/column errors and give helpful message
-    if (errMsg.includes('no such column') || errMsg.includes('SQLITE_ERROR')) {
-      console.error('[orders] Missing column error — ensureSchemaColumns may have failed:', errMsg)
+    // Detect specific errors and give helpful messages
+    if (errorMessage.includes('no such column') || errorMessage.includes('SQLITE_ERROR')) {
       return NextResponse.json({
         error: 'Sistem sedang diperbarui. Silakan coba lagi dalam 1-2 menit.',
+        debug: errorMessage,
       }, { status: 503 })
     }
 
-    // Generic error — never expose internal details to client
-    return NextResponse.json({ error: 'Gagal membuat pesanan. Silakan coba lagi.' }, { status: 500 })
+    if (errorMessage.includes('does not exist') || errorMessage.includes('no such table')) {
+      return NextResponse.json({
+        error: 'Sistem sedang diperbarui. Silakan coba lagi dalam 1-2 menit.',
+        debug: errorMessage,
+      }, { status: 503 })
+    }
+
+    if (errorMessage.includes('timeout') || errorMessage.includes('Timed out')) {
+      return NextResponse.json({
+        error: 'Server sedang sibuk. Silakan coba lagi.',
+      }, { status: 504 })
+    }
+
+    // Return error with debug info temporarily for production debugging
+    return NextResponse.json({
+      error: 'Gagal membuat pesanan. Silakan coba lagi.',
+      debug: errorMessage,
+    }, { status: 500 })
   }
 }
 
 /**
  * Parse product weight string to grams.
- * Handles various formats: "250", "250g", "1.5kg", "1 kg", "0.5", etc.
- * Returns weight in grams. Defaults to 250g if unparseable.
  */
 function parseWeight(weightStr: string): number {
   if (!weightStr || typeof weightStr !== 'string') return 250
 
   const normalized = weightStr.trim().toLowerCase()
 
-  // Try "Xkg" format
   const kgMatch = normalized.match(/^([\d.]+)\s*kg$/)
   if (kgMatch) {
     const val = parseFloat(kgMatch[1])
     return isNaN(val) ? 250 : Math.round(val * 1000)
   }
 
-  // Try "Xg" format
   const gMatch = normalized.match(/^([\d.]+)\s*g$/)
   if (gMatch) {
     const val = parseFloat(gMatch[1])
     return isNaN(val) ? 250 : Math.round(val)
   }
 
-  // Try plain number (assume grams)
   const numVal = parseFloat(normalized)
   if (!isNaN(numVal) && numVal > 0) {
-    // If number < 10, assume kg; if >= 10, assume grams
     return numVal < 10 ? Math.round(numVal * 1000) : Math.round(numVal)
   }
 
-  return 250 // Default: 250g
+  return 250
 }

@@ -411,7 +411,11 @@ function CartDrawer() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal membuat pesanan');
+      if (!res.ok) {
+        // Show debug info if available (helps diagnose production issues)
+        const debugInfo = data.debug ? ` (${data.debug})` : ''
+        throw new Error(data.error || 'Gagal membuat pesanan' + debugInfo);
+      }
 
       // Safely extract order data
       const order = data.order;

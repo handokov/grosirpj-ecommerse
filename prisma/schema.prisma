@@ -106,6 +106,9 @@ model Order {
   courierService  String?
   destinationCity String?
   note            String?
+  paymentProof    String?     // Cloudinary URL — bukti pembayaran dari user
+  paymentNotes    String?     // Catatan pembayaran dari user
+  paidAt          DateTime?   // Waktu pembayaran dikonfirmasi admin
   deletedAt       DateTime?   // Soft delete — orders should NEVER be hard-deleted for audit
   items           OrderItem[]
   createdAt       DateTime    @default(now())

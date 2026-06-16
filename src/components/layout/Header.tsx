@@ -18,6 +18,8 @@ import {
   MapPin,
   MessageCircle,
   ChevronLeft,
+  Upload,
+  CheckCircle,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
@@ -354,6 +356,13 @@ function CartDrawer() {
   const [shippingCost, setShippingCost] = useState(0);
   const [selectedShipping, setSelectedShipping] = useState<SelectedShipping | null>(null);
 
+  // Payment proof upload
+  const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const [paymentPreview, setPaymentPreview] = useState<string | null>(null);
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [proofUploaded, setProofUploaded] = useState(false);
+
   // Use centralized config
   const grandTotal = total + shippingCost;
 
@@ -472,6 +481,45 @@ function CartDrawer() {
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File terlalu besar. Maksimal 10MB');
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      toast.error('Format file tidak didukung. Gunakan JPG, PNG, atau WebP');
+      return;
+    }
+    setPaymentFile(file);
+    setPaymentPreview(URL.createObjectURL(file));
+  };
+
+  const handleUploadProof = async () => {
+    if (!paymentFile || !invoice) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('paymentProof', paymentFile);
+      if (paymentNotes.trim()) formData.append('paymentNotes', paymentNotes.trim());
+
+      const res = await fetch(`/api/orders/${invoice.orderNumber}/payment-proof`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal upload');
+
+      setProofUploaded(true);
+      toast.success('Bukti pembayaran berhasil dikirim!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal upload bukti pembayaran');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleClose = () => {
     setStep('cart');
     setInvoice(null);
@@ -481,6 +529,11 @@ function CartDrawer() {
     setCustNote('');
     setShippingCost(0);
     setSelectedShipping(null);
+    setPaymentFile(null);
+    setPaymentPreview(null);
+    setPaymentNotes('');
+    setUploading(false);
+    setProofUploaded(false);
     setIsCartOpen(false);
   };
 
@@ -733,11 +786,68 @@ function CartDrawer() {
                   </p>
                 </div>
 
+                {/* Upload Bukti Pembayaran */}
+                {!proofUploaded ? (
+                  <div className="space-y-2">
+                    <p className="font-semibold text-sm text-gray-800">📷 Upload Bukti Pembayaran</p>
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-emerald-400 transition-colors cursor-pointer relative">
+                      {paymentPreview ? (
+                        <div className="space-y-2">
+                          <img src={paymentPreview} alt="Preview" className="max-h-32 mx-auto rounded-lg" />
+                          <p className="text-xs text-gray-500">Klik untuk ganti foto</p>
+                        </div>
+                      ) : (
+                        <div className="py-2">
+                          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-1" />
+                          <p className="text-xs text-gray-600 font-medium">Klik untuk pilih foto</p>
+                          <p className="text-[10px] text-gray-400">JPG, PNG, WebP • Maks. 10MB</p>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={handleFileSelect}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                    <Input
+                      placeholder="Catatan pembayaran (opsional)"
+                      value={paymentNotes}
+                      onChange={(e) => setPaymentNotes(e.target.value)}
+                      className="h-9 text-xs"
+                    />
+                    {paymentFile && (
+                      <Button
+                        onClick={handleUploadProof}
+                        disabled={uploading}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-9 text-xs"
+                      >
+                        {uploading ? 'Mengupload...' : 'Kirim Bukti Pembayaran'}
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-emerald-50 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <p className="text-xs font-semibold text-emerald-800">Bukti pembayaran berhasil dikirim</p>
+                    </div>
+                    <p className="text-[10px] text-emerald-700">Admin akan memverifikasi pembayaran Anda</p>
+                  </div>
+                )}
+
                 {/* Status */}
-                <div className="flex items-center gap-2 bg-yellow-50 rounded-lg p-2">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-                  <span className="text-xs font-medium text-yellow-800">Menunggu Pembayaran</span>
-                </div>
+                {proofUploaded ? (
+                  <div className="flex items-center gap-2 bg-blue-50 rounded-lg p-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                    <span className="text-xs font-medium text-blue-800">Bukti Terkirim — Menunggu Verifikasi</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 bg-yellow-50 rounded-lg p-2">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-medium text-yellow-800">Menunggu Pembayaran</span>
+                  </div>
+                )}
 
                 <p className="text-[10px] text-muted-foreground text-center">
                   {new Date(invoice.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} {new Date(invoice.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
@@ -750,9 +860,9 @@ function CartDrawer() {
               onClick={handleWhatsApp}
               className="w-full bg-[#25D366] hover:bg-[#20BD5A] text-white h-11 rounded-xl font-semibold"
             >
-              <MessageCircle className="h-4 w-4 mr-2" /> Kirim Bukti Bayar via WhatsApp
+              <MessageCircle className="h-4 w-4 mr-2" /> Kirim Bukti via WhatsApp
             </Button>
-            <p className="text-xs text-center text-muted-foreground">Sertakan nomor invoice & bukti transfer</p>
+            <p className="text-xs text-center text-muted-foreground">Atau upload bukti di atas & kirim via WhatsApp sebagai backup</p>
           </div>
         </>
       )}

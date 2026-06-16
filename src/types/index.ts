@@ -144,6 +144,9 @@ export interface Order {
   status: OrderStatus;
   paymentMethod: string;
   paymentStatus: PaymentStatus;
+  paymentProof: string | null;
+  paymentNotes: string | null;
+  paidAt: string | null;
   totalAmount: number;
   shippingCost: number;
   courier: string | null;

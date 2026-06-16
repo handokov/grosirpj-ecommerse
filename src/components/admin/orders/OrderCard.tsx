@@ -1,4 +1,4 @@
-import { ShoppingCart, Phone, MapPin, RefreshCw, Eye } from 'lucide-react'
+import { ShoppingCart, Phone, MapPin, RefreshCw, Eye, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -47,6 +47,15 @@ export function OrderCard({ order, onStatusUpdate, onViewDetail }: OrderCardProp
             >
               {paymentConfig.label}
             </Badge>
+            {order.paymentProof && (
+              <Badge
+                variant="outline"
+                className="text-[10px] font-semibold text-blue-600 bg-blue-50 border-blue-200 gap-1"
+              >
+                <ImageIcon className="w-2.5 h-2.5" />
+                Bukti
+              </Badge>
+            )}
           </div>
         </div>
 

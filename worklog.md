@@ -132,3 +132,35 @@ Stage Summary:
 - Old `isAdminError` function no longer referenced anywhere in codebase
 - New pattern is cleaner: requireAdmin() throws on auth failure, eliminating the easy-to-forget null check
 - All existing error handling (statusCode checks, TimeoutError checks, etc.) preserved as fallbacks after isAuthError check
+
+---
+Task ID: 4
+Agent: Sub Agent
+Task: Add payment proof upload to Invoice step in CartDrawer
+
+Work Log:
+- Added `Upload` and `CheckCircle` icons to lucide-react import
+- Added 5 new state variables: `paymentFile`, `paymentPreview`, `paymentNotes`, `uploading`, `proofUploaded`
+- Added `handleFileSelect` function with file size (10MB max) and type validation (JPG/PNG/WebP/GIF)
+- Added `handleUploadProof` async function that POSTs FormData to `/api/orders/${orderNumber}/payment-proof`
+- Added upload UI section between BCA payment info and status badge:
+  - Drag-and-drop style file input with click-to-select
+  - Image preview after file selection
+  - Optional payment notes text input
+  - Upload button with loading state
+  - Success confirmation with CheckCircle icon after upload
+- Updated status badge to be conditional:
+  - Before upload: yellow "Menunggu Pembayaran" with pulsing dot
+  - After upload: blue "Bukti Terkirim — Menunggu Verifikasi"
+- Updated WhatsApp button label from "Kirim Bukti Bayar via WhatsApp" to "Kirim Bukti via WhatsApp"
+- Updated helper text to mention both upload and WhatsApp options
+- Reset all payment proof states in `handleClose` function
+- ESLint: 0 errors, 0 warnings
+- TypeScript: type check passes
+
+Stage Summary:
+- Single file modified: src/components/layout/Header.tsx
+- Payment proof upload feature fully integrated into Invoice step
+- UI uses conditional rendering based on `proofUploaded` state
+- Status badge dynamically reflects upload state (yellow→blue)
+- All existing functionality preserved (WhatsApp button, BCA info, invoice display)

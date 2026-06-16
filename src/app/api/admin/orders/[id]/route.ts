@@ -78,9 +78,18 @@ export async function PUT(
       customerName?: string
       customerPhone?: string
       customerAddr?: string
+      paidAt?: Date | null
     } = {}
     if (data.status !== undefined) updateData.status = data.status
-    if (data.paymentStatus !== undefined) updateData.paymentStatus = data.paymentStatus
+    if (data.paymentStatus !== undefined) {
+      updateData.paymentStatus = data.paymentStatus
+      // Set paidAt when confirming payment, clear it when reverting
+      if (data.paymentStatus === 'paid') {
+        updateData.paidAt = new Date()
+      } else if (data.paymentStatus === 'unpaid') {
+        updateData.paidAt = null
+      }
+    }
     if (data.paymentMethod !== undefined) updateData.paymentMethod = data.paymentMethod
     if (data.note !== undefined) updateData.note = data.note
     if (data.customerName !== undefined) updateData.customerName = data.customerName

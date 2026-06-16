@@ -10,6 +10,9 @@ import {
   X,
   CreditCard,
   RefreshCw,
+  ImageIcon,
+  ExternalLink,
+  FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +22,7 @@ import { Separator } from '@/components/ui/separator'
 import { formatRupiah, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { type OrderStatus, type PaymentStatus, type Order } from '@/types'
+import Image from 'next/image'
 import { STATUS_CONFIG, PAYMENT_CONFIG, PAYMENT_METHOD_LABELS, getNextOrderStatus } from '@/lib/order-config'
 import { OrderStatusTimeline } from '@/components/admin/orders/OrderStatusTimeline'
 import { CustomerInfoCard } from '@/components/admin/orders/CustomerInfoCard'
@@ -278,6 +282,58 @@ export default function OrderDetailPage() {
                 {formatRupiah(order.totalAmount)}
               </span>
             </div>
+            {order.paymentProof && (
+              <>
+                <Separator />
+                <div className="flex items-start gap-3">
+                  <span className="text-[11px] text-gray-400 w-20 shrink-0">Bukti Bayar</span>
+                  <div className="flex-1 space-y-2">
+                    <div className="relative group rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                      <Image
+                        src={order.paymentProof}
+                        alt="Bukti Pembayaran"
+                        width={400}
+                        height={300}
+                        className="w-full max-h-64 object-contain"
+                        unoptimized
+                      />
+                      <a
+                        href={order.paymentProof}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg p-1.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-600" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+            {order.paymentNotes && (
+              <>
+                <Separator />
+                <div className="flex items-start gap-3">
+                  <span className="text-[11px] text-gray-400 w-20 shrink-0">Catatan Bayar</span>
+                  <div className="flex items-start gap-1.5">
+                    <FileText className="w-3 h-3 text-gray-400 mt-0.5" />
+                    <span className="text-xs text-gray-600">{order.paymentNotes}</span>
+                  </div>
+                </div>
+              </>
+            )}
+            {!order.paymentProof && order.paymentStatus === 'unpaid' && (
+              <>
+                <Separator />
+                <div className="flex items-start gap-3">
+                  <span className="text-[11px] text-gray-400 w-20 shrink-0">Bukti Bayar</span>
+                  <div className="flex items-center gap-1.5 text-gray-400">
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span className="text-[11px] italic">Belum ada bukti pembayaran</span>
+                  </div>
+                </div>
+              </>
+            )}
             {order.note && (
               <>
                 <Separator />

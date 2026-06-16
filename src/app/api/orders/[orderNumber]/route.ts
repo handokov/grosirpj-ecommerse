@@ -40,6 +40,8 @@ export async function GET(
       status: order.status,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
+      paymentProof: order.paymentProof,
+      paymentNotes: order.paymentNotes,
       totalAmount: order.totalAmount,
       shippingCost: order.shippingCost,
       courier: order.courier,

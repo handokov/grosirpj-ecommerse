@@ -14,6 +14,17 @@ async function ensureSchemaColumns() {
   if (schemaEnsured) return
 
   try {
+    // Quick check: if 'courier' column exists in Order table, assume all columns are already migrated.
+    // This avoids running 14 ALTER TABLE statements on every cold start.
+    try {
+      await db.$queryRawUnsafe('SELECT courier FROM "Order" LIMIT 0')
+      // If we get here, the column exists — all good, skip migration
+      schemaEnsured = true
+      return
+    } catch {
+      // Column doesn't exist — need to migrate
+    }
+
     // List of ALTER TABLE statements to run.
     // Each will fail silently if the column already exists ("duplicate column name").
     const migrations = [

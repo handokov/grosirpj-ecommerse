@@ -555,3 +555,70 @@ Stage Summary:
 - Files modified: src/components/layout/SiteLayout.tsx (add CookieBanner), src/app/layout.tsx (add Analytics+SpeedInsights), src/components/shared/ProductCard.tsx (heart button), src/app/[categorySlug]/[productSlug]/ProductDetailClient.tsx (favorite button), src/components/layout/Header.tsx (wishlist link+badge), src/components/layout/Footer.tsx (Favorit link)
 - All features production-ready, lint clean, no console errors
 - Ready to commit & push to GitHub for Vercel deployment
+
+---
+Task ID: 37
+Agent: Main Agent
+Task: End-to-end testing of 3 features (#14 Cookie Banner, #13 Analytics, #10 Wishlist) via Agent Browser + VLM
+
+Work Log:
+- Verified git state: commit 84c6ed0 "feat: add cookie banner + Vercel analytics + wishlist feature" already pushed
+- Confirmed all 3 features implemented & committed before testing
+- Dev server running on localhost:3000, no errors in dev.log
+
+TEST 1: Cookie Banner (#14) — PASSED
+- Cleared localStorage (grosirpj-cookie-consent) → reloaded → banner appeared after 800ms delay
+- Agent Browser find text "Kami menggunakan cookie" → found ✅
+- Clicked "Saya Setuju" button → banner disappeared immediately
+- localStorage saved: grosirpj-cookie-consent = "accepted" ✅
+- Reloaded → banner stayed hidden (consent remembered) ✅
+- Tested X dismiss flow: cleared storage → reloaded → banner appeared → clicked X "Tutup banner"
+  → banner hidden but localStorage NOT saved (null) → GDPR-correct (will re-show next visit) ✅
+- VLM screenshot analysis confirmed: banner text "Kami menggunakan cookie" + "Pelajari lebih lanjut" link + "Saya Setuju" (green) button + X close button
+
+TEST 2: Analytics (#13) — PASSED
+- Checked DOM for Vercel script tags via eval:
+  - https://va.vercel-scripts.com/v1/script.debug.js (Analytics) ✅
+  - https://va.vercel-scripts.com/v1/speed-insights/script.debug.js (Speed Insights) ✅
+- React chunk manifest confirms @vercel/analytics Analytics component + @vercel/speed-insights SpeedInsights component imported & rendered
+- Console logs PROVE active tracking (debug mode in dev):
+  - [Vercel Web Analytics] [view] http://localhost:3000/ → /_vercel/insights/view
+  - [Vercel Web Analytics] [view] http://localhost:3000/wishlist → /_vercel/insights/view
+  - [Vercel Speed Insights] active
+  - Note: "Debug mode is enabled by default in development. No requests will be sent to the server" — production will send real data
+
+TEST 3: Wishlist (#10) — PASSED (full flow)
+- Cleared wishlist localStorage → opened homepage
+- 8 product cards each have "Simpan ke Favorit" heart button (refs e75-e82)
+- Header has "Lihat Favorit" link + Footer has "Favorit" link
+- Clicked heart on "Kemeja Anak Laki-Laki Sekolah":
+  → aria-label changed "Simpan ke Favorit" → "Hapus dari Favorit" ✅
+  → localStorage grosirpj-wishlist saved with full product data (id, name, slug, price, category, etc.) ✅
+- Clicked heart on "Sepatu Bayi Pre-Walker Anti Slip" → added ✅
+- Navigated to /wishlist page:
+  → heading "Favorit Saya" + "Hapus Semua" button + 2 product cards with "Hapus dari Favorit" buttons ✅
+  → VLM confirmed: title "Favorit Saya", 2 products (Kemeja Anak, Sepatu Bayi), "Hapus Semua" button
+- Navigated to product detail (Romper Bayi) → clicked "Simpan ke Favorit" button (e33):
+  → button changed to "Hapus dari Favorit" ✅
+  → /wishlist now shows 3 products ✅
+- Tested "Hapus Semua":
+  → clicked → AlertDialog opened: heading "Hapus semua favorit?" + "Batal" + "Ya, Hapus Semua" buttons ✅
+  → clicked "Ya, Hapus Semua" → all items removed → empty state appeared ✅
+  → localStorage items: [] ✅
+  → VLM confirmed empty state: heading "Favorit Saya" + "Mulai Belanja" + "Lihat Semua Produk"
+- Tested single-item removal + header badge:
+  → added 1 product from homepage → header "Lihat Favorit" link shows red badge with "1" (bg-red-500 text-white) ✅
+  → went to /wishlist → clicked "Hapus dari Favorit" on the item → back to empty state ✅
+
+Final verification:
+- Console errors: 0 ✅
+- Lint: 0 errors, 0 warnings ✅
+- Dev.log: no errors/failures ✅
+
+Stage Summary:
+- All 3 features (#14 Cookie Banner, #13 Analytics, #10 Wishlist) verified working end-to-end
+- Cookie Banner: GDPR-correct consent flow (accept persists, dismiss doesn't)
+- Analytics: scripts loaded + page views actively tracked (visible in console, will send to Vercel dashboard in production)
+- Wishlist: full CRUD flow (add from card/detail, view page, remove single, remove all with confirm dialog, empty state, header badge count)
+- VLM visual analysis confirmed all 3 features render correctly
+- Features already committed (84c6ed0) and pushed to GitHub — Vercel will auto-deploy

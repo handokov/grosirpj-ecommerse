@@ -444,8 +444,12 @@ function CartDrawer() {
       setStep('invoice');
       clearCart();
     } catch (err) {
-      if (process.env.NODE_ENV === 'development') console.error('Order error:', err);
-      toast.error('Gagal membuat pesanan', { description: 'Silakan coba lagi atau hubungi kami via WhatsApp.' });
+      console.error('Order error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Gagal membuat pesanan';
+      toast.error(errorMessage, {
+        description: 'Silakan coba lagi atau hubungi kami via WhatsApp.',
+        duration: 8000,
+      });
     } finally {
       setIsSubmitting(false);
     }

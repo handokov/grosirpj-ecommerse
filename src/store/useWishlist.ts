@@ -3,12 +3,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useSyncExternalStore } from 'react';
-import type { Product } from '@/types';
+import type { WishlistItem } from '@/types';
 
 interface WishlistState {
-  items: Product[];
+  items: WishlistItem[];
 
-  toggleWishlist: (product: Product) => void;
+  toggleWishlist: (product: WishlistItem) => void;
   removeFromWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
   clearWishlist: () => void;

@@ -31,6 +31,27 @@ export interface Product {
 }
 
 /**
+ * Minimal product shape stored in the wishlist.
+ * A subset of Product — enough to render wishlist cards without re-fetching.
+ * Both Product (full) and ProductCard's prop shape are assignable to this,
+ * so the wishlist can be toggled from either a full Product or a partial card.
+ */
+export interface WishlistItem {
+  id: string;
+  name: string;
+  slug: string;
+  images: string;
+  price: number;
+  wholesalePrice: number;
+  minOrder: number;
+  sold: number;
+  rating: number;
+  featured?: boolean;
+  categoryName?: string;
+  categorySlug?: string;
+}
+
+/**
  * Product as seen in the admin dashboard.
  * Extends the base Product with supplier info and a full category object.
  * Used in admin product detail/edit pages.

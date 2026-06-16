@@ -7,22 +7,15 @@ import { Star, Heart } from 'lucide-react'
 import { formatRupiah, calculateDiscount } from '@/lib/format'
 import ProductImage from '@/components/ui/product-image'
 import { useWishlist, useWishlistHydrated } from '@/store/useWishlist'
+import type { WishlistItem } from '@/types'
 
 interface ProductCardProps {
-  product: {
-    id: string
-    name: string
-    slug: string
-    images: string
-    price: number
-    wholesalePrice: number
-    minOrder: number
-    sold: number
-    rating: number
-    featured?: boolean
-    categoryName?: string
-    categorySlug?: string
-  }
+  /**
+   * Product to display. Accepts the minimal WishlistItem shape — both a full
+   * Product (from detail pages) and a partial card object (from API listings)
+   * are assignable to it, so the same card works everywhere.
+   */
+  product: WishlistItem
   /** Default category slug to use when product.categorySlug is missing */
   fallbackCategorySlug?: string
   /** Aspect ratio for the image area */

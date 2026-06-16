@@ -66,3 +66,6 @@ prisma/*.db
 prisma/prisma/
 tool-results/
 agent-ctx/
+
+# Test screenshots
+test-*.png

@@ -1,12 +1,10 @@
 /**
  * WhatsApp Notification Utility for GrosirPJ
  *
- * Sends WhatsApp notifications using the Fonnte API (Indonesian WhatsApp gateway).
- * Falls back to console logging + wa.me deep links when no API key is configured.
- *
- * Usage:
- *   - Set FONNTE_API_KEY env var to enable real WhatsApp delivery
- *   - Without the key, notifications are logged and a wa.me link is generated
+ * Sends WhatsApp notifications through multiple backends:
+ * 1. Self-hosted Baileys bot (port 3002) — FREE, no third-party needed
+ * 2. Fonnte API — if FONNTE_API_KEY env var is set
+ * 3. Console logging + wa.me link — fallback when nothing is configured
  *
  * All calls are non-blocking: the caller should use .catch() to swallow errors
  * so that notification failures never break the main business logic.
@@ -15,43 +13,74 @@
 import { WA_NUMBER } from '@/lib/store-config'
 
 // ---------------------------------------------------------------------------
-// Fonnte API helpers
+// Send backends — tries self-hosted bot first, then Fonnte, then fallback
 // ---------------------------------------------------------------------------
 
+const WA_BOT_URL = 'http://localhost:3002'
 const FONNTE_API_URL = 'https://api.fonnte.com/send'
 
 /**
- * Low-level send via Fonnte API.
- * Returns true if the message was sent (or would have been sent in dry-run).
+ * Send a WhatsApp message through available backends.
+ * Priority: Self-hosted bot → Fonnte API → Console log fallback
  */
-async function sendViaFonnte(target: string, message: string): Promise<boolean> {
+async function sendMessage(target: string, message: string): Promise<boolean> {
+  // 1. Try self-hosted Baileys bot first
+  try {
+    const res = await fetch(`${WA_BOT_URL}/send?XTransformPort=3002`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, message }),
+      signal: AbortSignal.timeout(5000), // 5s timeout
+    })
+
+    if (res.ok) {
+      const data = await res.json() as { success?: boolean; queued?: boolean }
+      if (data.success) {
+        console.log(`[whatsapp] ✅ Sent via self-hosted bot to ${target}`)
+        return true
+      }
+      if (data.queued) {
+        console.log(`[whatsapp] 📨 Queued via self-hosted bot (not connected yet) for ${target}`)
+        return true
+      }
+    }
+  } catch {
+    // Bot not running — try next backend
+    console.log('[whatsapp] Self-hosted bot not available, trying Fonnte...')
+  }
+
+  // 2. Try Fonnte API
   const apiKey = process.env.FONNTE_API_KEY
+  if (apiKey) {
+    try {
+      const res = await fetch(FONNTE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ target, message }),
+      })
 
-  if (!apiKey) {
-    // No API key configured — log and generate wa.me fallback link
-    const deepLink = buildWaMeLink(target, message)
-    console.log(`[whatsapp] No FONNTE_API_KEY set. Notification logged (not sent).`)
-    console.log(`[whatsapp] Target: ${target}`)
-    console.log(`[whatsapp] Message:\n${message}`)
-    console.log(`[whatsapp] Manual link: ${deepLink}`)
-    return false
+      if (res.ok) {
+        console.log(`[whatsapp] ✅ Sent via Fonnte to ${target}`)
+        return true
+      }
+
+      const text = await res.text().catch(() => '')
+      throw new Error(`Fonnte API error ${res.status}: ${text}`)
+    } catch (err) {
+      console.warn('[whatsapp] Fonnte failed:', err)
+    }
   }
 
-  const res = await fetch(FONNTE_API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ target, message }),
-  })
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Fonnte API error ${res.status}: ${text}`)
-  }
-
-  return true
+  // 3. Fallback: log to console + generate wa.me link
+  const deepLink = buildWaMeLink(target, message)
+  console.log(`[whatsapp] ⚠️ No backend available. Notification logged (not sent).`)
+  console.log(`[whatsapp] Target: ${target}`)
+  console.log(`[whatsapp] Message:\n${message}`)
+  console.log(`[whatsapp] Manual link: ${deepLink}`)
+  return false
 }
 
 /**
@@ -60,6 +89,33 @@ async function sendViaFonnte(target: string, message: string): Promise<boolean> 
 function buildWaMeLink(phone: string, message: string): string {
   const encoded = encodeURIComponent(message)
   return `https://wa.me/${phone}?text=${encoded}`
+}
+
+// ---------------------------------------------------------------------------
+// Check bot status
+// ---------------------------------------------------------------------------
+
+/**
+ * Check the status of the self-hosted WhatsApp bot.
+ * Returns connection status and queue info.
+ */
+export async function getWABotStatus(): Promise<{
+  available: boolean
+  status?: string
+  queued?: number
+}> {
+  try {
+    const res = await fetch(`${WA_BOT_URL}/status?XTransformPort=3002`, {
+      signal: AbortSignal.timeout(3000),
+    })
+    if (res.ok) {
+      const data = await res.json() as { status?: string; queued?: number }
+      return { available: true, status: data.status, queued: data.queued }
+    }
+  } catch {
+    // Bot not running
+  }
+  return { available: false }
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +154,22 @@ function formatPhoneDisplay(phone: string): string {
     return '0' + phone.slice(2)
   }
   return phone
+}
+
+/**
+ * Format a phone number for WhatsApp API (ensure 62xx format).
+ * e.g. "089622565076" → "6289622565076"
+ */
+function formatPhoneForWA(phone: string): string {
+  let clean = phone.replace(/[^0-9]/g, '')
+  if (clean.startsWith('08')) {
+    clean = '62' + clean.slice(1)
+  } else if (clean.startsWith('0')) {
+    clean = '62' + clean.slice(1)
+  } else if (!clean.startsWith('62') && !clean.startsWith('+')) {
+    clean = '62' + clean
+  }
+  return clean
 }
 
 // ---------------------------------------------------------------------------
@@ -145,9 +217,6 @@ export interface NewOrderNotification {
 
 /**
  * Send a WhatsApp notification to the admin when a new order is placed.
- *
- * The message is formatted with WhatsApp-friendly styling (*bold*, emoji, etc.)
- * and includes the order details, item breakdown, and total.
  */
 export async function notifyAdminNewOrder(order: NewOrderNotification): Promise<void> {
   const now = order.createdAt ? formatDateTime(order.createdAt) : formatDateTime(new Date())
@@ -188,7 +257,7 @@ export async function notifyAdminNewOrder(order: NewOrderNotification): Promise<
     .join('\n')
 
   // Send to admin's WhatsApp number
-  await sendViaFonnte(WA_NUMBER, message)
+  await sendMessage(WA_NUMBER, message)
 }
 
 // ---------------------------------------------------------------------------
@@ -206,15 +275,11 @@ export interface StatusUpdateNotification {
 
 /**
  * Send a WhatsApp notification to the buyer when their order status changes.
- *
- * Uses a friendly, personalized message in Indonesian with status-specific
- * wording and emoji.
  */
 export async function notifyBuyerStatusUpdate(order: StatusUpdateNotification): Promise<void> {
   const statusInfo = STATUS_MESSAGES[order.status]
 
   if (!statusInfo) {
-    // Unknown status — send a generic message
     console.warn(`[whatsapp] Unknown order status "${order.status}", skipping buyer notification for ${order.orderNumber}`)
     return
   }
@@ -238,5 +303,6 @@ export async function notifyBuyerStatusUpdate(order: StatusUpdateNotification): 
     .join('\n')
 
   // Send to the buyer's WhatsApp number
-  await sendViaFonnte(order.customerPhone, message)
+  const target = formatPhoneForWA(order.customerPhone)
+  await sendMessage(target, message)
 }

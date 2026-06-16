@@ -19,6 +19,9 @@ import {
   Database,
   Loader2,
   AlertCircle,
+  MessageCircle,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
 import {
   Card,
@@ -44,6 +47,25 @@ export default function SettingsPage() {
     status: string
     checks: { column: string; exists: boolean }[]
   } | null>(null)
+  const [waBotStatus, setWaBotStatus] = useState<{
+    available: boolean
+    status?: string
+    queued?: number
+  } | null>(null)
+  const [checkingWA, setCheckingWA] = useState(false)
+
+  const checkWABotStatus = async () => {
+    setCheckingWA(true)
+    try {
+      const res = await fetch('/api/admin/wa-bot/status')
+      const data = await res.json()
+      setWaBotStatus(data)
+    } catch {
+      setWaBotStatus({ available: false })
+    } finally {
+      setCheckingWA(false)
+    }
+  }
 
   const checkSchemaStatus = async () => {
     setCheckingStatus(true)
@@ -353,6 +375,99 @@ export default function SettingsPage() {
                 )}
                 Jalankan Migrasi
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* WhatsApp Bot Status */}
+      <div>
+        <h2 className="text-sm font-bold text-gray-900 mb-3">WhatsApp Bot</h2>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <MessageCircle className="w-4 h-4 text-emerald-700" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-gray-900">Notifikasi WhatsApp Otomatis</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Kirim notifikasi WA otomatis ke admin saat ada pesanan baru & ke buyer saat status berubah
+                </p>
+              </div>
+            </div>
+
+            {/* WA Bot Status */}
+            {waBotStatus && (
+              <div className={cn(
+                'p-3 rounded-lg text-[11px]',
+                waBotStatus.available && waBotStatus.status === 'connected'
+                  ? 'bg-emerald-50 border border-emerald-200'
+                  : waBotStatus.available && waBotStatus.status !== 'connected'
+                    ? 'bg-amber-50 border border-amber-200'
+                    : 'bg-red-50 border border-red-200'
+              )}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  {waBotStatus.available && waBotStatus.status === 'connected' ? (
+                    <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : waBotStatus.available ? (
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                  ) : (
+                    <WifiOff className="w-3.5 h-3.5 text-red-600" />
+                  )}
+                  <span className="font-semibold">
+                    {waBotStatus.available && waBotStatus.status === 'connected'
+                      ? 'WhatsApp Bot Terhubung'
+                      : waBotStatus.available
+                        ? `Bot ${waBotStatus.status === 'connecting' ? 'Sedang Menghubungkan...' : 'Tidak Terhubung'}`
+                        : 'Bot Tidak Aktif'}
+                  </span>
+                </div>
+                <div className="ml-5 text-gray-600 space-y-0.5">
+                  {waBotStatus.available ? (
+                    <>
+                      <div>Status: {waBotStatus.status}</div>
+                      {waBotStatus.queued !== undefined && waBotStatus.queued > 0 && (
+                        <div>Pesan antrian: {waBotStatus.queued}</div>
+                      )}
+                    </>
+                  ) : (
+                    <div>
+                      Bot WA belum berjalan. Jalankan:{' '}
+                      <code className="bg-gray-100 px-1 py-0.5 rounded text-[10px] font-mono">
+                        cd mini-services/wa-bot && bun run dev
+                      </code>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8"
+                onClick={checkWABotStatus}
+                disabled={checkingWA}
+              >
+                {checkingWA ? (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <Wifi className="w-3 h-3 mr-1" />
+                )}
+                Cek Status Bot
+              </Button>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-3 text-[10px] text-gray-500 space-y-1">
+              <p className="font-medium text-gray-600">Cara setup WhatsApp Bot:</p>
+              <ol className="list-decimal ml-4 space-y-0.5">
+                <li>Jalankan bot: <code className="bg-gray-100 px-1 rounded font-mono">cd mini-services/wa-bot && bun run dev</code></li>
+                <li>Scan QR code yang muncul di terminal dengan WhatsApp GrosirPJ</li>
+                <li>Setelah tersambung, notifikasi WA otomatis aktif</li>
+              </ol>
+              <p className="text-gray-400 mt-1">Alternatif: Set FONNTE_API_KEY di env var untuk pakai Fonnte API</p>
             </div>
           </CardContent>
         </Card>

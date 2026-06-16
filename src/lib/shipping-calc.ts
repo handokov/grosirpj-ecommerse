@@ -22,36 +22,48 @@ export async function calculateShippingCost(
   service: string,
   weightGrams: number
 ): Promise<number | null> {
-  // Find the zone that contains this province
-  const zones = await db.shippingZone.findMany({
-    where: { active: true },
-    orderBy: { order: 'asc' },
-  })
+  try {
+    // Find the zone that contains this province
+    const zones = await db.shippingZone.findMany({
+      where: { active: true },
+      orderBy: { order: 'asc' },
+    })
 
-  const zone = zones.find((z) => {
-    const provinceList = z.provinces
-      .split(',')
-      .map((p) => p.trim().toLowerCase())
-    return provinceList.includes(province.toLowerCase())
-  })
+    const zone = zones.find((z) => {
+      const provinceList = z.provinces
+        .split(',')
+        .map((p) => p.trim().toLowerCase())
+      return provinceList.includes(province.toLowerCase())
+    })
 
-  if (!zone) return null
+    if (!zone) return null
 
-  // Find the exact rate for this courier + service + zone
-  const rate = await db.shippingRate.findFirst({
-    where: {
-      zoneId: zone.id,
-      courier: courier.toLowerCase(),
-      service: service,
-      active: true,
-    },
-  })
+    // Find the exact rate for this courier + service + zone
+    const rate = await db.shippingRate.findFirst({
+      where: {
+        zoneId: zone.id,
+        courier: courier.toLowerCase(),
+        service: service,
+        active: true,
+      },
+    })
 
-  if (!rate) return null
+    if (!rate) return null
 
-  // Formula: firstKg + (ceil(weight / 1000) - 1) * nextKg (minimum 1kg)
-  const kgCount = Math.max(1, Math.ceil(weightGrams / 1000))
-  return rate.firstKg + (kgCount - 1) * rate.nextKg
+    // Formula: firstKg + (ceil(weight / 1000) - 1) * nextKg (minimum 1kg)
+    const kgCount = Math.max(1, Math.ceil(weightGrams / 1000))
+    return rate.firstKg + (kgCount - 1) * rate.nextKg
+  } catch (error) {
+    // If the shipping tables don't exist yet (e.g. fresh Turso DB),
+    // the query will throw. Return null to allow fallback to client cost.
+    const msg = error instanceof Error ? error.message : String(error)
+    if (msg.includes('does not exist') || msg.includes('no such table') || msg.includes('SQLITE_ERROR')) {
+      console.warn('[shipping] Shipping tables not found — returning null (tables may not exist yet)')
+      return null
+    }
+    // Re-throw unexpected errors
+    throw error
+  }
 }
 
 /**
@@ -87,12 +99,20 @@ export async function verifyShippingCost(
     return { cost: clientCost, adjusted: false, source: 'client' }
   }
 
-  // Try to calculate from rate table
-  const calculatedCost = await calculateShippingCost(province, courier, service, weightGrams)
+  // Try to calculate from rate table (handles missing tables gracefully)
+  let calculatedCost: number | null = null
+  try {
+    calculatedCost = await calculateShippingCost(province, courier, service, weightGrams)
+  } catch (error) {
+    // If calculation fails (e.g. tables don't exist), fall back to client cost
+    console.warn('[shipping] calculateShippingCost failed, using client cost:', error)
+    return { cost: clientCost, adjusted: false, source: 'client' }
+  }
 
   if (calculatedCost === null) {
     // No matching rate found in table — trust client cost as fallback
     // This handles edge cases like new couriers not yet in the rate table
+    // or shipping tables that haven't been seeded yet
     console.warn(
       `[shipping] No rate found for province="${province}" courier="${courier}" service="${service}" — using client cost ${clientCost}`
     )

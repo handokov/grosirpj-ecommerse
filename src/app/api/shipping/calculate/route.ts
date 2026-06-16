@@ -31,10 +31,25 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the zone that contains this province
-    const zones = await db.shippingZone.findMany({
-      where: { active: true },
-      orderBy: { order: 'asc' },
-    })
+    let zones: Awaited<ReturnType<typeof db.shippingZone.findMany>> = []
+    try {
+      zones = await db.shippingZone.findMany({
+        where: { active: true },
+        orderBy: { order: 'asc' },
+      })
+    } catch (dbErr) {
+      // Tables may not exist yet (fresh Turso DB) — return empty results
+      const msg = dbErr instanceof Error ? dbErr.message : String(dbErr)
+      if (msg.includes('does not exist') || msg.includes('no such table') || msg.includes('SQLITE_ERROR')) {
+        return NextResponse.json({
+          zone: null,
+          weight,
+          results: [],
+          message: 'Data ongkir belum tersedia. Admin perlu mengisi data ongkir terlebih dahulu melalui menu Ongkir.',
+        })
+      }
+      throw dbErr
+    }
 
     const zone = zones.find((z) => {
       const provinceList = z.provinces
@@ -53,10 +68,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all active rates for this zone
-    const rates = await db.shippingRate.findMany({
-      where: { zoneId: zone.id, active: true },
-      orderBy: { order: 'asc' },
-    })
+    let rates: Awaited<ReturnType<typeof db.shippingRate.findMany>> = []
+    try {
+      rates = await db.shippingRate.findMany({
+        where: { zoneId: zone.id, active: true },
+        orderBy: { order: 'asc' },
+      })
+    } catch (dbErr) {
+      const msg = dbErr instanceof Error ? dbErr.message : String(dbErr)
+      if (msg.includes('does not exist') || msg.includes('no such table') || msg.includes('SQLITE_ERROR')) {
+        return NextResponse.json({
+          zone: { code: zone.code, name: zone.name },
+          weight,
+          results: [],
+          message: 'Data tarif ongkir belum tersedia. Admin perlu mengisi data ongkir terlebih dahulu.',
+        })
+      }
+      throw dbErr
+    }
 
     if (rates.length === 0) {
       return NextResponse.json({

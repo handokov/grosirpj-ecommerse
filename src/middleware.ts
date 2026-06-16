@@ -51,6 +51,31 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-XSS-Protection', '1; mode=block')
   // Add Permissions-Policy to restrict browser features
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+
+  // HSTS — force HTTPS for 1 year (Vercel always serves over HTTPS)
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains; preload'
+  )
+
+  // Content-Security-Policy — defense-in-depth against XSS and data injection.
+  // Next.js requires 'unsafe-inline' for scripts/styles (hydration bootstrap).
+  // External origins restricted to a strict whitelist (Cloudinary for images).
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://res.cloudinary.com",
+    "font-src 'self' data:",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "upgrade-insecure-requests",
+  ].join('; ')
+  response.headers.set('Content-Security-Policy', csp)
+
   return response
 }
 
@@ -168,17 +193,11 @@ export function middleware(request: NextRequest) {
   return addSecurityHeaders(NextResponse.next())
 }
 
-// Expand matcher to include all public API routes that need rate limiting
+// Expand matcher to cover ALL routes so security headers (CSP, HSTS, etc.)
+// are applied everywhere — including the homepage and product pages.
+// Static assets and Next.js internals are excluded for performance.
 export const config = {
   matcher: [
-    '/admin/:path*',
-    '/api/admin/:path*',
-    '/api/auth/:path*',
-    '/api/orders/:path*',
-    '/api/ongkir/:path*',
-    '/api/search',
-    '/api/products',
-    '/api/products/detail',
-    '/api/categories',
+    '/((?!_next/static|_next/image|favicon.ico|icons/|images/|logo-sm.png|logo.svg|logo.png|sw.js|manifest.json|robots.txt|sitemap.xml).*)',
   ],
 }

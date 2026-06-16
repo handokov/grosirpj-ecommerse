@@ -269,14 +269,12 @@ export async function POST(request: NextRequest) {
     if (errorMessage.includes('no such column') || errorMessage.includes('SQLITE_ERROR')) {
       return NextResponse.json({
         error: 'Sistem sedang diperbarui. Silakan coba lagi dalam 1-2 menit.',
-        debug: errorMessage,
       }, { status: 503 })
     }
 
     if (errorMessage.includes('does not exist') || errorMessage.includes('no such table')) {
       return NextResponse.json({
         error: 'Sistem sedang diperbarui. Silakan coba lagi dalam 1-2 menit.',
-        debug: errorMessage,
       }, { status: 503 })
     }
 
@@ -286,10 +284,9 @@ export async function POST(request: NextRequest) {
       }, { status: 504 })
     }
 
-    // Return error with debug info temporarily for production debugging
+    // Generic error — do NOT expose internal error details to client
     return NextResponse.json({
       error: 'Gagal membuat pesanan. Silakan coba lagi.',
-      debug: errorMessage,
     }, { status: 500 })
   }
 }

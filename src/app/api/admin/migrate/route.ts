@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // POST - Run schema migrations for Turso production DB
 // Call this endpoint manually after deploying schema changes.
 // This is separated from the order creation path to avoid timeouts.
+// ADMIN ONLY — modifies database schema.
 export async function POST() {
   try {
+    await requireAdmin()
+
     const results: string[] = []
 
     // ─── Step 1: Ensure tables exist ─────────────────────────
@@ -98,19 +102,21 @@ export async function POST() {
       details: results,
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('[migrate] Migration failed:', errorMessage)
+    if (isAuthError(error)) return error.toResponse()
+    console.error('[migrate] Migration failed:', error instanceof Error ? error.message : String(error))
     return NextResponse.json({
       success: false,
       error: 'Migration failed',
-      details: errorMessage,
     }, { status: 500 })
   }
 }
 
 // GET - Check migration status (lightweight check)
+// ADMIN ONLY — exposes database schema information.
 export async function GET() {
   try {
+    await requireAdmin()
+
     const checks: { column: string; exists: boolean }[] = []
 
     // Check key columns with a single lightweight query
@@ -151,10 +157,10 @@ export async function GET() {
         : 'Some columns/tables are missing. Run POST /api/admin/migrate to fix.',
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    if (isAuthError(error)) return error.toResponse()
     return NextResponse.json({
       status: 'error',
-      error: errorMessage,
+      error: 'Internal error',
     }, { status: 500 })
   }
 }

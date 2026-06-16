@@ -93,3 +93,42 @@ Stage Summary:
 - Database has 4 new indexes for search/query optimization
 - Lint passes with 0 errors, 0 warnings
 - Browser verification: All 5 pages (home, search, category, product, admin login) load correctly
+
+---
+Task ID: 29
+Agent: Sub Agent
+Task: Fix auth-guard pattern in all API routes — migrate from return-based to throw-based pattern
+
+Work Log:
+- Updated auth-guard.ts to use throw-based AuthError pattern (requireAdmin/requireAuth now throw instead of returning union types)
+- Added AuthError class with toResponse() method and isAuthError() type guard
+- Migrated 15 API route files from old pattern to new try/catch pattern:
+  - health/route.ts (1 handler)
+  - admin/dashboard/route.ts (1 handler)
+  - admin/banners/route.ts (3 handlers: GET, POST, PUT)
+  - admin/upload-url/route.ts (1 handler: POST)
+  - admin/shipping/rates/route.ts (2 handlers: GET, POST)
+  - admin/banners/[id]/route.ts (3 handlers: GET, PUT, DELETE)
+  - admin/products/route.ts (2 handlers: GET, POST)
+  - admin/shipping/rates/[id]/route.ts (3 handlers: GET, PUT, DELETE)
+  - admin/orders/route.ts (2 handlers: GET, POST)
+  - admin/products/[id]/route.ts (3 handlers: GET, PUT, DELETE)
+  - admin/shipping/zones/route.ts (2 handlers: GET, POST)
+  - admin/orders/[id]/route.ts (3 handlers: GET, PUT, DELETE)
+  - admin/categories/route.ts (2 handlers: GET, POST)
+  - admin/categories/[id]/route.ts (3 handlers: GET, PUT, DELETE — discovered extra file not in original list)
+  - admin/shipping/zones/[id]/route.ts (3 handlers: GET, PUT, DELETE)
+- Replaced two old patterns:
+  1. `const session = await requireAdmin(); if (isAdminError(session)) return session` → moved inside try/catch
+  2. `const authError = await requireAdmin(); if (authError) return authError` → moved inside try/catch
+- Changed all imports from `isAdminError` to `isAuthError`
+- Added `isAuthError` import to files that previously only imported `requireAdmin`
+- Each handler's catch block now has `if (isAuthError(error)) return error.toResponse()` before generic error handling
+- Preserved all existing business logic, error handling, and custom catch patterns
+- Lint passes with 0 errors
+
+Stage Summary:
+- 15 files updated, 32 total handler functions migrated
+- Old `isAdminError` function no longer referenced anywhere in codebase
+- New pattern is cleaner: requireAdmin() throws on auth failure, eliminating the easy-to-forget null check
+- All existing error handling (statusCode checks, TimeoutError checks, etc.) preserved as fallbacks after isAuthError check

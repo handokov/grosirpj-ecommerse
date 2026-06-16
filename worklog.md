@@ -264,3 +264,24 @@ Stage Summary:
 - "Termurah" badge on cheapest option
 - Server-side verification uses province name for accurate zone matching
 - Full checkout flow verified working via Agent Browser
+
+---
+Task ID: 30
+Agent: Main Agent
+Task: Fix "Server sedang sibuk" timeout error on order creation in Vercel+Turso production
+
+Work Log:
+- Diagnosed root cause: `ensureSchemaColumns()` running on every Vercel cold start added DB round trips causing Turso timeouts
+- Removed `ensureSchemaColumns()` from the order creation hot path entirely
+- Optimized order creation transaction: moved `verifyShippingCost()` OUTSIDE the transaction (it's read-only)
+- Moved product validation and order item building BEFORE the transaction
+- Kept only essential writes inside the transaction: stock check, order number generation, order create, stock deduction
+- Created `/api/admin/migrate` endpoint with both GET (status check) and POST (run migration) handlers
+- Added "Database & Migrasi" section to admin Settings page with "Cek Status" and "Jalankan Migrasi" buttons
+- Schema migration is now a manual admin action instead of automatic on every order request
+
+Stage Summary:
+- Order creation is now much leaner: no schema check overhead, shipping verification outside transaction
+- Transaction only contains: stock re-check, order number generation, order creation, stock deduction
+- Admin can check schema status and run migrations from Settings page
+- This should eliminate the Turso timeout issue on Vercel serverless

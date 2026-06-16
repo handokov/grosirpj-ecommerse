@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   Store,
@@ -9,14 +10,15 @@ import {
   MapPin,
   Clock,
   Settings,
-  Sparkles,
   Shield,
   Pencil,
-  Globe,
   CreditCard,
   Truck,
   ArrowRight,
   CheckCircle2,
+  Database,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import {
   Card,
@@ -31,6 +33,55 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 export default function SettingsPage() {
+  const [migrating, setMigrating] = useState(false)
+  const [migrationResult, setMigrationResult] = useState<{
+    success: boolean
+    message: string
+    details?: string[]
+  } | null>(null)
+  const [checkingStatus, setCheckingStatus] = useState(false)
+  const [schemaStatus, setSchemaStatus] = useState<{
+    status: string
+    checks: { column: string; exists: boolean }[]
+  } | null>(null)
+
+  const checkSchemaStatus = async () => {
+    setCheckingStatus(true)
+    setMigrationResult(null)
+    try {
+      const res = await fetch('/api/admin/migrate')
+      const data = await res.json()
+      setSchemaStatus(data)
+    } catch {
+      setSchemaStatus({ status: 'error', checks: [] })
+    } finally {
+      setCheckingStatus(false)
+    }
+  }
+
+  const runMigration = async () => {
+    setMigrating(true)
+    setMigrationResult(null)
+    try {
+      const res = await fetch('/api/admin/migrate', { method: 'POST' })
+      const data = await res.json()
+      setMigrationResult({
+        success: data.success,
+        message: data.message || data.error || 'Unknown result',
+        details: data.details,
+      })
+      // Refresh status after migration
+      await checkSchemaStatus()
+    } catch (err) {
+      setMigrationResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Gagal menjalankan migrasi',
+      })
+    } finally {
+      setMigrating(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
       {/* Page Header */}
@@ -184,7 +235,128 @@ export default function SettingsPage() {
           </Link>
         </div>
       </div>
+
+      {/* Database Migration Section */}
+      <div>
+        <h2 className="text-sm font-bold text-gray-900 mb-3">Database & Migrasi</h2>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+                <Database className="w-4 h-4 text-amber-700" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-gray-900">Migrasi Database</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Jalankan migrasi schema jika ada kolom/tabel yang belum ada di database production
+                </p>
+              </div>
+            </div>
+
+            {/* Schema Status */}
+            {schemaStatus && (
+              <div className={cn(
+                'p-3 rounded-lg text-[11px]',
+                schemaStatus.status === 'ok'
+                  ? 'bg-emerald-50 border border-emerald-200'
+                  : schemaStatus.status === 'needs_migration'
+                    ? 'bg-amber-50 border border-amber-200'
+                    : 'bg-red-50 border border-red-200'
+              )}>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  {schemaStatus.status === 'ok' ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : schemaStatus.status === 'needs_migration' ? (
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                  )}
+                  <span className="font-semibold">
+                    {schemaStatus.status === 'ok'
+                      ? 'Semua schema sudah up to date'
+                      : schemaStatus.status === 'needs_migration'
+                        ? 'Ada kolom/tabel yang perlu dimigrasi'
+                        : 'Gagal mengecek status schema'}
+                  </span>
+                </div>
+                {schemaStatus.checks.length > 0 && (
+                  <div className="space-y-1 ml-5">
+                    {schemaStatus.checks.map((check) => (
+                      <div key={check.column} className="flex items-center gap-1.5">
+                        <span className={check.exists ? 'text-emerald-600' : 'text-amber-600'}>
+                          {check.exists ? '✓' : '✗'}
+                        </span>
+                        <span className="text-gray-700">{check.column}</span>
+                        {!check.exists && (
+                          <Badge variant="outline" className="text-[8px] bg-amber-100 border-amber-300 text-amber-700 ml-1">
+                            missing
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Migration Result */}
+            {migrationResult && (
+              <div className={cn(
+                'p-3 rounded-lg text-[11px]',
+                migrationResult.success
+                  ? 'bg-emerald-50 border border-emerald-200'
+                  : 'bg-red-50 border border-red-200'
+              )}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  {migrationResult.success ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                  )}
+                  <span className="font-semibold">{migrationResult.message}</span>
+                </div>
+                {migrationResult.details && migrationResult.details.length > 0 && (
+                  <div className="space-y-0.5 ml-5 mt-1">
+                    {migrationResult.details.map((detail, idx) => (
+                      <div key={idx} className="text-gray-600">{detail}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8"
+                onClick={checkSchemaStatus}
+                disabled={checkingStatus}
+              >
+                {checkingStatus ? (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <Database className="w-3 h-3 mr-1" />
+                )}
+                Cek Status
+              </Button>
+              <Button
+                size="sm"
+                className="text-xs h-8 bg-amber-600 hover:bg-amber-700"
+                onClick={runMigration}
+                disabled={migrating}
+              >
+                {migrating ? (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <Database className="w-3 h-3 mr-1" />
+                )}
+                Jalankan Migrasi
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
-

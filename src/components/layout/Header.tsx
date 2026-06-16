@@ -474,13 +474,13 @@ function CartDrawer() {
     });
 
     message += '\n━━━━━━━━━━━━━━━━━━━━━\n';
-    message += `📦 Subtotal: ${formatRupiah(invoice.totalAmount)}\n`;
+    message += `📦 Subtotal: ${formatRupiah(invoice.totalAmount - invoice.shippingCost)}\n`;
     if (invoice.courier && invoice.courier !== 'manual') {
       message += `🚚 Estimasi Ongkir (${invoice.courier.toUpperCase()} ${invoice.courierService}): ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
     } else {
       message += `🚚 Estimasi Ongkir: ${invoice.shippingCost > 0 ? formatRupiah(invoice.shippingCost) : 'Akan dikonfirmasi'}\n`;
     }
-    message += `💰 *TOTAL BAYAR: ${formatRupiah(invoice.totalAmount + invoice.shippingCost)}*\n\n`;
+    message += `💰 *TOTAL BAYAR: ${formatRupiah(invoice.totalAmount)}*\n\n`;
     message += '💳 *Pembayaran:*\n';
     message += 'Transfer BCA\n';
     message += `🏦 ${BCA_REKENING} a.n. Rahmawati\n\n`;
@@ -757,11 +757,11 @@ function CartDrawer() {
 
                 <div className="border-t" />
 
-                {/* Subtotal + Ongkir + Total */}
+                {/* Subtotal Produk + Ongkir + Total Bayar */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal Produk</span>
-                    <span className="font-medium">{formatRupiah(invoice.totalAmount)}</span>
+                    <span className="font-medium">{formatRupiah(invoice.totalAmount - invoice.shippingCost)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">
@@ -776,7 +776,7 @@ function CartDrawer() {
                   </div>
                   <div className="border-t pt-2 flex justify-between items-center">
                     <span className="font-bold text-gray-900">TOTAL BAYAR</span>
-                    <span className="text-xl font-bold text-emerald-900">{formatRupiah(invoice.totalAmount + invoice.shippingCost)}</span>
+                    <span className="text-xl font-bold text-emerald-900">{formatRupiah(invoice.totalAmount)}</span>
                   </div>
                 </div>
 

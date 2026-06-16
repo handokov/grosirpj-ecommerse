@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, isCuid } from '@/lib/validations'
 import { z } from 'zod'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // GET /api/admin/shipping/rates - List all shipping rates (with zone info)
 export async function GET(request: NextRequest) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const { searchParams } = request.nextUrl
     const zoneId = searchParams.get('zoneId')
@@ -23,6 +22,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ rates })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('List shipping rates error:', error)
     return NextResponse.json({ error: 'Gagal memuat tarif pengiriman' }, { status: 500 })
   }
@@ -43,8 +43,7 @@ const createRateSchema = z.object({
 // POST /api/admin/shipping/rates - Create a new shipping rate
 export async function POST(request: NextRequest) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const data = await validateBody(request, createRateSchema)
     if (data instanceof NextResponse) return data
@@ -53,6 +52,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ rate }, { status: 201 })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Create shipping rate error:', error)
     if (String(error).includes('Unique constraint')) {
       return NextResponse.json(

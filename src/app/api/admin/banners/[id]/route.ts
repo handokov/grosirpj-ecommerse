@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, updateBannerSchema } from '@/lib/validations'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,10 +10,9 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
     const banner = await db.banner.findUnique({ where: { id } })
     if (!banner) {
@@ -21,6 +20,7 @@ export async function GET(
     }
     return NextResponse.json(banner)
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Error fetching banner:')
     return NextResponse.json({ error: 'Gagal mengambil data banner' }, { status: 500 })
   }
@@ -31,10 +31,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
     const data = await validateBody(request, updateBannerSchema)
     if (data instanceof NextResponse) return data
@@ -52,6 +51,7 @@ export async function PUT(
 
     return NextResponse.json(banner)
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Error updating banner:')
     return NextResponse.json({ error: 'Gagal mengupdate banner' }, { status: 500 })
   }
@@ -62,14 +62,14 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
     await db.banner.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Error deleting banner:')
     return NextResponse.json({ error: 'Gagal menghapus banner' }, { status: 500 })
   }

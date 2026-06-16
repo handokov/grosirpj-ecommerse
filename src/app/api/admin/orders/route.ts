@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, createOrderSchema, isCuid } from '@/lib/validations'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // GET - List orders with filters
 export async function GET(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { searchParams } = new URL(request.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20') || 20))
@@ -55,6 +54,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Orders API error:', error)
     return NextResponse.json({ error: 'Gagal mengambil data pesanan' }, { status: 500 })
   }
@@ -62,10 +62,9 @@ export async function GET(request: NextRequest) {
 
 // POST - Create order (admin)
 export async function POST(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const data = await validateBody(request, createOrderSchema)
     if (data instanceof NextResponse) return data
 
@@ -214,6 +213,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ order }, { status: 201 })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Create order error:', error)
 
     // Check if this is a controlled validation error with statusCode

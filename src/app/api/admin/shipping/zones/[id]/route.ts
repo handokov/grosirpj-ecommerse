@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, isCuid } from '@/lib/validations'
 import { z } from 'zod'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // GET /api/admin/shipping/zones/[id] - Get a single shipping zone
 export async function GET(
@@ -10,8 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const { id } = await params
     const zone = await db.shippingZone.findUnique({
@@ -25,6 +24,7 @@ export async function GET(
 
     return NextResponse.json({ zone })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Get shipping zone error:', error)
     return NextResponse.json({ error: 'Gagal memuat zona pengiriman' }, { status: 500 })
   }
@@ -44,8 +44,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const { id } = await params
     const data = await validateBody(request, updateZoneSchema)
@@ -58,6 +57,7 @@ export async function PUT(
 
     return NextResponse.json({ zone })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Update shipping zone error:', error)
     return NextResponse.json({ error: 'Gagal mengupdate zona pengiriman' }, { status: 500 })
   }
@@ -69,8 +69,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const { id } = await params
     // Cascade delete will remove associated rates
@@ -78,6 +77,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Delete shipping zone error:', error)
     return NextResponse.json({ error: 'Gagal menghapus zona pengiriman' }, { status: 500 })
   }

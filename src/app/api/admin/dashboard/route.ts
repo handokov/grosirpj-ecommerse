@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 export async function GET() {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     // Parallelize independent queries for better performance
     const [totalProducts, totalCategories, totalOrders, revenueResult, recentOrders, statusGroups, topProducts, lowStockProducts, categories] = await Promise.all([
       // Get total products
@@ -149,6 +148,7 @@ export async function GET() {
       monthlyData,
     })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Dashboard API error:', error)
     // Return safe default data instead of 500
     return NextResponse.json({

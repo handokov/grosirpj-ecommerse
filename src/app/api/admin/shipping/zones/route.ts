@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, isCuid } from '@/lib/validations'
 import { z } from 'zod'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // GET /api/admin/shipping/zones - List all shipping zones
 export async function GET() {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const zones = await db.shippingZone.findMany({
       orderBy: { order: 'asc' },
@@ -19,6 +18,7 @@ export async function GET() {
 
     return NextResponse.json({ zones })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('List shipping zones error:', error)
     return NextResponse.json({ error: 'Gagal memuat zona pengiriman' }, { status: 500 })
   }
@@ -35,8 +35,7 @@ const createZoneSchema = z.object({
 // POST /api/admin/shipping/zones - Create a new shipping zone
 export async function POST(request: NextRequest) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const data = await validateBody(request, createZoneSchema)
     if (data instanceof NextResponse) return data
@@ -45,6 +44,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ zone }, { status: 201 })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Create shipping zone error:', error)
     return NextResponse.json({ error: 'Gagal membuat zona pengiriman' }, { status: 500 })
   }

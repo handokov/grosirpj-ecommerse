@@ -2,17 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, updateProductSchema, isCuid } from '@/lib/validations'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // GET - Single product
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
     if (!isCuid(id)) {
       return NextResponse.json({ error: 'ID produk tidak valid' }, { status: 400 })
@@ -28,6 +27,7 @@ export async function GET(
 
     return NextResponse.json({ product })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Get product error:', error)
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
   }
@@ -38,10 +38,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
     if (!isCuid(id)) {
       return NextResponse.json({ error: 'ID produk tidak valid' }, { status: 400 })
@@ -90,6 +89,7 @@ export async function PUT(
 
     return NextResponse.json({ product })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Update product error:', error)
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
@@ -100,10 +100,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
     if (!isCuid(id)) {
       return NextResponse.json({ error: 'ID produk tidak valid' }, { status: 400 })
@@ -124,6 +123,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Delete product error:', error)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }

@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, createBannerSchema, bulkUpdateBannerSchema } from '@/lib/validations'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
 
 // GET all banners (admin)
 export async function GET() {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const banners = await db.banner.findMany({
       orderBy: { order: 'asc' },
     })
     return NextResponse.json(banners)
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Error fetching banners:', error)
     return NextResponse.json({ error: 'Gagal mengambil data banner' }, { status: 500 })
   }
@@ -23,10 +23,9 @@ export async function GET() {
 
 // POST create banner
 export async function POST(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const data = await validateBody(request, createBannerSchema)
     if (data instanceof NextResponse) return data
 
@@ -42,6 +41,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(banner, { status: 201 })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Error creating banner:', error)
     return NextResponse.json({ error: 'Gagal membuat banner' }, { status: 500 })
   }
@@ -49,10 +49,9 @@ export async function POST(request: NextRequest) {
 
 // PUT update banner order (bulk)
 export async function PUT(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const data = await validateBody(request, bulkUpdateBannerSchema)
     if (data instanceof NextResponse) return data
 
@@ -68,6 +67,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Error updating banners:', error)
     return NextResponse.json({ error: 'Gagal mengupdate banner' }, { status: 500 })
   }

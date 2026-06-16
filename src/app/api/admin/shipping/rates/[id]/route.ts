@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, isCuid } from '@/lib/validations'
 import { z } from 'zod'
-import { requireAdmin } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // GET /api/admin/shipping/rates/[id] - Get a single shipping rate
 export async function GET(
@@ -10,8 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const { id } = await params
     const rate = await db.shippingRate.findUnique({
@@ -25,6 +24,7 @@ export async function GET(
 
     return NextResponse.json({ rate })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Get shipping rate error:', error)
     return NextResponse.json({ error: 'Gagal memuat tarif pengiriman' }, { status: 500 })
   }
@@ -48,8 +48,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const { id } = await params
     const data = await validateBody(request, updateRateSchema)
@@ -62,6 +61,7 @@ export async function PUT(
 
     return NextResponse.json({ rate })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Update shipping rate error:', error)
     return NextResponse.json({ error: 'Gagal mengupdate tarif pengiriman' }, { status: 500 })
   }
@@ -73,14 +73,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAdmin()
-    if (authError) return authError
+    const session = await requireAdmin()
 
     const { id } = await params
     await db.shippingRate.delete({ where: { id } })
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Delete shipping rate error:', error)
     return NextResponse.json({ error: 'Gagal menghapus tarif pengiriman' }, { status: 500 })
   }

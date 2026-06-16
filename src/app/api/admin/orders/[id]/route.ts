@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { validateBody, updateOrderSchema, isCuid } from '@/lib/validations'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // Valid order status transitions — enforced server-side to prevent invalid state
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -18,10 +18,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
 
     // Validate ID format
@@ -46,6 +45,7 @@ export async function GET(
 
     return NextResponse.json({ order })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Get order error:', error)
     return NextResponse.json({ error: 'Gagal mengambil data order' }, { status: 500 })
   }
@@ -56,10 +56,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
 
     // Validate ID format
@@ -183,6 +182,7 @@ export async function PUT(
 
     return NextResponse.json({ order })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Update order error:', error)
 
     // Check if this is a controlled validation error with statusCode
@@ -200,10 +200,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { id } = await params
 
     // Validate ID format
@@ -227,6 +226,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Delete order error:', error)
 
     if (error instanceof Error && 'statusCode' in error) {

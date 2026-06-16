@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
 import { validateBody, uploadUrlSchema } from '@/lib/validations'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 import { MAX_FILE_SIZE } from '@/lib/store-config'
 
 export const dynamic = 'force-dynamic'
@@ -45,10 +45,9 @@ function isPrivateIP(ip: string): boolean {
  * Used for importing images from external sources (e.g., Shopee).
  */
 export async function POST(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const data = await validateBody(request, uploadUrlSchema)
     if (data instanceof NextResponse) return data
 
@@ -169,6 +168,7 @@ export async function POST(request: NextRequest) {
       publicId: uploadResult.publicId,
     })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Upload URL error:', error)
     if (error instanceof Error && error.name === 'TimeoutError') {
       return NextResponse.json({ error: 'Download timed out' }, { status: 408 })

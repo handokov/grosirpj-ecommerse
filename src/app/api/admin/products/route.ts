@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { generateSlug } from '@/lib/utils'
 import { validateBody, createProductSchema } from '@/lib/validations'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 
 // GET - List products with filters
 export async function GET(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const { searchParams } = new URL(request.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20') || 20))
@@ -51,6 +50,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Products API error:')
     return NextResponse.json({ products: [], total: 0, page: 1, totalPages: 0 })
   }
@@ -58,10 +58,9 @@ export async function GET(request: NextRequest) {
 
 // POST - Create product
 export async function POST(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const data = await validateBody(request, createProductSchema)
     if (data instanceof NextResponse) return data
 
@@ -104,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
     console.error('Create product error:')
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }

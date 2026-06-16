@@ -4,63 +4,88 @@ import { NextResponse } from 'next/server'
 
 /**
  * Verify that the current request is from an authenticated user.
- * Returns the session if valid, or a 401 NextResponse if not.
- * 
+ * Returns the session if valid, or throws an error response if not.
+ *
  * Usage in API routes:
  * ```ts
  * const session = await requireAuth()
- * if (isAuthError(session)) return session // unauthorized
+ * // session is guaranteed to be a valid Session object here
  * ```
  */
 export async function requireAuth() {
   try {
     const session = await getServerSession(authOptions)
     if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      throw new AuthError('Unauthorized', 401)
     }
     return session
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  } catch (error) {
+    if (error instanceof AuthError) throw error
+    throw new AuthError('Unauthorized', 401)
   }
-}
-
-/**
- * Type guard to check if requireAuth() returned an error response (not a session)
- */
-export function isAuthError(result: Awaited<ReturnType<typeof requireAuth>>): result is NextResponse<{ error: string }> {
-  return result instanceof NextResponse
 }
 
 /**
  * Verify that the current request is from an authenticated admin user.
  * Checks both authentication and admin role.
- * Returns the session if valid, or a 401/403 NextResponse if not.
- * 
+ * Returns the session if valid, or throws an error response if not.
+ *
  * Usage in API routes:
  * ```ts
  * const session = await requireAdmin()
- * if (isAdminError(session)) return session // unauthorized or forbidden
+ * // session is guaranteed to be a valid admin Session object here
  * ```
  */
 export async function requireAdmin() {
   try {
     const session = await getServerSession(authOptions)
     if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      throw new AuthError('Unauthorized', 401)
     }
     const role = (session.user as unknown as { role: string }).role
     if (role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden — admin access required' }, { status: 403 })
+      throw new AuthError('Forbidden — admin access required', 403)
     }
     return session
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  } catch (error) {
+    if (error instanceof AuthError) throw error
+    throw new AuthError('Unauthorized', 401)
   }
 }
 
 /**
- * Type guard to check if requireAdmin() returned an error response (not a session)
+ * Custom error class for authentication/authorization failures.
+ * Can be converted to a NextResponse using toResponse().
  */
-export function isAdminError(result: Awaited<ReturnType<typeof requireAdmin>>): result is NextResponse<{ error: string }> {
-  return result instanceof NextResponse
+export class AuthError extends Error {
+  status: number
+
+  constructor(message: string, status: number = 401) {
+    super(message)
+    this.name = 'AuthError'
+    this.status = status
+  }
+
+  toResponse() {
+    return NextResponse.json({ error: this.message }, { status: this.status })
+  }
+}
+
+/**
+ * Check if an error is an AuthError and return the appropriate NextResponse.
+ * Use this in catch blocks of API route handlers.
+ *
+ * Usage:
+ * ```ts
+ * try {
+ *   const session = await requireAdmin()
+ *   // ... do admin stuff
+ * } catch (error) {
+ *   if (isAuthError(error)) return error.toResponse()
+ *   return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+ * }
+ * ```
+ */
+export function isAuthError(error: unknown): error is AuthError {
+  return error instanceof AuthError
 }

@@ -622,3 +622,58 @@ Stage Summary:
 - Wishlist: full CRUD flow (add from card/detail, view page, remove single, remove all with confirm dialog, empty state, header badge count)
 - VLM visual analysis confirmed all 3 features render correctly
 - Features already committed (84c6ed0) and pushed to GitHub — Vercel will auto-deploy
+
+---
+Task ID: 38
+Agent: Main Agent
+Task: Fix Vercel build failure — wishlist/cookie/analytics not appearing on live site
+
+Work Log:
+- User reported "Di live vercel tidak ada whistlist nya" with 2 Vercel dashboard screenshots
+- VLM analysis of screenshots revealed: Vercel build FAILED with TypeScript error
+  - Error: "Type error: Argument of type '{ id, name, slug, ... }' is not assignable to parameter of type 'Product'"
+  - Location: src/components/shared/ProductCard.tsx:53 toggleWishlist(product)
+  - Build exit code: 1 → Vercel kept serving OLD build (pre-wishlist) from CDN cache
+
+- Root cause analysis:
+  - ProductCard receives a PARTIAL product shape (subset of Product) as its prop
+  - useWishlist.toggleWishlist expected the FULL Product type from @/types
+  - Product type has required fields not in ProductCard: description, stock, categoryId, reviewCount, tags, weight, sizes
+  - TypeScript (correctly) rejected passing a partial product to a full Product parameter
+  - bun run lint did NOT catch this (lint ≠ full type check); only bun run build catches it
+  - Previous local testing used dev server (no build step), so the error never surfaced locally
+
+- Fix: introduced new WishlistItem type in src/types/index.ts
+  - WishlistItem = minimal subset of Product (id, name, slug, images, price, wholesalePrice, minOrder, sold, rating, featured?, categoryName?, categorySlug?)
+  - Updated useWishlist.ts: items: WishlistItem[], toggleWishlist: (product: WishlistItem) => void
+  - Updated ProductCard.tsx: product prop type changed from inline interface to WishlistItem
+  - ProductDetailClient.tsx: NO change needed — full Product is structurally assignable to WishlistItem
+  - WishlistClient.tsx: NO change needed — items (WishlistItem[]) passed to ProductCard (accepts WishlistItem)
+
+- Verification:
+  - Local: bun run build → EXIT CODE 0, "✓ Compiled successfully in 7.1s", 30/30 static pages, 0 TypeScript errors
+  - Committed as 705a9ae "fix(types): add WishlistItem type to fix Vercel build failure"
+  - Pushed to origin/main → Vercel auto-deploy triggered
+
+- Vercel rebuild monitoring:
+  - Before push: cache age 5573s (93 min, old build from pre-wishlist)
+  - After push + 3 min: cache age 9s → NEW build deployed!
+  - Verified JS chunks now contain wishlist code:
+    - chunk 21049f6ffc3bb3fe.js: "Lihat Favorit", "grosirpj-cookie-consent", "Kami menggunakan cookie"
+    - chunk 76e1b35c292ff968.js: "grosirpj-wishlist"
+  - HTML contains 2× /wishlist links (header + footer)
+
+- Live site end-to-end test (https://grosirpj-ecommerse.vercel.app):
+  - Cookie Banner: cleared localStorage → reloaded → banner appeared → clicked "Saya Setuju" → localStorage saved "accepted" ✅
+  - Wishlist heart in header: "Lihat Favorit" link present (VLM confirmed: logo, search, heart, cart in header) ✅
+  - Wishlist add from card: clicked "Simpan ke Favorit" → header badge showed "1" ✅
+  - /wishlist page: heading "Favorit Saya" + "Hapus Semua" button + 1 product (Kemeja Anak) with "Hapus dari Favorit" ✅
+  - Console errors: 0 ✅
+  - VLM confirmed both homepage (heart visible) and wishlist page (1 product, correct title)
+
+Stage Summary:
+- Vercel build failure ROOT CAUSE: TypeScript type mismatch (partial product vs full Product type)
+- FIX: added WishlistItem shared type, decoupled wishlist from full Product type
+- All 3 features (#14 Cookie Banner, #13 Analytics, #10 Wishlist) now LIVE on Vercel production
+- Lesson learned: always run `bun run build` locally before pushing — lint alone doesn't catch type errors in Next.js App Router
+- Commit: 705a9ae (pushed, Vercel auto-deployed, age 9s = fresh)

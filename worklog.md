@@ -458,3 +458,100 @@ Stage Summary:
 - Fully responsive (flex-wrap on mobile), accessible (aria-pressed), no console errors
 - Files modified: src/app/admin/export/page.tsx only
 - Ready to push to GitHub for Vercel deployment
+
+---
+Task ID: 35
+Agent: Wishlist Sub Agent
+Task: Implement Wishlist feature #10
+
+Work Log:
+- Read worklog.md for context — reviewed previous agents' work (static info pages #7, export presets, etc.) and existing patterns (useStore.ts persist middleware, ProductCard structure, Header actions area, ProductDetailClient.tsx cart button area, Footer Informasi section)
+- Reviewed src/types/index.ts to confirm Product type shape (id, name, slug, images, price, wholesalePrice, minOrder, sold, rating, categoryName, categorySlug, etc.)
+- Created src/store/useWishlist.ts — Zustand store with persist middleware (localStorage key: grosirpj-wishlist). Stores full Product objects in `items` array. Methods: toggleWishlist, removeFromWishlist, isInWishlist, clearWishlist, getWishlistCount. Also exported a `useWishlistHydrated()` hook using useSyncExternalStore to detect client mount without triggering the react-hooks/set-state-in-effect lint rule.
+- Modified src/components/shared/ProductCard.tsx — added an absolute-positioned heart button (top-right of product image, w-8 h-8, rounded-full, bg-white/90 backdrop-blur, shadow-sm, z-10). Heart icon h-4 w-4 — fill-red-500/text-red-500 when saved, gray-500 outline otherwise. Uses e.preventDefault() + e.stopPropagation() so clicking the heart inside the Link wrapper does NOT navigate to the product page. Hover/active scale animation (hover:scale-110 active:scale-95). Moved featured TOP badge to top-left-12 (was top-right) to avoid overlap with the new heart button; added z-[5] to badges so heart stays on top.
+- Modified src/app/[categorySlug]/[productSlug]/ProductDetailClient.tsx — added a full-width outline "Simpan ke Favorit" / "Hapus dari Favorit" button with heart icon directly below the "Tambah ke Keranjang" button. Filled red heart + red border when saved; gray outline + emerald hover when not. Toast notification: "Ditambahkan ke Favorit" / "Dihapus dari Favorit" with product name as description.
+- Created src/app/wishlist/page.tsx — server component wrapper with metadata (title, description, OpenGraph, canonical URL). Renders WishlistClient.
+- Created src/app/wishlist/WishlistClient.tsx — client component with: breadcrumb (Beranda > Favorit), header showing emerald heart icon + "Favorit Saya" title + "X produk tersimpan" count, "Hapus Semua" button (using AlertDialog for confirmation, red styling, only shows when count > 0), product grid reusing ProductCard, skeleton loading state during hydration, and a polished EmptyState (red heart icon in circle, "Belum ada favorit" heading, helper text, "Mulai Belanja" + "Lihat Semua Produk" buttons). Uses `hydrated` guard to prevent hydration mismatch with persisted localStorage.
+- Modified src/components/layout/Header.tsx — added a heart icon link button (asChild Button with Link to /wishlist) in the right actions area, positioned BEFORE the cart Sheet. Same styling as cart button (h-10 w-10 rounded-full outline). Shows a red badge with wishlist count (top-right, -top-1 -right-1, bg-red-500 text-white) when count > 0, with 99+ cap. Badge only renders after hydration to avoid SSR mismatch.
+- Modified src/components/layout/Footer.tsx — added "Favorit" link in the Informasi section (after "Lacak Pesanan"), pointing to /wishlist.
+- Ran `bun run lint` — initially hit 3 errors from react-hooks/set-state-in-effect rule (the `useEffect(() => setMounted(true), [])` pattern). Fixed by replacing the mounted-flag pattern with a `useWishlistHydrated()` hook built on useSyncExternalStore (getServerSnapshot returns false, getClientSnapshot returns true) — this is the React-blessed way to detect client mount without calling setState in an effect. Re-ran lint → 0 errors, 0 warnings.
+- Verified dev server (localhost:3000) running — all routes return 200:
+  - GET /wishlist 200 (empty state renders with "Favorit Saya", breadcrumb, heart icon, "Belum ada favorit", "Mulai Belanja" button)
+  - GET / 200 (header shows heart link next to cart; product cards show heart button top-right)
+  - GET /anak-anak-6-12-tahun/kemeja-anak-laki-laki-sekolah 200 ("Simpan ke Favorit" button renders below "Tambah ke Keranjang")
+- Used agent-browser + VLM for end-to-end visual verification:
+  - Wishlist page: confirmed "Favorit Saya" header with green heart icon, "0 produk tersimpan" subtitle, "Beranda > Favorit" breadcrumb, and empty state with red heart icon + "Belum ada favorit" + "Mulai Belanja" button
+  - Product detail: confirmed "Simpan ke Favorit" button with heart icon directly below "Tambah ke Keranjang"
+  - Homepage header: confirmed heart icon link positioned to the left of the shopping cart icon
+  - Homepage product cards: confirmed each product image has a small white circular heart button in the top-right corner
+- Console errors: 0 (only pre-existing Next.js Image warnings about `fill` without `sizes`, unrelated to this feature)
+- Dev log: all 200 responses, no runtime errors after fixes
+
+Stage Summary:
+- Feature #10 (Wishlist/Favorit) is FULLY IMPLEMENTED and VERIFIED
+- All spec requirements met:
+  1. ✅ Wishlist store (src/store/useWishlist.ts) with persist middleware, localStorage key grosirpj-wishlist, full Product objects, all 5 required methods
+  2. ✅ Heart button on ProductCard (top-right, w-8 h-8, white/90 backdrop-blur, shadow-sm, h-4 w-4 heart, preventDefault+stopPropagation, scale animation, works inside Link wrapper)
+  3. ✅ Heart button on Product Detail (below Tambah ke Keranjang, "Simpan ke Favorit"/"Hapus dari Favorit" label, filled red heart when saved, toast notifications)
+  4. ✅ Wishlist page at /wishlist (server wrapper + client component, reuses ProductCard, polished empty state with heart icon + "Belum ada favorit" + "Mulai Belanja", header with count, "Hapus Semua" with AlertDialog confirmation, breadcrumb Home > Favorit, emerald theme consistent with other pages)
+  5. ✅ Header wishlist link with red count badge (positioned next to cart icon, 99+ cap, hydration-safe)
+  6. ✅ Footer "Favorit" link in Informasi section
+- Technical decisions:
+  - Used useSyncExternalStore-based `useWishlistHydrated()` hook instead of the typical `useEffect(() => setMounted(true), [])` pattern to satisfy the strict react-hooks/set-state-in-effect lint rule while preserving SSR-safety (no hydration mismatch)
+  - Moved featured TOP badge from top-right to top-left-12 on ProductCard to avoid visual overlap with the new heart button
+  - Used AlertDialog (shadcn/ui) for "Hapus Semua" confirmation instead of window.confirm for a more polished UX consistent with the rest of the app
+- Files created: src/store/useWishlist.ts, src/app/wishlist/page.tsx, src/app/wishlist/WishlistClient.tsx
+- Files modified: src/components/shared/ProductCard.tsx, src/app/[categorySlug]/[productSlug]/ProductDetailClient.tsx, src/components/layout/Header.tsx, src/components/layout/Footer.tsx
+- Lint: 0 errors, 0 warnings
+- Feature is production-ready
+
+---
+Task ID: 36
+Agent: Main Agent
+Task: Verify Cookie Banner (#14) + Analytics (#13) + Wishlist (#10) - 3 features batch
+
+Work Log:
+- Implemented #14 Cookie Banner (src/components/layout/CookieBanner.tsx):
+  - Fixed bottom banner with emerald theme, Cookie icon, "Kami menggunakan cookie" text
+  - Link to /kebijakan-privasi for "Pelajari lebih lanjut"
+  - "Saya Setuju" button (emerald) + X dismiss button
+  - localStorage key: grosirpj-cookie-consent = "accepted"
+  - 800ms delay before showing (smoother UX), slide-in animation
+  - Only shows on storefront (mounted in SiteLayout, not admin)
+  - useEffect checks localStorage on mount (SSR-safe, no hydration mismatch)
+- Implemented #13 Analytics (Vercel Analytics + Speed Insights):
+  - Installed @vercel/analytics@2.0.1 and @vercel/speed-insights@2.0.0
+  - Added <Analytics /> and <SpeedInsights /> to root layout (src/app/layout.tsx)
+  - Auto-tracks page views, Web Vitals (LCP, FID, CLS) in production on Vercel
+  - No config needed — works automatically after Vercel deploy
+- Verified #10 Wishlist (implemented by subagent Task ID 35):
+  - useWishlist Zustand store with persist (localStorage: grosirpj-wishlist)
+  - Heart buttons on ProductCard (top-right, red filled when saved)
+  - "Simpan ke Favorit" / "Hapus dari Favorit" button on ProductDetailClient
+  - /wishlist page with empty state + filled state + "Hapus Semua" (AlertDialog)
+  - Header heart link with count badge + Footer "Favorit" link
+  - useWishlistHydrated() hook using useSyncExternalStore (SSR-safe, lint-clean)
+
+- Agent Browser verification (all 3 features):
+  - Cookie Banner: cleared localStorage → reloaded → banner appeared with "Kami menggunakan cookie" + "Saya Setuju" button → clicked → banner dismissed → localStorage saved "accepted" ✅
+  - VLM confirmed: "cookie consent banner di bagian bawah, isi: Kami menggunakan cookie + tombol Saya Setuju + Pelajari lebih lanjut"
+  - Wishlist empty state: /wishlist shows "Favorit Saya" + "Belum ada favorit" + "Mulai Belanja" button ✅
+  - Wishlist add from ProductCard: clicked heart on "Kemeja Anak Laki-Laki Sekolah" → aria-label changed from "Simpan ke Favorit" to "Hapus dari Favorit" ✅
+  - Wishlist add 2nd product: clicked heart on "Sepatu Bayi Pre-Walker Anti Slip" → added ✅
+  - Wishlist page with 2 products: VLM confirmed "Ada 2 produk tampil: Kemeja Anak Laki-Laki Sekolah dan Sepatu Bayi Pre-Walker Anti Slip, ada tombol Hapus Semua" ✅
+  - Product detail wishlist: clicked "Simpan ke Favorit" on Romper Bayi → toast "Ditambahkan ke Favorit" appeared → button changed to "Hapus dari Favorit" ✅
+  - Header wishlist link: "Lihat Favorit" link present ✅
+  - Footer wishlist link: "Favorit" in Informasi section ✅
+  - Console errors: 0 across all tests ✅
+  - Lint: 0 errors, 0 warnings ✅
+  - Dev log: all pages 200 OK, /wishlist 70ms response ✅
+
+Stage Summary:
+- 3 features completed in one batch:
+  1. ✅ #14 Cookie Banner — GDPR-friendly, localStorage consent, emerald theme
+  2. ✅ #13 Analytics — Vercel Analytics + Speed Insights (auto-tracks on production)
+  3. ✅ #10 Wishlist — full feature: store + UI + page + header/footer links
+- Files created: src/components/layout/CookieBanner.tsx, src/store/useWishlist.ts, src/app/wishlist/page.tsx, src/app/wishlist/WishlistClient.tsx
+- Files modified: src/components/layout/SiteLayout.tsx (add CookieBanner), src/app/layout.tsx (add Analytics+SpeedInsights), src/components/shared/ProductCard.tsx (heart button), src/app/[categorySlug]/[productSlug]/ProductDetailClient.tsx (favorite button), src/components/layout/Header.tsx (wishlist link+badge), src/components/layout/Footer.tsx (Favorit link)
+- All features production-ready, lint clean, no console errors
+- Ready to commit & push to GitHub for Vercel deployment

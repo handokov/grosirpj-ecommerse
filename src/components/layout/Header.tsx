@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useStore, type Product } from '@/store/useStore';
+import { useWishlist, useWishlistHydrated } from '@/store/useWishlist';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ import {
   Phone,
   Truck,
   CreditCard,
+  Heart,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import ProductImage from '@/components/ui/product-image';
@@ -47,6 +49,8 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const wishlistHydrated = useWishlistHydrated();
+  const wishlistCount = useWishlist((s) => s.items.length);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -189,6 +193,22 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
+              <Button
+                asChild
+                variant="outline"
+                size="icon"
+                className="relative h-10 w-10 rounded-full border-gray-200 hover:bg-emerald-50 hover:border-emerald-400"
+              >
+                <Link href="/wishlist" aria-label="Lihat Favorit">
+                  <Heart className="h-5 w-5" />
+                  {wishlistHydrated && wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {wishlistCount > 99 ? '99+' : wishlistCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+
               <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
                 <SheetTrigger asChild>
                   <Button

@@ -4,12 +4,13 @@ import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useStore, type Product } from '@/store/useStore';
+import { useWishlist } from '@/store/useWishlist';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
-  Star, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Package, BarChart3, Weight, ChevronLeft, ChevronRight,
+  Star, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, Package, BarChart3, Weight, ChevronLeft, ChevronRight, Heart,
 } from 'lucide-react';
 import { formatRupiah, calculateDiscount } from '@/lib/format';
 import { toast } from 'sonner';
@@ -24,6 +25,8 @@ interface Props {
 
 export default function ProductDetailClient({ product, related }: Props) {
   const { addToCart } = useStore();
+  const inWishlist = useWishlist((s) => s.isInWishlist(product.id));
+  const toggleWishlist = useWishlist((s) => s.toggleWishlist);
   const [quantity, setQuantity] = useState(product.minOrder);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -108,6 +111,20 @@ export default function ProductDetailClient({ product, related }: Props) {
     toast.success(`${product.name} ditambahkan ke keranjang`, {
       description: `${quantity} pcs${selectedSize ? ` - Ukuran ${selectedSize}` : ''} - ${formatRupiah(product.wholesalePrice * quantity)}`,
     });
+  };
+
+  const handleToggleWishlist = () => {
+    const wasInWishlist = inWishlist;
+    toggleWishlist(product);
+    if (wasInWishlist) {
+      toast.success('Dihapus dari Favorit', {
+        description: product.name,
+      });
+    } else {
+      toast.success('Ditambahkan ke Favorit', {
+        description: product.name,
+      });
+    }
   };
 
   return (
@@ -311,6 +328,20 @@ export default function ProductDetailClient({ product, related }: Props) {
 
             <Button className="w-full h-11 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white font-semibold text-sm" onClick={handleAddToCart}>
               <ShoppingCart className="h-4 w-4 mr-2" /> Tambah ke Keranjang
+            </Button>
+
+            <Button
+              variant="outline"
+              className={`w-full h-11 rounded-xl font-semibold text-sm mt-2 transition-colors ${
+                inWishlist
+                  ? 'border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-emerald-50 hover:border-emerald-400 hover:text-emerald-800'
+              }`}
+              onClick={handleToggleWishlist}
+              aria-pressed={inWishlist}
+            >
+              <Heart className={`h-4 w-4 mr-2 ${inWishlist ? 'fill-red-500 text-red-500' : ''}`} />
+              {inWishlist ? 'Hapus dari Favorit' : 'Simpan ke Favorit'}
             </Button>
 
             {/* Guarantees */}

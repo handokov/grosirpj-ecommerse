@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import StorefrontWrapperClient from "@/components/layout/StorefrontWrapperClient";
 import PWARegistrar from "@/components/pwa/PWARegistrar";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -154,6 +156,8 @@ export default function RootLayout({
         <StorefrontWrapperClient>{children}</StorefrontWrapperClient>
         <PWARegistrar />
         <Toaster position="top-right" richColors />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

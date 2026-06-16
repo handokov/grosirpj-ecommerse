@@ -69,6 +69,9 @@ export default function Footer() {
               <li>
                 <Link href="/lacak" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Lacak Pesanan</Link>
               </li>
+              <li>
+                <Link href="/wishlist" className="text-sm text-gray-400 hover:text-emerald-600 transition-colors">Favorit</Link>
+              </li>
             </ul>
           </div>
 

@@ -3,9 +3,10 @@
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Star } from 'lucide-react'
+import { Star, Heart } from 'lucide-react'
 import { formatRupiah, calculateDiscount } from '@/lib/format'
 import ProductImage from '@/components/ui/product-image'
+import { useWishlist, useWishlistHydrated } from '@/store/useWishlist'
 
 interface ProductCardProps {
   product: {
@@ -39,6 +40,19 @@ export function ProductCard({
   const discount = calculateDiscount(product.price, product.wholesalePrice)
   const productUrl = `/${product.categorySlug || fallbackCategorySlug}/${product.slug}`
 
+  // Wishlist — hydrated guard avoids hydration mismatch with persisted localStorage
+  const hydrated = useWishlistHydrated()
+  const inWishlist = useWishlist((s) => s.isInWishlist(product.id))
+  const toggleWishlist = useWishlist((s) => s.toggleWishlist)
+
+  const isSaved = hydrated && inWishlist
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleWishlist(product)
+  }
+
   return (
     <Link href={productUrl}>
       <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer h-full">
@@ -51,15 +65,31 @@ export function ProductCard({
               loading="lazy"
             />
             {discount > 0 && (
-              <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2">
+              <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 z-[5]">
                 -{discount}%
               </Badge>
             )}
             {product.featured && variant === 'full' && (
-              <Badge className="absolute top-2 right-2 bg-amber-500 text-gray-900 text-xs px-2">
+              <Badge className="absolute top-2 left-12 bg-amber-500 text-gray-900 text-xs px-2 z-[5]">
                 <Star className="h-3 w-3 fill-current mr-0.5" />TOP
               </Badge>
             )}
+            {/* Wishlist heart button */}
+            <button
+              type="button"
+              onClick={handleToggleWishlist}
+              aria-label={isSaved ? 'Hapus dari Favorit' : 'Simpan ke Favorit'}
+              aria-pressed={isSaved}
+              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-transform duration-200 z-10"
+            >
+              <Heart
+                className={`h-4 w-4 transition-colors ${
+                  isSaved
+                    ? 'fill-red-500 text-red-500'
+                    : 'text-gray-500 hover:text-red-500'
+                }`}
+              />
+            </button>
           </div>
           <div className="p-3">
             {variant === 'full' && product.categoryName && (

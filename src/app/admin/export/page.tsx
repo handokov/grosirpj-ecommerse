@@ -94,6 +94,11 @@ const EXPORT_TYPES: ExportTypeMeta[] = [
 /** Return today's date as YYYY-MM-DD (for default "to" input). */
 function todayIso(): string {
   const d = new Date()
+  return toIso(d)
+}
+
+/** Convert a Date to YYYY-MM-DD (local time, no timezone shift). */
+function toIso(d: Date): string {
   const yyyy = d.getFullYear()
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
@@ -107,6 +112,89 @@ function firstDayOfMonthIso(): string {
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   return `${yyyy}-${mm}-01`
 }
+
+// ---------- Date range presets ----------
+
+interface DatePreset {
+  key: string
+  label: string
+  /** Returns [from, to] as YYYY-MM-DD strings. */
+  getRange: () => [string, string]
+}
+
+const DATE_PRESETS: DatePreset[] = [
+  {
+    key: 'today',
+    label: 'Hari Ini',
+    getRange: () => {
+      const today = todayIso()
+      return [today, today]
+    },
+  },
+  {
+    key: '7d',
+    label: '7 Hari Terakhir',
+    getRange: () => {
+      const to = new Date()
+      const from = new Date()
+      from.setDate(to.getDate() - 6) // include today = 7 days
+      return [toIso(from), toIso(to)]
+    },
+  },
+  {
+    key: '30d',
+    label: '1 Bulan Terakhir',
+    getRange: () => {
+      const to = new Date()
+      const from = new Date()
+      from.setDate(to.getDate() - 29) // include today = 30 days
+      return [toIso(from), toIso(to)]
+    },
+  },
+  {
+    key: '90d',
+    label: '3 Bulan Terakhir',
+    getRange: () => {
+      const to = new Date()
+      const from = new Date()
+      from.setDate(to.getDate() - 89) // include today = 90 days
+      return [toIso(from), toIso(to)]
+    },
+  },
+  {
+    key: 'this-month',
+    label: 'Bulan Ini',
+    getRange: () => [firstDayOfMonthIso(), todayIso()],
+  },
+  {
+    key: 'last-month',
+    label: 'Bulan Lalu',
+    getRange: () => {
+      const now = new Date()
+      const from = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      const to = new Date(now.getFullYear(), now.getMonth(), 0) // last day of prev month
+      return [toIso(from), toIso(to)]
+    },
+  },
+  {
+    key: 'ytd',
+    label: 'Tahun Ini',
+    getRange: () => {
+      const now = new Date()
+      return [`${now.getFullYear()}-01-01`, todayIso()]
+    },
+  },
+  {
+    key: '365d',
+    label: '1 Tahun Terakhir',
+    getRange: () => {
+      const to = new Date()
+      const from = new Date()
+      from.setDate(to.getDate() - 364)
+      return [toIso(from), toIso(to)]
+    },
+  },
+]
 
 /**
  * Trigger a file download from a Response by reading it as a Blob.
@@ -158,6 +246,7 @@ export default function ExportDataPage() {
   const [selectedType, setSelectedType] = useState<ExportType>('sales')
   const [from, setFrom] = useState<string>(firstDayOfMonthIso())
   const [to, setTo] = useState<string>(todayIso())
+  const [activePreset, setActivePreset] = useState<string>('this-month')
   const [format, setFormat] = useState<ExportFormat>('csv')
   const [exporting, setExporting] = useState(false)
 
@@ -165,6 +254,22 @@ export default function ExportDataPage() {
     () => EXPORT_TYPES.find(t => t.key === selectedType)!,
     [selectedType]
   )
+
+  /** Apply a date preset — sets from/to and marks the preset as active. */
+  const handlePresetClick = (preset: DatePreset) => {
+    const [f, t] = preset.getRange()
+    setFrom(f)
+    setTo(t)
+    setActivePreset(preset.key)
+  }
+
+  /** When user manually changes a date input, clear the active preset highlight. */
+  const handleManualDateChange = (setter: (v: string) => void) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setter(e.target.value)
+    setActivePreset('')
+  }
 
   const handleExport = async () => {
     // Validate date range when required
@@ -269,11 +374,46 @@ export default function ExportDataPage() {
             <CardTitle className="text-sm">Konfigurasi Export</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Atur rentang tanggal dan format file. Field tanggal hanya berlaku untuk
-            Laporan Penjualan & Rekap Order.
+            Pilih periode cepat atau atur tanggal manual. Field tanggal hanya berlaku untuk
+            Laporan Penjualan &amp; Rekap Order.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
+          {/* Quick presets — only relevant when date range is needed */}
+          <div
+            className={cn(
+              'space-y-2 transition-opacity',
+              !selectedMeta.needsDateRange && 'opacity-40 pointer-events-none'
+            )}
+          >
+            <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+              Periode Cepat
+            </Label>
+            <div className="flex flex-wrap gap-1.5">
+              {DATE_PRESETS.map(preset => {
+                const active = activePreset === preset.key
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => handlePresetClick(preset)}
+                    disabled={!selectedMeta.needsDateRange}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all duration-150',
+                      active
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-200'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/50',
+                    )}
+                    aria-pressed={active}
+                  >
+                    {preset.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Date range — only enabled when needed */}
           <div
             className={cn(
@@ -290,7 +430,7 @@ export default function ExportDataPage() {
                 id="from-date"
                 type="date"
                 value={from}
-                onChange={e => setFrom(e.target.value)}
+                onChange={handleManualDateChange(setFrom)}
                 className="text-xs h-9 bg-gray-50 border-gray-200"
                 disabled={!selectedMeta.needsDateRange}
               />
@@ -304,7 +444,7 @@ export default function ExportDataPage() {
                 id="to-date"
                 type="date"
                 value={to}
-                onChange={e => setTo(e.target.value)}
+                onChange={handleManualDateChange(setTo)}
                 className="text-xs h-9 bg-gray-50 border-gray-200"
                 disabled={!selectedMeta.needsDateRange}
               />

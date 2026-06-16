@@ -403,3 +403,58 @@ Stage Summary:
   8. ✅ No console errors, fast response (59-67ms)
 - Files: src/app/tentang/page.tsx, src/app/cara-belanja/page.tsx, src/app/syarat-ketentuan/page.tsx, src/app/kebijakan-privasi/page.tsx, src/components/layout/Footer.tsx, src/components/layout/SiteLayout.tsx
 - Feature is production-ready and already pushed to GitHub (commit 2d33058 in origin/main)
+
+---
+Task ID: 34
+Agent: Main Agent
+Task: Add date range presets to Export Data page (user requested "bisa pilih bulan gak, 1 bulan terakhir dll")
+
+Work Log:
+- User requested quick date preset buttons (Hari Ini, 1 Bulan Terakhir, etc.) for Export page instead of only manual date pickers
+- Reviewed existing export page (src/app/admin/export/page.tsx) — only had manual date inputs with default "Bulan Ini" range
+- Added 8 date presets with smart date calculation:
+  1. Hari Ini — today → today
+  2. 7 Hari Terakhir — today-6 → today (includes today = 7 days)
+  3. 1 Bulan Terakhir — today-29 → today (30 days including today)
+  4. 3 Bulan Terakhir — today-89 → today (90 days)
+  5. Bulan Ini — 1st of current month → today (DEFAULT, matches original behavior)
+  6. Bulan Lalu — 1st to last day of previous month
+  7. Tahun Ini — Jan 1 of current year → today
+  8. 1 Tahun Terakhir — today-364 → today (365 days)
+- Refactored helpers: extracted toIso() function for clean date formatting (reused by todayIso and presets)
+- Added `activePreset` state to track which preset is highlighted (defaults to 'this-month')
+- Added `handlePresetClick()` — sets from/to dates + marks preset active
+- Added `handleManualDateChange()` — clears active preset highlight when user edits date manually (so highlight doesn't lie)
+- Added "Periode Cepat" section UI above date inputs:
+  - Flex-wrap layout with 8 pill buttons
+  - Active state: emerald bg + white text + shadow
+  - Inactive: white bg + gray border + hover emerald
+  - aria-pressed for accessibility
+  - Disabled (opacity + pointer-events-none) when export type doesn't need date range (Stok Produk)
+- Updated date inputs to use handleManualDateChange so manual edits clear preset highlight
+- Updated CardDescription: "Pilih periode cepat atau atur tanggal manual."
+- Lint: 0 errors, 0 warnings
+- Used Agent Browser for end-to-end verification:
+  - Logged in, navigated to /admin/export
+  - All 8 preset buttons rendered: Hari Ini, 7 Hari Terakhir, 1 Bulan Terakhir, 3 Bulan Terakhir, Bulan Ini, Bulan Lalu, Tahun Ini, 1 Tahun Terakhir
+  - Default state: "Bulan Ini" highlighted emerald, dates 01/06 → 16/06 ✅
+  - Click "1 Bulan Terakhir": dates updated to 18/05 → 16/06 (30 days) ✅
+  - Click "Hari Ini": dates 16/06 → 16/06 ✅
+  - Click "Tahun Ini": dates 01/01 → 16/06 ✅
+  - Click "Bulan Lalu": dates 01/05 → 31/05 (correct last day of May) ✅
+  - Click "Unduh Sekarang" with preset: Export succeeded, toast "Export Laporan Penjualan berhasil diunduh" ✅
+  - Switch to "Stok Produk": all 8 preset buttons + date inputs disabled (opacity-40) ✅
+  - Switch back to "Laporan Penjualan": presets re-enabled ✅
+  - VLM analysis confirmed: "baris Periode Cepat ada, tombol Bulan Ini sedang aktif (highlighted/emerald), date picker manual juga ada"
+- Dev log: all requests 200 OK, no errors, export API 19ms response
+
+Stage Summary:
+- Added 8 date range preset buttons to Export Data page
+- All presets calculate correct date ranges (including edge cases like last day of month for "Bulan Lalu")
+- Active preset highlighted in emerald; manual date edit clears highlight
+- Presets auto-disable when export type doesn't need date range (Stok Produk)
+- Default preset "Bulan Ini" matches original default behavior (no breaking change)
+- Export still works correctly with any preset selection
+- Fully responsive (flex-wrap on mobile), accessible (aria-pressed), no console errors
+- Files modified: src/app/admin/export/page.tsx only
+- Ready to push to GitHub for Vercel deployment

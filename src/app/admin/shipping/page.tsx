@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronRight,
   Info,
+  Database,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -177,6 +178,9 @@ export default function ShippingManagementPage() {
   const [deletingZoneLoading, setDeletingZoneLoading] = useState(false)
   const [zoneRatesLoading, setZoneRatesLoading] = useState<Set<string>>(new Set())
 
+  // Seed state
+  const [seeding, setSeeding] = useState(false)
+
   // Rate state
   const [rates, setRates] = useState<ShippingRate[]>([])
   const [ratesLoading, setRatesLoading] = useState(true)
@@ -223,6 +227,23 @@ export default function ShippingManagementPage() {
       setRatesLoading(false)
     }
   }, [rateZoneFilter])
+
+  // ===== Seed Default Data =====
+  const handleSeedShipping = async () => {
+    setSeeding(true)
+    try {
+      const res = await fetch('/api/admin/shipping/seed', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Gagal seed data')
+      toast.success(`Berhasil! ${data.summary.zonesCreated} zona & ${data.summary.ratesCreated} tarif ongkir dibuat.`)
+      fetchZones()
+      fetchRates()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal seed data ongkir')
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   useEffect(() => {
     fetchZones()
@@ -533,6 +554,20 @@ export default function ShippingManagementPage() {
             </p>
           </div>
         </div>
+        <Button
+          onClick={handleSeedShipping}
+          disabled={seeding}
+          variant="outline"
+          className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-xs"
+          size="sm"
+        >
+          {seeding ? (
+            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+          ) : (
+            <Database className="w-3.5 h-3.5 mr-1.5" />
+          )}
+          {seeding ? 'Menyemai data...' : 'Seed Data Ongkir'}
+        </Button>
       </div>
 
       {/* Tabs */}

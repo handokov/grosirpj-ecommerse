@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const productMap = new Map(products.map(p => [p.id, p]))
 
     // Validate products and build order items BEFORE transaction
-    const orderItems: { productId: string; quantity: number; size: string; price: number; productName: string; productImage: string }[] = []
+    const orderItems: { productId: string; quantity: number; size: string; color: string; variant: string; price: number; productName: string; productImage: string }[] = []
     let productAmount = 0
     const errors: string[] = []
     let totalWeightGrams = 0
@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
         productId: item.productId,
         quantity: item.quantity,
         size: item.size,
+        color: item.color,
+        variant: item.variant,
         price: unitPrice,
         productName: product.name,
         productImage: firstImage,

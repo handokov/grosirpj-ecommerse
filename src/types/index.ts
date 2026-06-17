@@ -28,6 +28,9 @@ export interface Product {
   tags: string | null;
   weight: string | null;
   sizes: string | null;
+  colors: string | null;
+  variantName: string | null;
+  variants: string | null;
 }
 
 /**
@@ -71,6 +74,9 @@ export interface AdminProduct {
   tags: string | null;
   weight: string | null;
   sizes: string | null;
+  colors: string | null;
+  variantName: string | null;
+  variants: string | null;
   supplierName: string | null;
   supplierLink: string | null;
   supplierPhone: string | null;
@@ -83,6 +89,8 @@ export interface CartItemType {
   product: Product;
   quantity: number;
   size?: string;
+  color?: string;
+  variant?: string;
 }
 
 // ---------- Category Types ----------
@@ -143,6 +151,8 @@ export interface OrderItem {
   productId: string;
   quantity: number;
   size: string | null;
+  color: string | null;
+  variant: string | null;
   price: number;
   productName: string;
   productImage: string;
@@ -152,6 +162,7 @@ export interface OrderItem {
     supplierName: string | null;
     supplierLink: string | null;
     supplierPhone: string | null;
+    variantName?: string | null;
   };
 }
 

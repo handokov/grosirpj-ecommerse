@@ -414,6 +414,8 @@ function CartDrawer() {
         productId: item.product.id,
         quantity: item.quantity,
         size: item.size || '',
+        color: item.color || '',
+        variant: item.variant || '',
         price: item.product.wholesalePrice,
       }));
 
@@ -614,12 +616,14 @@ function CartDrawer() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.product.name}</p>
                       {item.size && <p className="text-xs text-muted-foreground">Ukuran: {item.size}</p>}
+                      {item.color && <p className="text-xs text-muted-foreground">Warna: {item.color}</p>}
+                      {item.variant && <p className="text-xs text-muted-foreground">{item.product.variantName || 'Varian'}: {item.variant}</p>}
                       <p className="text-sm text-emerald-800 font-semibold">{formatRupiah(item.product.wholesalePrice)}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.size)} disabled={item.quantity <= item.product.minOrder}>-</Button>
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.size, item.color, item.variant)} disabled={item.quantity <= item.product.minOrder}>-</Button>
                         <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
-                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.size)} disabled={item.quantity >= item.product.stock}>+</Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeFromCart(item.product.id, item.size)}>
+                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.size, item.color, item.variant)} disabled={item.quantity >= item.product.stock}>+</Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeFromCart(item.product.id, item.size, item.color, item.variant)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>

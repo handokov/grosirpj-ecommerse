@@ -75,6 +75,9 @@ export const createProductSchema = z.object({
   tags: z.string().optional().default(''),
   weight: z.string().optional().default(''),
   sizes: z.string().optional().default(''),
+  colors: z.string().optional().default(''),
+  variantName: z.string().max(50).optional().default(''),
+  variants: z.string().optional().default(''),
   supplierName: z.string().nullable().optional(),
   supplierLink: z.string().nullable().optional(),
   supplierPhone: z.string().nullable().optional(),
@@ -93,6 +96,9 @@ export const updateProductSchema = z.object({
   tags: z.string().optional(),
   weight: z.string().optional(),
   sizes: z.string().optional(),
+  colors: z.string().optional(),
+  variantName: z.string().max(50).optional(),
+  variants: z.string().optional(),
   supplierName: z.string().nullable().optional(),
   supplierLink: z.string().nullable().optional(),
   supplierPhone: z.string().nullable().optional(),
@@ -144,6 +150,8 @@ export const createOrderSchema = z.object({
     productId: z.string().min(1),
     quantity: z.coerce.number().int().min(1).max(9999),
     size: z.string().max(50).optional().default(''),
+    color: z.string().max(50).optional().default(''),
+    variant: z.string().max(50).optional().default(''),
   })).min(1, 'Minimal 1 item').max(100, 'Maksimal 100 item per order'),
 })
 
@@ -164,6 +172,8 @@ export const publicCreateOrderSchema = z.object({
     productId: z.string().min(1, 'Product ID wajib'),
     quantity: z.coerce.number().int().min(1, 'Minimal 1 item').max(9999),
     size: z.string().max(50).optional().default(''),
+    color: z.string().max(50).optional().default(''),
+    variant: z.string().max(50).optional().default(''),
   })).min(1, 'Minimal 1 item').max(50, 'Maksimal 50 item per order'),
 })
 

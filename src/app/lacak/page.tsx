@@ -37,6 +37,8 @@ import { cn } from '@/lib/utils';
 interface OrderItem {
   quantity: number;
   size: string | null;
+  color: string | null;
+  variant: string | null;
   price: number;
   productName: string;
   productImage: string | null;
@@ -624,6 +626,16 @@ function LacakPageContent() {
                         {item.size && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                             {item.size}
+                          </Badge>
+                        )}
+                        {item.color && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-sky-100 text-sky-800 hover:bg-sky-200">
+                            {item.color}
+                          </Badge>
+                        )}
+                        {item.variant && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-800 hover:bg-amber-200">
+                            {item.variant}
                           </Badge>
                         )}
                         <span className="text-xs text-gray-500">

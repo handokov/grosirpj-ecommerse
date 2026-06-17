@@ -108,6 +108,8 @@ export function OrderCard({ order, onStatusUpdate, onViewDetail }: OrderCardProp
                   </p>
                   <div className="flex items-center gap-2 text-[10px] text-gray-500">
                     {item.size && <span>Ukuran: {item.size}</span>}
+                    {item.color && <span>Warna: {item.color}</span>}
+                    {item.variant && <span>{item.product?.variantName || 'Varian'}: {item.variant}</span>}
                     <span>{item.quantity}x {formatRupiah(item.price)}</span>
                   </div>
                   {/* Supplier Info */}

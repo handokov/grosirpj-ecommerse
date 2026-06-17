@@ -39,7 +39,7 @@ export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
               <TableRow>
                 <TableHead className="w-14 text-[11px] h-9">Gambar</TableHead>
                 <TableHead className="text-[11px]">Produk</TableHead>
-                <TableHead className="text-[11px] text-center">Ukuran</TableHead>
+                <TableHead className="text-[11px] text-center">Varian</TableHead>
                 <TableHead className="text-[11px] text-center">Jumlah</TableHead>
                 <TableHead className="text-[11px] text-right">Harga</TableHead>
                 <TableHead className="text-[11px] text-right">Subtotal</TableHead>
@@ -81,13 +81,26 @@ export function OrderItemsTable({ items, totalAmount }: OrderItemsTableProps) {
                     />
                   </TableCell>
                   <TableCell className="text-center">
-                    {item.size ? (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {item.size}
-                      </Badge>
-                    ) : (
-                      <span className="text-[11px] text-gray-400">-</span>
-                    )}
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {item.size ? (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {item.size}
+                        </Badge>
+                      ) : null}
+                      {item.color ? (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-sky-100 text-sky-800 hover:bg-sky-200">
+                          {item.color}
+                        </Badge>
+                      ) : null}
+                      {item.variant ? (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-800 hover:bg-amber-200">
+                          {item.variant}
+                        </Badge>
+                      ) : null}
+                      {!item.size && !item.color && !item.variant && (
+                        <span className="text-[11px] text-gray-400">-</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-center text-xs text-gray-600">
                     {item.quantity}

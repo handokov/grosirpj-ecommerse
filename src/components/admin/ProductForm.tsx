@@ -48,6 +48,9 @@ const productSchema = z.object({
   minOrder: z.string().min(1, 'Min. order wajib diisi'),
   stock: z.string().min(1, 'Stok wajib diisi'),
   sizes: z.string(),
+  colors: z.string(),
+  variantName: z.string(),
+  variants: z.string(),
   weight: z.string(),
   tags: z.string(),
   featured: z.boolean(),
@@ -67,6 +70,9 @@ export interface ProductInitialData {
   minOrder: string
   stock: string
   sizes: string
+  colors: string
+  variantName: string
+  variants: string
   weight: string
   tags: string
   featured: boolean
@@ -143,6 +149,9 @@ export default function ProductForm({
       minOrder: '1',
       stock: '',
       sizes: '',
+      colors: '',
+      variantName: '',
+      variants: '',
       weight: '',
       tags: '',
       featured: false,
@@ -403,6 +412,39 @@ export default function ProductForm({
               </p>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="colors">Warna (comma-separated)</Label>
+              <Input
+                id="colors"
+                placeholder="Merah, Hitam, Putih, Navy"
+                {...register('colors')}
+              />
+              <p className="text-xs text-gray-400">
+                Pisahkan dengan koma, contoh: Merah, Hitam, Putih
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="variantName">Jenis Variant Lain (nama)</Label>
+              <Input
+                id="variantName"
+                placeholder="Contoh: Material, Tipe, Model"
+                {...register('variantName')}
+              />
+              <p className="text-xs text-gray-400">
+                Kosongkan jika tidak ada. Nama jenis variant selain ukuran & warna
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="variants">Nilai Variant Lain (comma-separated)</Label>
+              <Input
+                id="variants"
+                placeholder="Katun, Jeans, Sutra"
+                {...register('variants')}
+              />
+              <p className="text-xs text-gray-400">
+                Pisahkan dengan koma. Wajib diisi jika "Jenis Variant Lain" diisi
+              </p>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="weight">Berat</Label>
               <Input
                 id="weight"

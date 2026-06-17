@@ -64,6 +64,9 @@ export async function PUT(
     if (data.tags !== undefined) updateData.tags = data.tags
     if (data.weight !== undefined) updateData.weight = data.weight
     if (data.sizes !== undefined) updateData.sizes = data.sizes
+    if (data.colors !== undefined) updateData.colors = data.colors
+    if (data.variantName !== undefined) updateData.variantName = data.variantName || null
+    if (data.variants !== undefined) updateData.variants = data.variants
     if (data.supplierName !== undefined) updateData.supplierName = data.supplierName || null
     if (data.supplierLink !== undefined) updateData.supplierLink = data.supplierLink || null
     if (data.supplierPhone !== undefined) updateData.supplierPhone = data.supplierPhone || null

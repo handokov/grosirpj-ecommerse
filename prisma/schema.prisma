@@ -38,7 +38,10 @@ model Product {
   featured       Boolean    @default(false)
   tags           String?
   weight         String?
-  sizes          String?
+  sizes          String?    // Ukuran (comma-separated), mis: S, M, L, XL
+  colors         String?    // Warna (comma-separated), mis: Merah, Hitam, Putih
+  variantName    String?    // Nama jenis variant lain (mis: "Material", "Tipe", "Model")
+  variants       String?    // Nilai variant lain (comma-separated), mis: Katun, Jeans, Sutra
   supplierName   String?    // Nama supplier/toko supplier
   supplierLink   String?    // Link alamat toko supplier (Shopee, Tokopedia, dll)
   supplierPhone  String?    // No telp/WhatsApp supplier
@@ -69,13 +72,15 @@ model CartItem {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity  Int      @default(1)
   size      String?
+  color     String?
+  variant   String?
   sessionId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([sessionId])
   @@index([productId])
-  @@unique([sessionId, productId, size])
+  @@unique([sessionId, productId, size, color, variant])
 }
 
 model User {
@@ -132,6 +137,8 @@ model OrderItem {
   product      Product? @relation(fields: [productId], references: [id]) // Optional — product may be soft-deleted
   quantity     Int
   size         String?
+  color        String?
+  variant      String?
   price        Int      // Price at time of order (Rupiah — integer)
   productName  String   // Snapshot: product name at time of order (prevents data loss if product changes)
   productImage String   // Snapshot: first image at time of order

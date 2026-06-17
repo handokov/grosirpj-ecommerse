@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
         include: {
           items: {
             include: {
-              product: { select: { name: true, images: true, supplierName: true, supplierLink: true, supplierPhone: true } },
+              product: { select: { name: true, images: true, supplierName: true, supplierLink: true, supplierPhone: true, variantName: true } },
             },
           },
         },
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       const productMap = new Map(products.map(p => [p.id, p]))
 
       // Calculate prices server-side
-      const orderItems: { productId: string; quantity: number; size: string; price: number; productName: string; productImage: string }[] = []
+      const orderItems: { productId: string; quantity: number; size: string; color: string; variant: string; price: number; productName: string; productImage: string }[] = []
       let totalAmount = 0
       const errors: string[] = []
 
@@ -130,6 +130,8 @@ export async function POST(request: NextRequest) {
           productId: item.productId,
           quantity: item.quantity,
           size: item.size,
+          color: item.color,
+          variant: item.variant,
           price: unitPrice,
           productName: product.name,
           productImage: firstImage,
@@ -185,7 +187,7 @@ export async function POST(request: NextRequest) {
         include: {
           items: {
             include: {
-              product: { select: { name: true, images: true } },
+              product: { select: { name: true, images: true, variantName: true } },
             },
           },
         },

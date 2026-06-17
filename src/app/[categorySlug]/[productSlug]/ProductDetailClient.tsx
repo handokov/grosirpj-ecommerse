@@ -29,6 +29,8 @@ export default function ProductDetailClient({ product, related }: Props) {
   const toggleWishlist = useWishlist((s) => s.toggleWishlist);
   const [quantity, setQuantity] = useState(product.minOrder);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // Touch/swipe state
@@ -39,7 +41,10 @@ export default function ProductDetailClient({ product, related }: Props) {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const discount = calculateDiscount(product.price, product.wholesalePrice);
-  const sizeList = product.sizes ? product.sizes.split(',') : [];
+  const sizeList = product.sizes ? product.sizes.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const colorList = product.colors ? product.colors.split(',').map(c => c.trim()).filter(Boolean) : [];
+  const variantList = product.variants ? product.variants.split(',').map(v => v.trim()).filter(Boolean) : [];
+  const variantLabel = product.variantName || 'Varian';
   const allImages = getAllImageUrls(product.images);
   const hasMultipleImages = allImages.length > 1;
 
@@ -107,9 +112,14 @@ export default function ProductDetailClient({ product, related }: Props) {
   }, [goNext, goPrev]);
 
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedSize || undefined);
+    addToCart(product, quantity, selectedSize || undefined, selectedColor || undefined, selectedVariant || undefined);
+    const details = [
+      selectedSize ? `Ukuran ${selectedSize}` : null,
+      selectedColor ? `Warna ${selectedColor}` : null,
+      selectedVariant ? `${variantLabel} ${selectedVariant}` : null,
+    ].filter(Boolean).join(' - ');
     toast.success(`${product.name} ditambahkan ke keranjang`, {
-      description: `${quantity} pcs${selectedSize ? ` - Ukuran ${selectedSize}` : ''} - ${formatRupiah(product.wholesalePrice * quantity)}`,
+      description: `${quantity} pcs${details ? ` - ${details}` : ''} - ${formatRupiah(product.wholesalePrice * quantity)}`,
     });
   };
 
@@ -283,13 +293,53 @@ export default function ProductDetailClient({ product, related }: Props) {
                 <div className="flex flex-wrap gap-1.5">
                   {sizeList.map((size) => (
                     <Button
-                      key={size.trim()}
-                      variant={selectedSize === size.trim() ? 'default' : 'outline'}
+                      key={size}
+                      variant={selectedSize === size ? 'default' : 'outline'}
                       size="sm"
-                      className={`rounded-lg h-8 text-xs px-3 ${selectedSize === size.trim() ? 'bg-emerald-800 hover:bg-emerald-900' : 'hover:border-emerald-300 hover:text-emerald-900'}`}
-                      onClick={() => setSelectedSize(size.trim())}
+                      className={`rounded-lg h-8 text-xs px-3 ${selectedSize === size ? 'bg-emerald-800 hover:bg-emerald-900' : 'hover:border-emerald-300 hover:text-emerald-900'}`}
+                      onClick={() => setSelectedSize(size)}
                     >
-                      {size.trim()}
+                      {size}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Color selection */}
+            {colorList.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-gray-900 text-sm mb-2">Pilih Warna</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {colorList.map((color) => (
+                    <Button
+                      key={color}
+                      variant={selectedColor === color ? 'default' : 'outline'}
+                      size="sm"
+                      className={`rounded-lg h-8 text-xs px-3 ${selectedColor === color ? 'bg-emerald-800 hover:bg-emerald-900' : 'hover:border-emerald-300 hover:text-emerald-900'}`}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {color}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Custom variant selection */}
+            {variantList.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-gray-900 text-sm mb-2">Pilih {variantLabel}</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {variantList.map((v) => (
+                    <Button
+                      key={v}
+                      variant={selectedVariant === v ? 'default' : 'outline'}
+                      size="sm"
+                      className={`rounded-lg h-8 text-xs px-3 ${selectedVariant === v ? 'bg-emerald-800 hover:bg-emerald-900' : 'hover:border-emerald-300 hover:text-emerald-900'}`}
+                      onClick={() => setSelectedVariant(v)}
+                    >
+                      {v}
                     </Button>
                   ))}
                 </div>

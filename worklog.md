@@ -715,3 +715,178 @@ Stage Summary:
 - Customer bisa pilih kombinasi variant saat add to cart
 - Variant info ikut ke cart, order, invoice customer, dan admin order detail
 - Next: Vercel auto-deploy akan triggered; perlu verify production build pass
+
+---
+Task ID: sync-github
+Agent: Main Agent (GLM-5.2)
+Task: Sync local workspace to GitHub state (Skenario 2 — reset --hard origin/main)
+
+Work Log:
+- Verified PAT ghp_*** for handokov/grosirpj-ecommerse works via GitHub API
+- Added git remote origin with PAT embedded in URL (config insteadOf to hide PAT from remote -v)
+- git fetch origin — local was 167 commits behind GitHub
+- PRE-RESET state:
+  * Local HEAD: 4cfad1e (snapshot lama dari restore sebelumnya)
+  * GitHub HEAD: ec64a053 (fix migration variant columns — fix "Failed to create product")
+  * Local tracked files: 165
+  * GitHub tracked files: 1480
+- git reset --hard origin/main — POST-RESET state:
+  * Local HEAD = GitHub HEAD = ec64a053
+  * Local tracked files = 1480 (same as GitHub)
+  * 9 tables in DB schema: Category, Banner, ShippingZone, ShippingRate, CartItem, Order, OrderItem, Product, User
+- bun install — 64 new packages installed (614 total in node_modules)
+- bunx prisma generate — Prisma Client regenerated with new schema (variant columns)
+- bunx prisma db push — schema synced to local SQLite db/custom.db
+  * New tables added: Category, Banner, ShippingZone, ShippingRate
+  * New columns added: Product.colors, variantName, variants, supplierName/Link/Phone, deletedAt
+  * New columns added: CartItem.color, variant, sessionId
+  * Lost tables (not in new schema): VariantGroup, VariantOption, Review, Chat, Wishlist, Notification
+- Data migration from old dev.db to new schema: 
+  * User: 4 rows copied successfully
+  * Product: 0/30 (old schema missing slug column, NOT NULL constraint failed)
+  * Order: 0/5 (old schema missing orderNumber column)
+  * OrderItem: 0/6 (old schema missing productImage column)
+- Ran bun prisma/seed.ts to populate fresh demo data:
+  * 5 categories created
+  * 20 products created
+  * 0 orders (clean state)
+- Recreated .env (was deleted by reset):
+  * DATABASE_URL="file:./db/custom.db"
+  * NEXTAUTH_SECRET="dev-secret-local-only-not-for-production"
+  * NEXTAUTH_URL="http://localhost:3000"
+- Started dev server (bun run dev) — Ready in 4s
+- Verified via Agent Browser:
+  * HTTP 200 on http://localhost:3000/
+  * Title: "GrosirPJ - Pusat Grosir Baju Anak & Baby Kids Terpercaya"
+  * Screenshot saved: /home/z/my-project/upload/preview-after-sync.png (1.8MB)
+  * Homepage shows: banner carousel, 5 categories (Bayi/Balita/Anak-anak/Aksesoris/Sepatu), "Grosir Baju Baby & Kids" heading
+  * No console errors
+- bunx tsc --noEmit — initially 422 errors, all from upload/grosirpj-extracted/ (extraction artifact)
+  * Fix: added "upload" to tsconfig.json exclude array
+  * Re-run: 0 errors ✅
+- bun run lint — clean (0 errors, 0 warnings)
+
+Stage Summary:
+- Local now fully synced with GitHub state at commit ec64a053
+- All 167 missing commits obtained (security fixes, analytics, variant feature, build fixes, etc.)
+- Local dev server runs cleanly with new schema
+- TypeScript: clean (0 errors)
+- Lint: clean (0 errors)
+- Browser verification: ✅ homepage renders correctly
+- Files modified locally (NOT pushed):
+  * .env (recreated — was deleted by reset)
+  * tsconfig.json (added "upload" to exclude — local sandbox only, won't push)
+- Mode: WAITING for next user instruction
+- User explicitly said: "jangan di push dulu" — no commits made
+
+---
+Task ID: image-display-fix
+Agent: Main Agent (GLM-5.2)
+Task: Fix mobile image display — gambar produk terlalu besar di mobile + auto-resize saat upload
+
+Problem Analysis:
+- User screenshot showed product image taking up entire mobile screen (899x1599 portrait screenshot)
+- Root cause: container used `aspect-square` (1:1) with no max-width, so on 375px mobile, image became 375x375px taking ~80% of viewport
+- Cloudinary upload had no width/height limit — full original image (up to 10MB) stored
+- getOptimizedImageUrl used `c_limit` (no crop) → browser did the cropping via object-cover, output not optimal
+
+Fixes Applied (3 files):
+
+1. src/app/[categorySlug]/[productSlug]/ProductDetailClient.tsx
+   - Main image container: aspect-square → aspect-[4/5] sm:aspect-square (portrait on mobile, square on desktop)
+   - Added max-w-[420px] mx-auto w-full constraint → image centered with breathing room
+   - Thumbnail gallery: w-16 h-16 → w-20 h-20 (mobile) for easier tap target (was 64px, now 80px)
+   - Thumbnail active state: added ring-2 ring-emerald-600/30 for clearer highlight
+   - Thumbnail container: added max-w-[420px] mx-auto w-full (aligned with main image)
+
+2. src/lib/cloudinary.ts (auto-resize saat upload)
+   - Added transformation: { width: 1200, height: 1200, crop: 'limit' }
+   - Effect: any uploaded image auto-resized to max 1200x1200 (keeps aspect ratio)
+   - Combined with existing quality: 'auto:good' + fetch_format: 'auto'
+   - Result: smaller files, faster page load, consistent quality
+   - Applies to ALL future uploads (products, banners, etc.)
+   - Note: existing images already in Cloudinary are NOT affected — they remain as-is
+
+3. src/lib/image-utils.ts (smart crop strategy)
+   - Changed c_limit (no crop) → conditional:
+     * c_fill when both width & height specified (Cloudinary crops server-side → smaller file, consistent aspect)
+     * c_limit when only width or height specified (just downsize, keep aspect ratio)
+   - Effect: ProductCard thumbnails now get server-side crop (consistent squares)
+   - ProductDetail main image: still c_limit because only width is specified
+
+Verification:
+- bunx tsc --noEmit → 0 errors (excluding upload/grosirpj-extracted/ extraction artifact)
+- bun run lint → 0 errors, 0 warnings
+- Dev server restarted successfully
+- Agent Browser test on product detail page (390x844 mobile viewport):
+  * HTTP 200 on /anak-anak-6-12-tahun/kaos-anak-unisex-print-kartun
+  * Title: "Kaos Anak Unisex Print Kartun - GrosirPJ | Grosir Baju Anak & Baby Kids"
+  * Screenshot: /home/z/my-project/upload/after-mobile-fold.png (273KB)
+- VLM analysis of AFTER screenshot:
+  * ✅ "Gambar produk utama tampil jelas"
+  * ✅ "Tidak, ukurannya sudah pas (tidak terlalu besar)"
+  * ✅ "Aspect ratio lebih proporsional (4:5 portrait), bukan persegi (1:1)"
+  * ✅ "Ruang kosong di samping/atas gambar sudah pas"
+  * ✅ "Tampilan enak dilihat, visual seimbang"
+
+Stage Summary:
+- Mobile image display: ✅ Fixed (4:5 portrait + max-w-420px + centered)
+- Auto-resize on upload: ✅ Added (1200x1200 limit, smaller files for all future uploads)
+- Smart crop strategy: ✅ c_fill for fixed-dimension crops, c_limit for aspect-preserving resize
+- TypeScript: ✅ Clean
+- Lint: ✅ Clean
+- Browser verification: ✅ VLM confirmed visually improved
+- Mode: READY for push (waiting for user approval)
+
+---
+Task ID: push-image-fix-to-vercel
+Agent: Main Agent (GLM-5.2)
+Task: Push image display fix ke GitHub + monitor Vercel deploy
+
+Work Log:
+- Pre-push SHA backup: 121267d1bccdb1809b8a0de5df4dd912c649e1fc (local HEAD pre-push)
+  Note: ada 2 auto-commits sandbox (32ab555 tsconfig + worklog, 121267d image fix + worklog)
+  dengan UUID messages. Decided to squash & rewrite to descriptive message.
+- Strategy: git reset --soft origin/main → unstage tsconfig.json & worklog.md → re-commit
+  only 3 image-fix files with descriptive message
+- Final TypeScript check: 0 errors
+- Final lint check: 0 errors
+- git fetch origin — confirmed no user commits since sync
+- Commit f1c1d74 "fix(ui): perbaiki tampilan gambar produk di mobile + auto-resize saat upload"
+- Push: ec64a05..f1c1d74 main → main, exit 0
+
+GitHub verification:
+- API call to /repos/handokov/grosirpj-ecommerse/commits/main
+- HEAD SHA: f1c1d74235303a90f650b61425b1ebb92ec01546 ✅ matches local
+
+Vercel deploy monitoring:
+- Immediate post-push check: HTTP 200 on homepage (might be cached)
+- Polling every 15s for 5 min max — HTTP 200 on attempt 1
+- Product detail URL test: https://grosirpj-ecommerse.vercel.app/anak-anak-6-12-tahun/kaos-anak-unisex-print-kartun → HTTP 200
+- x-vercel-cache: MISS (fresh response, not cached)
+- age: 0 (brand new deployment)
+- HTML check: ✅ Found "aspect-[4/5]" class in production HTML — NEW code deployed
+
+Agent Browser verification on Vercel production:
+- Viewport: 390x844 (iPhone 14 mobile)
+- URL: https://grosirpj-ecommerse.vercel.app/anak-anak-6-12-tahun/kaos-anak-unisex-print-kartun
+- HTTP 200, title: "Kaos Anak Unisex Print Kartun - GrosirPJ | Grosir Baju Anak & Baby Kids"
+- Screenshot: /home/z/my-project/upload/vercel-after-mobile-fold.png (272KB)
+- Console errors: 0
+- Page renders correctly with breadcrumb, image, badge -42% OFF, product info
+
+VLM analysis of production screenshot:
+- ✅ "Aspect ratio gambar produk utama terlihat 4:5 portrait (bukan square 1:1)"
+- ✅ "Gambar sudah pas, tidak terlalu besar"
+- ✅ "Tidak ada error visual"
+- ✅ "Overall tampilan enak dilihat"
+
+Stage Summary:
+- Push: ✅ Success (f1c1d74 on GitHub main)
+- Vercel deploy: ✅ Live with new code
+- Production verification: ✅ aspect-[4/5] in HTML, renders correctly
+- VLM confirms: ✅ Visual fix verified in production
+- Rollback reference (kalau dibutuhkan):
+  * Pre-push SHA: ec64a05 (commit sebelum push ini)
+  * Revert command: git revert f1c1d74 → git push origin main
+  * Atau: Vercel dashboard → Promote previous deployment to Production

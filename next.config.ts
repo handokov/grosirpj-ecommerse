@@ -31,6 +31,28 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // Turbopack: treat non-JS files as raw text to prevent
+  // "Unknown module type" / "Parsing ecmascript failed" errors when Turbopack
+  // scans node_modules (e.g. @libsql/client/README.md, @libsql/hrana-client/LICENSE).
+  // This happens because libsql uses dynamic `require(`@libsql/${target}`)` for
+  // native bindings, so Turbopack eagerly scans ALL files in those packages.
+  turbopack: {
+    rules: {
+      '*.md': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      'LICENSE': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+      'LICENSE.*': {
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
+    },
+  },
 };
 
 export default nextConfig;

@@ -677,3 +677,41 @@ Stage Summary:
 - All 3 features (#14 Cookie Banner, #13 Analytics, #10 Wishlist) now LIVE on Vercel production
 - Lesson learned: always run `bun run build` locally before pushing — lint alone doesn't catch type errors in Next.js App Router
 - Commit: 705a9ae (pushed, Vercel auto-deployed, age 9s = fresh)
+
+---
+Task ID: variant-feature
+Agent: main (Claude)
+Task: Tambah kolom variant lain (selain Ukuran) untuk produk — user minta tambah field Warna & jenis variant custom
+
+Work Log:
+- Investigasi screenshot via VLM: user butuh kolom variant selain "Ukuran" di form produk
+- Review struktur kode: schema Product hanya punya field `sizes`, CartItem hanya punya `size`, OrderItem hanya punya `size`
+- Tambah 3 field baru di Product schema: `colors` (Warna), `variantName` (nama jenis variant custom), `variants` (nilai variant custom)
+- Tambah 2 field baru di CartItem & OrderItem: `color`, `variant`
+- Update unique constraint CartItem menjadi `[sessionId, productId, size, color, variant]`
+- Run `prisma db push --accept-data-loss` untuk sync schema ke SQLite lokal
+- Update types/index.ts: tambah field baru di Product, AdminProduct, CartItemType, OrderItem
+- Update lib/validations.ts: tambah field di createProductSchema, updateProductSchema, createOrderSchema, publicCreateOrderSchema
+- Update API routes: admin/products (POST/PUT), admin/orders (POST), orders (POST), orders/[orderNumber] (GET)
+- Update admin product selects untuk include `variantName: true` di 5 tempat
+- Update ProductForm.tsx: tambah 3 input baru di section "Varian" (Warna, Jenis Variant Lain, Nilai Variant)
+- Update admin/products/[id]/page.tsx: pass field baru ke initialData
+- Update ProductDetailClient.tsx: tambah state selectedColor & selectedVariant, render 3 section pilihan variant (Ukuran, Warna, Varian custom), pass ke addToCart
+- Update useStore cart: signature addToCart, removeFromCart, updateCartQuantity sekarang menerima (productId, size, color, variant); pakai cartKey helper untuk key unik
+- Update Header.tsx (cart UI + checkout): display color/variant, kirim color/variant ke API orders saat checkout
+- Update OrderItemsTable.tsx: kolom "Ukuran" jadi "Varian", tampilkan badge untuk size/color/variant
+- Update OrderCard.tsx: tampilkan Ukuran/Warna/Varian di item line
+- Update lacak/page.tsx (invoice customer): tampilkan badge color & variant
+- Verifikasi: `tsc --noEmit` 0 error, `bun run lint` 0 error
+- Test end-to-end via curl: API /api/products mengembalikan field baru (colors, variantName, variants)
+- Test UI: set test data colors/variants di 1 produk, fetch product detail page, verify 3 section "Pilih Ukuran", "Pilih Warna", "Pilih Material" muncul dengan benar
+- Revert test data & delete test admin user
+- Commit `abe6231` + push ke origin/main
+
+Stage Summary:
+- 17 files modified, 215 insertions, 44 deletions
+- Schema migration backward-compatible (semua field baru nullable)
+- Feature: admin bisa set 3 jenis variant per produk (Ukuran, Warna, Variant custom)
+- Customer bisa pilih kombinasi variant saat add to cart
+- Variant info ikut ke cart, order, invoice customer, dan admin order detail
+- Next: Vercel auto-deploy akan triggered; perlu verify production build pass

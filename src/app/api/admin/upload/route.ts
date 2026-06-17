@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
 import { requireAdmin, isAuthError } from '@/lib/auth-guard'
-import { MAX_FILE_SIZE, ALLOWED_IMAGE_TYPES } from '@/lib/store-config'
+import {
+  MAX_FILE_SIZE,
+  ALLOWED_IMAGE_TYPES,
+  CLOUDINARY_FOLDER_PRODUCTS,
+  CLOUDINARY_FOLDER_BANNERS,
+} from '@/lib/store-config'
 
 export const dynamic = 'force-dynamic'
+
+// Allowed folders for upload (security: prevents admin from writing to arbitrary folders)
+const ALLOWED_FOLDERS = [CLOUDINARY_FOLDER_PRODUCTS, CLOUDINARY_FOLDER_BANNERS]
 
 /**
  * Upload a single image file (FormData) to Cloudinary.
@@ -31,12 +39,20 @@ export async function POST(request: NextRequest) {
     }
 
     const file = formData.get('file')
-    const folder = (formData.get('folder') as string) || 'grosirpj'
+    const folder = (formData.get('folder') as string) || CLOUDINARY_FOLDER_PRODUCTS
 
     // Validate file presence
     if (!file || !(file instanceof File)) {
       return NextResponse.json(
         { error: 'File tidak ditemukan dalam request' },
+        { status: 400 }
+      )
+    }
+
+    // Validate folder (security: only allow predefined folders)
+    if (!ALLOWED_FOLDERS.includes(folder)) {
+      return NextResponse.json(
+        { error: 'Folder tidak diizinkan' },
         { status: 400 }
       )
     }

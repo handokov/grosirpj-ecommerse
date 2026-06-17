@@ -65,11 +65,20 @@ export async function POST() {
       // OrderItem table
       'ALTER TABLE "OrderItem" ADD COLUMN productName TEXT',
       'ALTER TABLE "OrderItem" ADD COLUMN productImage TEXT',
+      'ALTER TABLE "OrderItem" ADD COLUMN color TEXT',
+      'ALTER TABLE "OrderItem" ADD COLUMN variant TEXT',
       // Product table
       'ALTER TABLE "Product" ADD COLUMN deletedAt DATETIME',
       'ALTER TABLE "Product" ADD COLUMN supplierName TEXT',
       'ALTER TABLE "Product" ADD COLUMN supplierLink TEXT',
       'ALTER TABLE "Product" ADD COLUMN supplierPhone TEXT',
+      // Product table — variant feature (colors + custom variant)
+      'ALTER TABLE "Product" ADD COLUMN colors TEXT',
+      'ALTER TABLE "Product" ADD COLUMN variantName TEXT',
+      'ALTER TABLE "Product" ADD COLUMN variants TEXT',
+      // CartItem table — variant feature
+      'ALTER TABLE "CartItem" ADD COLUMN color TEXT',
+      'ALTER TABLE "CartItem" ADD COLUMN variant TEXT',
     ]
 
     let migrated = 0
@@ -125,6 +134,15 @@ export async function GET() {
       { table: 'Order', column: 'destinationCity' },
       { table: 'OrderItem', column: 'productName' },
       { table: 'Product', column: 'deletedAt' },
+      // Variant feature columns (added in commit abe6231)
+      { table: 'Product', column: 'colors' },
+      { table: 'Product', column: 'variantName' },
+      { table: 'Product', column: 'variants' },
+      { table: 'Product', column: 'supplierName' },
+      { table: 'OrderItem', column: 'color' },
+      { table: 'OrderItem', column: 'variant' },
+      { table: 'CartItem', column: 'color' },
+      { table: 'CartItem', column: 'variant' },
     ]
 
     for (const check of columnsToCheck) {

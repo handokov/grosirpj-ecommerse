@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
     if (isAuthError(error)) return error.toResponse()
-    console.error('Create product error:')
+    console.error('Create product error:', error)
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }

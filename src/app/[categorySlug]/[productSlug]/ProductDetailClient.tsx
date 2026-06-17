@@ -155,7 +155,7 @@ export default function ProductDetailClient({ product, related }: Props) {
           <div>
             {/* Main image with swipe support */}
             <div
-              className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 group select-none"
+              className="relative aspect-[4/5] sm:aspect-square rounded-2xl overflow-hidden bg-gray-100 mb-3 group select-none mx-auto w-full max-w-[420px]"
               onTouchStart={hasMultipleImages ? handleTouchStart : undefined}
               onTouchMove={hasMultipleImages ? handleTouchMove : undefined}
               onTouchEnd={hasMultipleImages ? handleTouchEnd : undefined}
@@ -219,14 +219,14 @@ export default function ProductDetailClient({ product, related }: Props) {
 
             {/* Thumbnail gallery */}
             {hasMultipleImages && (
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin max-w-[420px] mx-auto w-full">
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => goToImage(idx)}
-                    className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                    className={`relative w-20 h-20 sm:w-20 sm:h-20 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
                       idx === selectedImageIndex
-                        ? 'border-emerald-600 shadow-md'
+                        ? 'border-emerald-600 shadow-md ring-2 ring-emerald-600/30'
                         : 'border-gray-200 hover:border-emerald-300'
                     }`}
                   >

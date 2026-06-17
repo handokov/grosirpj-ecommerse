@@ -25,6 +25,10 @@ export function getAllImageUrls(src: string | null | undefined): string[] {
  * Get optimized image URL
  * - Cloudinary URLs get transformation parameters
  * - Local paths stay as-is (Next.js Image handles optimization)
+ *
+ * Crop strategy: `c_fill` when both width & height are specified (Cloudinary crops
+ * server-side → consistent aspect ratio, smaller files). `c_limit` otherwise
+ * (just resize down, keep aspect ratio).
  */
 export function getOptimizedImageUrl(
   path: string,
@@ -45,7 +49,12 @@ export function getOptimizedImageUrl(
       if (options?.quality) transforms.push(`q_${options.quality}`);
       if (options?.format) transforms.push(`f_${options.format}`);
       else transforms.push('f_auto');
-      transforms.push('c_limit');
+      // Use c_fill when both dimensions known (consistent crop), else c_limit (no crop)
+      if (options?.width && options?.height) {
+        transforms.push('c_fill');
+      } else {
+        transforms.push('c_limit');
+      }
 
       const transformStr = transforms.join(',');
       return path.replace('/image/upload/', `/image/upload/${transformStr}/`);

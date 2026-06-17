@@ -12,6 +12,10 @@ export default cloudinary
 
 /**
  * Upload an image to Cloudinary
+ *
+ * Images are auto-resized on upload to a max of 1200x1200 (limit, keeps aspect ratio)
+ * to reduce file size and ensure consistent display across all product views.
+ * Quality & format are also optimized (auto:good + f_auto → webp/avif when supported).
  */
 export async function uploadImage(
   file: Buffer | string,
@@ -21,6 +25,7 @@ export async function uploadImage(
     folder,
     resource_type: 'image',
     transformation: [
+      { width: 1200, height: 1200, crop: 'limit' },
       { quality: 'auto:good' },
       { fetch_format: 'auto' },
     ],

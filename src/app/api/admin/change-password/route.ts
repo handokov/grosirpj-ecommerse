@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { compare, hash } from 'bcryptjs'
 import { z } from 'zod'
-import { requireAdmin, isAdminError } from '@/lib/auth-guard'
+import { requireAdmin, isAuthError } from '@/lib/auth-guard'
 import { db } from '@/lib/db'
 
 const changePasswordSchema = z.object({
@@ -17,10 +17,9 @@ const changePasswordSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  const session = await requireAdmin()
-  if (isAdminError(session)) return session
-
   try {
+    const session = await requireAdmin()
+
     const body = await request.json()
     const result = changePasswordSchema.safeParse(body)
     if (!result.success) {
@@ -55,6 +54,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Password berhasil diubah' })
   } catch (error) {
+    if (isAuthError(error)) return error.toResponse()
+
     console.error('Change password error:', error)
     return NextResponse.json({ error: 'Gagal mengubah password' }, { status: 500 })
   }

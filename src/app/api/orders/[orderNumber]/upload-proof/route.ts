@@ -65,14 +65,13 @@ export async function POST(
       where: { id: order.id },
       data: {
         paymentProof: result.url,
-        paymentProofUploadedAt: new Date(),
       },
     })
 
     return NextResponse.json({
       success: true,
       paymentProof: updatedOrder.paymentProof,
-      paymentProofUploadedAt: updatedOrder.paymentProofUploadedAt,
+      uploadedAt: updatedOrder.updatedAt,
     })
   } catch (error) {
     console.error('Upload payment proof error:', error)

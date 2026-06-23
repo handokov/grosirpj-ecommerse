@@ -11,8 +11,10 @@ export async function GET(
   try {
     const { orderNumber } = await params
 
-    // Validate order number format (GPJ-YYYYMMDD-XXXX)
-    if (!/^GPJ-\d{8}-\d{4,6}[A-Z]?$/.test(orderNumber)) {
+    // Validate order number format (GPJ-YYYYMMDD-XXXXXXXX)
+    // Suffix is seq (4+ digits) + rand (4+ digits), so total 8+ digits.
+    // Use \d{4,} to accept any suffix length >= 4 (future-proof for high-volume days).
+    if (!/^GPJ-\d{8}-\d{4,}[A-Z]?$/.test(orderNumber)) {
       return NextResponse.json({ error: 'Nomor order tidak valid' }, { status: 400 })
     }
 
